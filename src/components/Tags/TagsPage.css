@@ -1,0 +1,11 @@
+/* TagsPage-specific styles.
+   Global classes (.page-container, .card, .card-header, .card-body, .card-empty,
+   .data-table, .table-actions, .color-dot, .form-input-inline, .page-title,
+   .page-subtitle, .page-header) are defined in index.css */
+
+.tags-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,252 @@
+/* ── Epic Drawer ────────────────────────────────────────────────────────────── */
+.epic-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(780px, 100vw);
+  background: #fff;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-drawer);
+  overflow: hidden;
+}
+
+/* ── Top bar ────────────────────────────────────────────────────────────────── */
+.epic-drawer-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 10px;
+  border-bottom: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+}
+
+.epic-drawer-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.epic-drawer-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.epic-drawer-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Body layout ────────────────────────────────────────────────────────────── */
+.epic-drawer-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.epic-drawer-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.epic-drawer-sidebar {
+  width: 260px;
+  min-width: 260px;
+  border-left: 1px solid var(--color-border-light);
+  overflow-y: auto;
+  padding: 20px 18px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Title ──────────────────────────────────────────────────────────────────── */
+.epic-drawer-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+  margin: 0;
+}
+.epic-drawer-title:hover { background: var(--color-bg); }
+
+.epic-drawer-title-input {
+  font-size: 22px;
+  font-weight: 700;
+  width: 100%;
+  letter-spacing: -0.03em;
+}
+
+/* ── Description ────────────────────────────────────────────────────────────── */
+.epic-drawer-desc {
+  resize: vertical;
+}
+
+/* ── Progress ───────────────────────────────────────────────────────────────── */
+.epic-drawer-progress-bar {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.epic-drawer-progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* ── Tickets list ───────────────────────────────────────────────────────────── */
+.epic-drawer-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  font-style: italic;
+  margin: 0;
+}
+
+.epic-drawer-tickets {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.epic-drawer-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, border-color 0.1s;
+  width: 100%;
+}
+.epic-drawer-ticket-row:hover {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.epic-drawer-ticket-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.epic-drawer-ticket-key {
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.epic-drawer-ticket-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: 500;
+}
+.epic-drawer-ticket-title--done {
+  text-decoration: line-through;
+  color: var(--color-text-subtle);
+}
+
+.epic-drawer-ticket-col {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  background: var(--color-border-light);
+  border-radius: 20px;
+  font-weight: 500;
+}
+.epic-drawer-ticket-col--backlog {
+  background: rgba(107,114,128,0.1);
+  color: var(--color-text-subtle);
+}
+
+.epic-drawer-ticket-chevron {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.epic-drawer-ticket-row:hover .epic-drawer-ticket-chevron {
+  opacity: 1;
+}
+
+/* ── Status pill selector ────────────────────────────────────────────────────── */
+.epic-drawer-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.epic-drawer-status-pill {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--color-text-subtle);
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.epic-drawer-status-pill:hover {
+  background: var(--color-hover);
+}
+.epic-drawer-status-pill--auto {
+  font-style: italic;
+  font-weight: 400;
+}
+.epic-drawer-status-pill--todo.epic-drawer-status-pill--active {
+  background: #F3F4F6;
+  color: #6B7280;
+  border-color: #D1D5DB;
+}
+.epic-drawer-status-pill--inprogress.epic-drawer-status-pill--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.epic-drawer-status-pill--done.epic-drawer-status-pill--active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: #6EE7B7;
+}
+.epic-drawer-status-pill--auto.epic-drawer-status-pill--active {
+  background: var(--color-border-light);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  font-style: italic;
+}

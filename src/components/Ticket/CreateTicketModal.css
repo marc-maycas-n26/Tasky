@@ -1,0 +1,58 @@
+/* CreateTicketModal uses global .modal, .modal-header, .modal-body, .modal-footer from index.css */
+
+/* ── Issue type toggle ──────────────────────────────────────────────────────── */
+.issue-type-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.issue-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.issue-type-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.issue-type-btn--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.create-ticket-row {
+  display: flex;
+  gap: 12px;
+}
+
+.create-ticket-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-toggle {
+  cursor: pointer;
+  transition: opacity 0.1s, transform 0.1s;
+  border-radius: 20px;
+}
+.tag-toggle:hover {
+  opacity: 0.8;
+  transform: scale(0.97);
+}
+.tag-toggle--active {
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+

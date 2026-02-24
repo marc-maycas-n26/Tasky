@@ -1,0 +1,151 @@
+/* SettingsPage – light Jira theme.
+   Global classes (.page-container, .card, .card-header, .card-body, .card-empty,
+   .data-table, .table-actions, .color-dot, .form-input-inline, .page-title,
+   .page-subtitle, .page-header, .text-subtle) are defined in index.css */
+
+.settings-page {
+  max-width: 900px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* ── Scrollable table wrapper ──────────────────────────────────────────────── */
+.settings-table-wrap {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* ── Add rows ──────────────────────────────────────────────────────────────── */
+.settings-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-add-row--epics {
+  flex-wrap: wrap;
+}
+
+/* ── Field / row helpers ───────────────────────────────────────────────────── */
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 400px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Storage section ───────────────────────────────────────────────────────── */
+.settings-storage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-storage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.settings-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ── Hints / warnings / errors ─────────────────────────────────────────────── */
+.settings-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  line-height: 1.5;
+}
+
+.settings-warn {
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+}
+
+.settings-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+/* ── Google Drive connected pill ────────────────────────────────────────────── */
+.settings-gd-connected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.gd-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gd-status-dot--on { background: var(--color-success); }
+.gd-status-dot--off { background: var(--color-text-subtle); }
+
+/* ── Drag-to-reorder rows ──────────────────────────────────────────────────── */
+.drag-handle {
+  cursor: grab;
+  color: var(--color-text-subtle);
+  font-size: 16px;
+  user-select: none;
+  text-align: center;
+  padding: 0 4px;
+}
+.drag-handle:active { cursor: grabbing; }
+
+.row-drag-over td {
+  background: var(--color-primary-subtle) !important;
+}
+
+/* ── Feature flags ─────────────────────────────────────────────────────────── */
+.flags-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.flag-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.flag-chip {
+  padding: 2px 8px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+/* ── Inline input override ─────────────────────────────────────────────────── */
+.form-input-inline {
+  max-width: 220px;
+}

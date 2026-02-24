@@ -1,0 +1,175 @@
+.rte-root {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.rte-root:focus-within:not(.rte-root--readonly) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.rte-root--readonly {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.rte-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.rte-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.rte-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.rte-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.rte-btn:hover {
+  background: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+.rte-btn--active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* ── Editor content ──────────────────────────────────────────────────────── */
+.rte-content {
+  padding: 10px 12px;
+  min-height: 120px;
+  cursor: text;
+  flex: 1;
+}
+
+.rte-content .tiptap {
+  outline: none;
+  min-height: 100px;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+/* Placeholder */
+.rte-content .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-subtle);
+  font-style: italic;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Typography within editor */
+.rte-content .tiptap h1 { font-size: 20px; font-weight: 700; margin: 12px 0 6px; }
+.rte-content .tiptap h2 { font-size: 17px; font-weight: 700; margin: 10px 0 5px; }
+.rte-content .tiptap h3 { font-size: 15px; font-weight: 600; margin: 8px 0 4px; }
+.rte-content .tiptap p { margin: 4px 0; }
+.rte-content .tiptap ul,
+.rte-content .tiptap ol { padding-left: 20px; margin: 6px 0; }
+.rte-content .tiptap li { margin: 2px 0; }
+.rte-content .tiptap blockquote {
+  border-left: 3px solid var(--color-border);
+  padding-left: 12px;
+  margin: 6px 0;
+  color: var(--color-text-secondary);
+}
+.rte-content .tiptap code {
+  background: var(--color-border-light);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+.rte-content .tiptap pre {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin: 6px 0;
+  overflow-x: auto;
+}
+.rte-content .tiptap pre code {
+  background: none;
+  padding: 0;
+  font-size: 12px;
+}
+.rte-content .tiptap a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.rte-content .tiptap img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  margin: 6px 0;
+  display: block;
+}
+
+/* ── Mini dialogs ────────────────────────────────────────────────────────── */
+.rte-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.rte-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  padding: 20px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rte-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.rte-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
