@@ -135,11 +135,8 @@ export interface AppState {
 
 export interface AppSettings {
   projectKey: string; // e.g. "TM"
-  googleDrive?: {
-    connected: boolean;
-    fileId?: string;
-    lastSyncAt?: string;
-    autoSync: boolean;
+  markdownFolder?: {
+    folderName: string; // display name of the picked folder
   };
 }
 

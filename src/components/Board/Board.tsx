@@ -126,12 +126,13 @@ export function Board() {
   const epicGroups = useMemo(() => {
     const backlogColId = columns.find(c => c.isBacklog)?.id;
     const top = filteredTickets.filter(t => !t.parentId && t.columnId !== backlogColId);
+    const noEpicTickets = top.filter(t => !t.epicId);
     return [
       ...sortedEpics.map(epic => ({
         epic,
         tickets: top.filter(t => t.epicId === epic.id),
       })),
-      { epic: null as Epic | null, tickets: top.filter(t => !t.epicId) },
+      ...(noEpicTickets.length > 0 ? [{ epic: null as Epic | null, tickets: noEpicTickets }] : []),
     ];
   }, [sortedEpics, filteredTickets, columns]);
 

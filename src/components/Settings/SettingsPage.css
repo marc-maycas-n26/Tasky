@@ -5,17 +5,31 @@
 
 .settings-page {
   max-width: 900px;
-  overflow-y: auto;
-  height: 100vh;
 }
 
 /* ── Scrollable table wrapper ──────────────────────────────────────────────── */
 .settings-table-wrap {
-  max-height: 320px;
+  max-height: 340px;
   overflow-y: auto;
+  border-top: 1px solid var(--color-border-light);
 }
 
-/* ── Add rows ──────────────────────────────────────────────────────────────── */
+/* ── Columns card header with action button ─────────────────────────────────── */
+.columns-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Inline add row (inside card body) ──────────────────────────────────────── */
+.columns-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* ── Add rows (used by EpicsSection) ───────────────────────────────────────── */
 .settings-add-row {
   display: flex;
   align-items: center;
@@ -82,7 +96,7 @@
   color: var(--color-danger);
 }
 
-/* ── Google Drive connected pill ────────────────────────────────────────────── */
+/* ── Storage connected pill ─────────────────────────────────────────────────── */
 .settings-gd-connected {
   display: flex;
   align-items: center;
@@ -93,15 +107,6 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
 }
-
-.gd-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.gd-status-dot--on { background: var(--color-success); }
-.gd-status-dot--off { background: var(--color-text-subtle); }
 
 /* ── Drag-to-reorder rows ──────────────────────────────────────────────────── */
 .drag-handle {

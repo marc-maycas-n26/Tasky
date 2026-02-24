@@ -4,6 +4,8 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
 import { useEffect, useCallback, useState } from 'react';
 import './RichTextEditor.css';
 
@@ -25,6 +27,8 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       }),
       Image.configure({ inline: false, allowBase64: true }),
       Placeholder.configure({ placeholder }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
     ],
     content: value,
     editable: !readOnly,
@@ -164,6 +168,14 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
               📁
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
             </label>
+          </ToolbarGroup>
+
+          <div className="rte-toolbar-sep" />
+
+          <ToolbarGroup>
+            <ToolBtn active={isActive('taskList')} title="Checklist" onClick={() => editor.chain().focus().toggleTaskList().run()}>
+              ☑
+            </ToolBtn>
           </ToolbarGroup>
         </div>
       )}

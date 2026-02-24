@@ -68,6 +68,11 @@ class AppDatabase extends Dexie {
 
 const db = new AppDatabase();
 
+/** Wipe the entire app database. Called when switching to markdown-only mode. */
+export async function clearAppDatabase(): Promise<void> {
+  await db.delete();
+}
+
 export class IndexedDbAdapter implements StorageAdapter {
   name = 'IndexedDB (local)';
   supportsSync = false;

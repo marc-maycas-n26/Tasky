@@ -139,6 +139,48 @@
   display: block;
 }
 
+/* ── Task list (checklist) ───────────────────────────────────────────────── */
+.rte-content .tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 4px;
+  margin: 6px 0;
+}
+
+.rte-content .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 3px 0;
+}
+
+.rte-content .tiptap ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.rte-content .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.rte-content .tiptap ul[data-type="taskList"] li > div {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.rte-content .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: var(--color-text-subtle);
+}
+
+/* Nested task lists */
+.rte-content .tiptap ul[data-type="taskList"] ul[data-type="taskList"] {
+  margin: 2px 0 2px 20px;
+}
+
 /* ── Mini dialogs ────────────────────────────────────────────────────────── */
 .rte-dialog-backdrop {
   position: fixed;

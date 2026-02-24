@@ -26,7 +26,6 @@ export const SEED_DATA: AppState = {
   nextTicketNumber: 5,
   settings: {
     projectKey: 'TM',
-    googleDrive: { connected: false, autoSync: false },
   },
   columns: [
     { id: col1, name: 'Backlog', order: 0, isBacklog: true, isTodo: false, createdAt: now, updatedAt: now },

@@ -5,6 +5,7 @@ import type {
   Comment, LinkedItem, LinkedItemRelation,
 } from '../types';
 import { IndexedDbAdapter } from '../storage/indexedDb';
+import { MarkdownFsAdapter, restoreDirectoryHandle } from '../storage/markdownFs';
 
 interface StoreState extends AppState {
   // adapter
@@ -81,11 +82,12 @@ interface StoreState extends AppState {
 }
 
 const now = () => new Date().toISOString();
-const defaultAdapter = new IndexedDbAdapter();
 
 export const useStore = create<StoreState>((set, get) => ({
   // ── initial state ──────────────────────────────────────────────────────────
-  adapter: defaultAdapter,
+  // IndexedDbAdapter is instantiated lazily inside init() — avoids opening
+  // the database on module load when markdown-folder mode may take over.
+  adapter: new IndexedDbAdapter(),
   isLoading: false,
   isSaving: false,
   lastError: null,
@@ -112,11 +114,20 @@ export const useStore = create<StoreState>((set, get) => ({
   async init() {
     set({ isLoading: true, lastError: null });
     try {
-      const state = await get().adapter.loadAll();
-      // Ensure trashedTickets is always an array (backward compat with old snapshots)
+      // Always attempt to restore the markdown folder handle first.
+      // This ensures IndexedDB is never read when markdown mode was configured.
+      let adapter = get().adapter;
+      if (!(adapter instanceof MarkdownFsAdapter)) {
+        const handle = await restoreDirectoryHandle();
+        if (handle) {
+          adapter = new MarkdownFsAdapter(handle);
+          set({ adapter });
+        }
+        // If no handle was found, adapter remains IndexedDbAdapter — that is fine.
+      }
+      const state = await adapter.loadAll();
       const trashedTickets = state.trashedTickets ?? [];
       set({ ...state, trashedTickets, isLoading: false });
-      // Purge any items that expired while the app was closed
       get().purgeExpiredTrash();
     } catch (e) {
       set({ isLoading: false, lastError: String(e) });

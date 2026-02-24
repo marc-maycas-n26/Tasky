@@ -397,11 +397,19 @@
 
 .bl-row-priority {
   font-size: var(--font-size-xs);
-  color: var(--color-text-subtle);
   white-space: nowrap;
-  padding: 2px 6px;
-  background: var(--color-border-light);
+  padding: 2px 7px;
   border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.bl-row-priority-icon {
+  font-size: 11px;
+  line-height: 1;
+  font-style: normal;
 }
 
 /* ── Status badge ────────────────────────────────────────────────────────────── */
@@ -487,6 +495,115 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+/* ── Drag handle ─────────────────────────────────────────────────────────────── */
+.bl-row-drag-handle {
+  cursor: grab;
+  color: var(--color-text-subtle);
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+  user-select: none;
+  padding: 0 2px;
+}
+.bl-row:hover .bl-row-drag-handle {
+  opacity: 1;
+}
+.bl-row-drag-handle:active {
+  cursor: grabbing;
+}
+
+.bl-row--dragging {
+  opacity: 0.4;
+}
+
+.bl-row--ghost {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  padding: 9px 16px;
+  pointer-events: none;
+  max-width: 480px;
+}
+
+/* ── Section drop-over highlight ─────────────────────────────────────────────── */
+.bl-section--drop-over {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+/* ── Board column drop zones (inside BoardSection) ───────────────────────────── */
+.bl-board-cols {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.bl-board-col-zone {
+  flex: 1;
+  min-width: 160px;
+  border-right: 1px solid var(--color-border-light);
+  transition: background 0.15s;
+}
+.bl-board-col-zone:last-child {
+  border-right: none;
+}
+.bl-board-col-zone--over {
+  background: var(--color-primary-subtle);
+}
+
+.bl-board-col-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 6px;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg);
+}
+
+.bl-board-col-zone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bl-board-col-zone-name {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bl-board-col-zone-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  background: var(--color-border-light);
+  padding: 1px 5px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.bl-board-col-zone-empty {
+  padding: 20px 16px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  font-style: italic;
+  text-align: center;
+  border: 2px dashed var(--color-border-light);
+  border-radius: var(--radius-md);
+  margin: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.bl-board-col-zone-empty--over {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-style: normal;
+  font-weight: 600;
 }
 
 /* ── Chevron ─────────────────────────────────────────────────────────────────── */

@@ -1,4 +1,3 @@
-import { GeneralSection } from './GeneralSection';
 import { ColumnsSection } from './ColumnsSection';
 import { StorageSection } from './StorageSection';
 import './SettingsPage.css';
@@ -11,7 +10,6 @@ export function SettingsPage() {
         <p className="page-subtitle">Configure your board and data storage.</p>
       </div>
 
-      <GeneralSection />
       <ColumnsSection />
       <StorageSection />
     </div>

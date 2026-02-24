@@ -1,20 +1,45 @@
+import { useDraggable } from '@dnd-kit/core';
 import { useStore } from '../../store';
 import { StatusBadge } from './StatusBadge';
-import type { Ticket } from '../../types';
+import type { Priority, Ticket } from '../../types';
+
+const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; icon: string }> = {
+  lowest:  { label: 'Lowest',  color: '#6B7280', icon: '↓↓' },
+  low:     { label: 'Low',     color: '#3B82F6', icon: '↓' },
+  medium:  { label: 'Medium',  color: '#F59E0B', icon: '=' },
+  high:    { label: 'High',    color: '#EF4444', icon: '↑' },
+  highest: { label: 'Highest', color: '#DC2626', icon: '↑↑' },
+};
 
 export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: boolean }) {
   const tags = useStore(s => s.tags);
   const openTicket = useStore(s => s.openTicket);
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
 
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: ticket.id });
+
+  const priority = ticket.priority ? PRIORITY_CONFIG[ticket.priority] : null;
+
   return (
     <div
-      className={`bl-row${indented ? ' bl-row--indented' : ''}`}
-      onClick={() => openTicket(ticket.id)}
+      ref={setNodeRef}
+      className={`bl-row${indented ? ' bl-row--indented' : ''}${isDragging ? ' bl-row--dragging' : ''}`}
+      onClick={() => !isDragging && openTicket(ticket.id)}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && openTicket(ticket.id)}
     >
+      {/* drag handle */}
+      <span
+        className="bl-row-drag-handle"
+        aria-hidden="true"
+        {...listeners}
+        {...attributes}
+        onClick={e => e.stopPropagation()}
+      >
+        ⠿
+      </span>
+
       <span className="bl-row-icon" aria-hidden="true">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="#5E6C84" strokeWidth="1.3" fill="none"/>
@@ -35,9 +60,14 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
             {tag.name}
           </span>
         ))}
-        {ticket.priority && (
-          <span className="bl-row-priority">
-            {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+        {priority && (
+          <span
+            className="bl-row-priority"
+            style={{ background: priority.color + '18', color: priority.color, border: `1px solid ${priority.color}33` }}
+            title={priority.label}
+          >
+            <span className="bl-row-priority-icon">{priority.icon}</span>
+            {priority.label}
           </span>
         )}
       </div>

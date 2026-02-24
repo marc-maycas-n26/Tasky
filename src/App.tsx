@@ -51,7 +51,7 @@ function AppShell() {
       <main style={{
         paddingLeft: 'var(--sidebar-width-expanded)',
         height: '100%',
-        overflow: 'hidden',
+        overflowY: 'auto',
       }}>
         <Routes>
           <Route path="/" element={<Board />} />
