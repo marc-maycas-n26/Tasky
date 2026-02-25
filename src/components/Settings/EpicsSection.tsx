@@ -127,10 +127,10 @@ export function EpicsSection() {
                     <td className="text-subtle">{epic.description ?? '—'}</td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-icon btn-ghost btn-sm" title="Edit" onClick={() => startEdit(epic.id)}>
+                        <button className="btn btn-icon btn-secondary btn-sm" title="Edit" onClick={() => startEdit(epic.id)}>
                           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
                         </button>
-                        <button className="btn btn-icon btn-ghost btn-sm" title="Delete" style={{ color: 'var(--color-danger)' }} onClick={() => deleteEpic(epic.id)}>
+                        <button className="btn btn-icon btn-sm btn-icon-danger" title="Delete" onClick={() => deleteEpic(epic.id)}>
                           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M5 3.5l.5 8M9 3.5l-.5 8M3 3.5l.5 8.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5L11 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </button>
                       </div>
