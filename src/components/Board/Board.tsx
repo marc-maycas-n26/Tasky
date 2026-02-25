@@ -30,6 +30,7 @@ export function Board() {
   const [search, setSearch] = useState('');
   const [epicFilter, setEpicFilter] = useState<Set<string>>(new Set());
   const [labelFilter, setLabelFilter] = useState<Set<string>>(new Set());
+  const [otherCollapsed, setOtherCollapsed] = useState(false);
 
   const sortedColumns = useMemo(
     () => [...columns].sort((a, b) => a.order - b.order).filter(c => !c.isBacklog),
@@ -142,82 +143,87 @@ export function Board() {
   return (
     <div className="board-root">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        {/* Toolbar — outside the scroll container so it never scrolls */}
+        <div className="board-toolbar">
+          <div className="board-search">
+            <span className="board-search-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <input
+              className="board-search-input"
+              placeholder="Search board"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="board-toolbar-sep" />
+
+          <FilterDropdown
+            label="Epic"
+            options={epicOptions}
+            selected={epicFilter}
+            onToggle={toggleEpicFilter}
+          />
+
+          <FilterDropdown
+            label="Label"
+            options={labelOptions}
+            selected={labelFilter}
+            onToggle={toggleLabelFilter}
+          />
+
+          {(epicFilter.size > 0 || labelFilter.size > 0) && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => { setEpicFilter(new Set()); setLabelFilter(new Set()); }}
+            >
+              Clear filters
+            </button>
+          )}
+
+          <div className="board-toolbar-right">
+            <button className="btn btn-primary" onClick={() => openCreateTicket({})}>
+              + Create issue
+            </button>
+          </div>
+        </div>
         <div className="board-scroll-container">
           <div className="board-inner">
-            {/* Toolbar — aligned with swimlanes */}
-            <div className="board-toolbar">
-              <div className="board-search">
-                <span className="board-search-icon">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </span>
-                <input
-                  className="board-search-input"
-                  placeholder="Search board"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-              </div>
-
-              <div className="board-toolbar-sep" />
-
-              <FilterDropdown
-                label="Epic"
-                options={epicOptions}
-                selected={epicFilter}
-                onToggle={toggleEpicFilter}
-              />
-
-              <FilterDropdown
-                label="Label"
-                options={labelOptions}
-                selected={labelFilter}
-                onToggle={toggleLabelFilter}
-              />
-
-              {(epicFilter.size > 0 || labelFilter.size > 0) && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => { setEpicFilter(new Set()); setLabelFilter(new Set()); }}
-                >
-                  Clear filters
-                </button>
-              )}
-
-              <div className="board-toolbar-right">
-                <button className="btn btn-primary" onClick={() => openCreateTicket({})}>
-                  + Create issue
-                </button>
-              </div>
-            </div>
             {/* Swimlanes */}
-            {epicGroups.map(({ epic, tickets: groupTickets }) => (
-              <div key={epic?.id ?? '__other__'} className="swimlane">
-                <SwimlaneEpicHeader
-                  epic={epic}
-                  tickets={groupTickets}
-                  columns={columns}
-                  tags={tags}
-                />
+            {epicGroups.map(({ epic, tickets: groupTickets }) => {
+              const isCollapsed = epic ? epic.isCollapsed : otherCollapsed;
+              return (
+                <div key={epic?.id ?? '__other__'} className="swimlane">
+                  <SwimlaneEpicHeader
+                    epic={epic}
+                    tickets={groupTickets}
+                    columns={columns}
+                    tags={tags}
+                    isCollapsedOverride={epic ? undefined : otherCollapsed}
+                    onToggleOther={epic ? undefined : () => setOtherCollapsed(c => !c)}
+                  />
 
-                {!epic?.isCollapsed && (
-                  <div className="swimlane-cols-row">
-                    {sortedColumns.map(col => (
-                      <BoardColumn
-                        key={col.id}
-                        column={col}
-                        epicId={epic?.id}
-                        tickets={groupTickets
-                          .filter(t => t.columnId === col.id)
-                          .sort((a, b) => a.order - b.order)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                  {!isCollapsed && (
+                    <div className="swimlane-cols-row">
+                      {sortedColumns.map(col => (
+                        <BoardColumn
+                          key={col.id}
+                          column={col}
+                          epicId={epic?.id}
+                          tickets={groupTickets
+                            .filter(t => t.columnId === col.id)
+                            .sort((a, b) => a.order - b.order)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
