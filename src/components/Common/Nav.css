@@ -1,17 +1,35 @@
-/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+/* ── Sidebar shell ────────────────────────────────────────────────────────── */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
-  width: var(--sidebar-width-expanded);
   background: var(--color-nav-bg);
   z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 10px 0 16px;
+  padding: 10px 0 12px;
   border-right: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  /* Width transitions for both pinned toggle and hover */
+  transition: width 0.22s ease, box-shadow 0.22s ease;
+}
+
+/* ── Pinned-open: pushes content (main gets padding-left 200px) ───────────── */
+.sidebar--pinned {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ── Collapsed: icon strip only (main gets padding-left 52px) ────────────── */
+.sidebar--collapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+/* On hover, expand to full width as an overlay — pure CSS, no JS, no layout shift */
+.sidebar--collapsed:hover {
+  width: var(--sidebar-width-expanded);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Brand ───────────────────────────────────────────────────────────────── */
@@ -30,15 +48,21 @@
 }
 
 .sidebar-brand-icon {
-  font-size: 20px;
-  color: #A78BFA;
-  line-height: 1;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-brand-name {
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Hidden when collapsed, revealed on hover */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.sidebar--pinned .sidebar-brand-name,
+.sidebar--collapsed:hover .sidebar-brand-name {
+  opacity: 1;
 }
 
 /* ── Links ───────────────────────────────────────────────────────────────── */
@@ -56,7 +80,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 9px 9px;
   border-radius: var(--radius-md);
   color: var(--color-nav-text);
   text-decoration: none;
@@ -66,13 +90,11 @@
   overflow: hidden;
   transition: background 0.12s, color 0.12s;
 }
-
 .sidebar-link:hover {
   background: var(--color-nav-hover);
   color: #fff;
   text-decoration: none;
 }
-
 .sidebar-link--active {
   background: var(--color-nav-active);
   color: #fff;
@@ -85,10 +107,17 @@
   flex-shrink: 0;
 }
 
+/* Labels: always in DOM, faded out when not visible */
 .sidebar-link-label {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.sidebar--pinned .sidebar-link-label,
+.sidebar--collapsed:hover .sidebar-link-label {
+  opacity: 1;
 }
 
 .sidebar-trash-badge {
@@ -112,8 +141,23 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 8px 14px 0;
+  justify-content: flex-start;
+  padding: 8px 8px 0;
   width: 100%;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.sidebar-saving-slot {
+  flex: 1;
+  overflow: hidden;
+  /* Hide saving text when labels are hidden */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.sidebar--pinned .sidebar-saving-slot,
+.sidebar--collapsed:hover .sidebar-saving-slot {
+  opacity: 1;
 }
 
 .sidebar-saving {
@@ -123,12 +167,24 @@
   white-space: nowrap;
 }
 
-.sidebar-saving-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  animation: pulse 1.2s ease-in-out infinite;
+/* Toggle button — always visible */
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar-toggle-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
 }
 
 @keyframes pulse {

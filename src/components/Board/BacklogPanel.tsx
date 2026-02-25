@@ -1,22 +1,19 @@
 import { useRef, useState } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../../store';
 import type { Ticket } from '../../types';
 import './BacklogPanel.css';
 
 function MoveMenu({ ticket, onClose }: { ticket: Ticket; onClose: () => void }) {
   const columns = useStore(s => s.columns);
-  const tickets = useStore(s => s.tickets);
-  const moveTicket = useStore(s => s.moveTicket);
+  const moveToBoard = useStore(s => s.moveToBoard);
 
   const boardCols = [...columns]
     .filter(c => !c.isBacklog)
     .sort((a, b) => a.order - b.order);
 
   function handleMove(colId: string) {
-    const colTickets = tickets
-      .filter(t => t.columnId === colId && (t.epicId ?? null) === (ticket.epicId ?? null) && !t.parentId)
-      .sort((a, b) => a.order - b.order);
-    moveTicket(ticket.id, colId, ticket.epicId, colTickets.length);
+    moveToBoard(ticket.id, colId);
     onClose();
   }
 
@@ -52,14 +49,24 @@ function BacklogRow({ ticket }: { ticket: Ticket }) {
   const [moveOpen, setMoveOpen] = useState(false);
   const moveRef = useRef<HTMLDivElement>(null);
 
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: ticket.id });
+
   return (
     <div
-      className="backlog-row"
-      onClick={() => openTicket(ticket.id)}
+      ref={setNodeRef}
+      className={`backlog-row${isDragging ? ' backlog-row--dragging' : ''}`}
+      onClick={() => !isDragging && openTicket(ticket.id)}
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && openTicket(ticket.id)}
     >
+      <span
+        className="backlog-row-drag-handle"
+        aria-hidden="true"
+        {...listeners}
+        {...attributes}
+        onClick={e => e.stopPropagation()}
+      >⠿</span>
       <span className="backlog-row-icon" aria-hidden="true">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="#5E6C84" strokeWidth="1.3" fill="none"/>
@@ -137,17 +144,34 @@ function BacklogRow({ ticket }: { ticket: Ticket }) {
   );
 }
 
+function DroppableBacklogList({ tickets }: { tickets: Ticket[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: '__backlog__' });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`backlog-list${isOver ? ' backlog-list--over' : ''}`}
+    >
+      {tickets.length === 0 ? (
+        <div className={`backlog-empty${isOver ? ' backlog-empty--over' : ''}`}>
+          {isOver ? 'Drop here to move to backlog' : 'No backlog items. Add issues here before moving them to the board.'}
+        </div>
+      ) : (
+        tickets.map(ticket => (
+          <BacklogRow key={ticket.id} ticket={ticket} />
+        ))
+      )}
+    </div>
+  );
+}
+
 export function BacklogPanel() {
   const tickets = useStore(s => s.tickets);
   const columns = useStore(s => s.columns);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const [collapsed, setCollapsed] = useState(false);
 
-  const backlogCol = columns.find(c => c.isBacklog);
-  if (!backlogCol) return null;
-
   const backlogTickets = tickets
-    .filter(t => t.columnId === backlogCol.id && !t.parentId)
+    .filter(t => t.inBacklog === true && !t.parentId)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -181,7 +205,7 @@ export function BacklogPanel() {
           title="Add issue to backlog"
           onClick={e => {
             e.stopPropagation();
-            openCreateTicket({ columnId: backlogCol.id });
+            openCreateTicket({ inBacklog: true });
           }}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -191,19 +215,7 @@ export function BacklogPanel() {
         </button>
       </div>
 
-      {!collapsed && (
-        <div className="backlog-list">
-          {backlogTickets.length === 0 ? (
-            <div className="backlog-empty">
-              No backlog items. Add issues here before moving them to the board.
-            </div>
-          ) : (
-            backlogTickets.map(ticket => (
-              <BacklogRow key={ticket.id} ticket={ticket} />
-            ))
-          )}
-        </div>
-      )}
+      {!collapsed && <DroppableBacklogList tickets={backlogTickets} />}
     </div>
   );
 }

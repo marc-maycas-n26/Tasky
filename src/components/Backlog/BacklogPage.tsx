@@ -7,7 +7,6 @@ import { useStore } from '../../store';
 import { CreateTicketModal } from '../Ticket/CreateTicketModal';
 import { TicketDrawer } from '../Ticket/TicketDrawer';
 import { EpicDrawer } from '../Epic/EpicDrawer';
-import { BoardSection } from './BoardSection';
 import { BacklogSection } from './BacklogSection';
 import type { Ticket } from '../../types';
 import './BacklogPage.css';
@@ -21,8 +20,9 @@ export function BacklogPage() {
   const isEpicDrawerOpen = useStore(s => s.isEpicDrawerOpen);
   const openEpic = useStore(s => s.openEpic);
   const openCreateTicket = useStore(s => s.openCreateTicket);
-  const moveTicket = useStore(s => s.moveTicket);
   const reorderTickets = useStore(s => s.reorderTickets);
+  const moveToBoard = useStore(s => s.moveToBoard);
+  const moveToBacklog = useStore(s => s.moveToBacklog);
 
   const [search, setSearch] = useState('');
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
@@ -31,10 +31,12 @@ export function BacklogPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const backlogCol = columns.find(c => c.isBacklog);
-
   const backlogTickets = tickets
-    .filter(t => t.columnId === backlogCol?.id && !t.parentId)
+    .filter(t => t.inBacklog === true && !t.parentId)
+    .sort((a, b) => a.order - b.order);
+
+  const boardTickets = tickets
+    .filter(t => t.inBacklog !== true && !!t.columnId && !t.parentId)
     .sort((a, b) => a.order - b.order);
 
   function handleDragStart(e: DragStartEvent) {
@@ -49,36 +51,52 @@ export function BacklogPage() {
 
     const draggedId = active.id as string;
     const overId = over.id as string;
+    const dragged = tickets.find(t => t.id === draggedId);
+    if (!dragged) return;
 
-    // Dropped onto a col-{id}-epic-{epicId} drop zone
-    const colEpicMatch = overId.match(/^col-(.+)-epic-(.+)$/);
-    if (colEpicMatch) {
-      const [, targetColId, epicPart] = colEpicMatch;
-      const targetEpicId = epicPart === 'null' ? undefined : epicPart;
-      const colTickets = tickets
-        .filter(t => t.columnId === targetColId && (t.epicId ?? 'null') === (targetEpicId ?? 'null') && !t.parentId)
-        .sort((a, b) => a.order - b.order);
-      moveTicket(draggedId, targetColId, targetEpicId, colTickets.length);
+    // Dropped on the Board section drop zone → move backlog ticket to board
+    if (overId === 'section-board') {
+      if (dragged.inBacklog) {
+        const firstCol = [...columns]
+          .filter(c => !c.isBacklog)
+          .sort((a, b) => a.order - b.order)[0];
+        if (firstCol) moveToBoard(draggedId, firstCol.id);
+      }
       return;
     }
 
-    // Dropped onto another ticket row — reorder within same column
+    // Dropped on the Backlog section drop zone → move board ticket to backlog
+    if (overId === 'section-backlog') {
+      if (!dragged.inBacklog) moveToBacklog(draggedId);
+      return;
+    }
+
+    // Dropped onto another ticket row — reorder within same section
     const overTicket = tickets.find(t => t.id === overId);
     if (overTicket && draggedId !== overId) {
-      const targetColId = overTicket.columnId;
-      const targetEpicId = overTicket.epicId;
-      const colTickets = tickets
-        .filter(t => t.columnId === targetColId && (t.epicId ?? null) === (targetEpicId ?? null) && !t.parentId)
-        .sort((a, b) => a.order - b.order);
-      const withoutDragged = colTickets.filter(t => t.id !== draggedId);
+      // Cross-section drop: ticket dragged over a row in the other section
+      if (dragged.inBacklog !== overTicket.inBacklog) {
+        if (dragged.inBacklog) {
+          // backlog ticket dropped on a board row → move to board, same column as target
+          moveToBoard(draggedId, overTicket.columnId || (
+            [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order)[0]?.id ?? ''
+          ));
+        } else {
+          // board ticket dropped on a backlog row → move to backlog
+          moveToBacklog(draggedId);
+        }
+        return;
+      }
+
+      // Same-section reorder
+      const sameSection = tickets.filter(t =>
+        t.inBacklog === dragged.inBacklog && !t.parentId
+      ).sort((a, b) => a.order - b.order);
+      const withoutDragged = sameSection.filter(t => t.id !== draggedId);
       const overIdx = withoutDragged.findIndex(t => t.id === overId);
       const insertIdx = overIdx === -1 ? withoutDragged.length : overIdx;
-      const dragged = tickets.find(t => t.id === draggedId)!;
       withoutDragged.splice(insertIdx, 0, dragged);
-      reorderTickets(targetColId, targetEpicId, withoutDragged.map(t => t.id));
-      if (dragged.columnId !== targetColId || dragged.epicId !== targetEpicId) {
-        moveTicket(draggedId, targetColId, targetEpicId, insertIdx);
-      }
+      reorderTickets(dragged.columnId, dragged.epicId, withoutDragged.map(t => t.id));
     }
   }
 
@@ -140,7 +158,7 @@ export function BacklogPage() {
         )}
 
         <div className="board-toolbar-right">
-          <button className="btn btn-primary" onClick={() => openCreateTicket({ columnId: backlogCol?.id })}>
+          <button className="btn btn-primary" onClick={() => openCreateTicket({ inBacklog: true })}>
             + Create issue
           </button>
         </div>
@@ -148,8 +166,8 @@ export function BacklogPage() {
 
       {/* Content */}
       <div className="bl-content">
-        <BoardSection />
-        <BacklogSection allBacklogTickets={backlogTickets} search={search} />
+        <BacklogSection tickets={boardTickets} search={search} inBacklog={false} />
+        <BacklogSection tickets={backlogTickets} search={search} inBacklog={true} />
       </div>
 
       {isTicketDrawerOpen && <TicketDrawer />}

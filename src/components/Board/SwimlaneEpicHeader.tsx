@@ -8,7 +8,7 @@ type Tags = ReturnType<typeof useStore.getState>['tags'];
 function getEpicStatus(tickets: Ticket[], columns: Columns): 'todo' | 'inprogress' | 'done' {
   if (tickets.length === 0) return 'todo';
   const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
-  const todoColIds = columns.filter(c => c.isBacklog || c.isTodo).map(c => c.id);
+  const todoColIds = columns.filter(c => c.isTodo).map(c => c.id);
   const allDone = tickets.every(t => doneColIds.includes(t.columnId));
   if (allDone) return 'done';
   const allTodo = tickets.every(t => todoColIds.includes(t.columnId));
@@ -23,6 +23,8 @@ interface Props {
   tickets: Ticket[];
   columns: Columns;
   tags: Tags;
+  isCollapsedOverride?: boolean;
+  onToggleOther?: () => void;
 }
 
 const EPIC_STATUS_OPTIONS: { value: EpicStatus; label: string }[] = [
@@ -31,7 +33,7 @@ const EPIC_STATUS_OPTIONS: { value: EpicStatus; label: string }[] = [
   { value: 'done', label: 'Done' },
 ];
 
-export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags }: Props) {
+export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCollapsedOverride, onToggleOther }: Props) {
   const toggleEpicCollapsed = useStore(s => s.toggleEpicCollapsed);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
@@ -51,8 +53,8 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags }: Pr
     return () => document.removeEventListener('mousedown', handleClick);
   }, [statusMenuOpen]);
 
-  const backlogCol = columns.find(c => c.isBacklog) ?? columns[0];
-  const isCollapsed = epic?.isCollapsed ?? false;
+  const todoCol = columns.find(c => c.isTodo) ?? columns.find(c => !c.isBacklog) ?? columns[0];
+  const isCollapsed = isCollapsedOverride ?? epic?.isCollapsed ?? false;
   const computedStatus = getEpicStatus(tickets, columns);
   const status = epic?.status ?? computedStatus;
   const statusLabel = EPIC_STATUS_LABELS[status];
@@ -63,7 +65,10 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags }: Pr
   return (
     <div
       className="swimlane-epic-header"
-      onClick={() => epic && toggleEpicCollapsed(epic.id)}
+      onClick={() => {
+        if (epic) toggleEpicCollapsed(epic.id);
+        else onToggleOther?.();
+      }}
     >
       <span className="swimlane-toggle-btn" aria-label={isCollapsed ? 'Expand' : 'Collapse'}>
         {isCollapsed ? (
@@ -168,7 +173,7 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags }: Pr
         title="Create issue in this epic"
         onClick={e => {
           e.stopPropagation();
-          openCreateTicket({ epicId: epic?.id, columnId: backlogCol?.id });
+          openCreateTicket({ epicId: epic?.id, columnId: todoCol?.id, inBacklog: false });
         }}
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">

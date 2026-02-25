@@ -125,14 +125,13 @@ export function Board() {
   }
 
   const epicGroups = useMemo(() => {
-    const backlogColId = columns.find(c => c.isBacklog)?.id;
-    const top = filteredTickets.filter(t => !t.parentId && t.columnId !== backlogColId);
+    const top = filteredTickets.filter(t => !t.parentId && t.inBacklog !== true && !!t.columnId);
     const noEpicTickets = top.filter(t => !t.epicId);
     return [
       ...sortedEpics.map(epic => ({
         epic,
         tickets: top.filter(t => t.epicId === epic.id),
-      })),
+      })).filter(g => g.tickets.length > 0),
       ...(noEpicTickets.length > 0 ? [{ epic: null as Epic | null, tickets: noEpicTickets }] : []),
     ];
   }, [sortedEpics, filteredTickets, columns]);
@@ -191,23 +190,22 @@ export function Board() {
             </button>
           </div>
         </div>
-        <div className="board-scroll-container">
-          <div className="board-inner">
-            {/* Swimlanes */}
-            {epicGroups.map(({ epic, tickets: groupTickets }) => {
-              const isCollapsed = epic ? epic.isCollapsed : otherCollapsed;
-              return (
-                <div key={epic?.id ?? '__other__'} className="swimlane">
-                  <SwimlaneEpicHeader
-                    epic={epic}
-                    tickets={groupTickets}
-                    columns={columns}
-                    tags={tags}
-                    isCollapsedOverride={epic ? undefined : otherCollapsed}
-                    onToggleOther={epic ? undefined : () => setOtherCollapsed(c => !c)}
-                  />
+        <div className="board-swimlanes">
+          {epicGroups.map(({ epic, tickets: groupTickets }) => {
+            const isCollapsed = epic ? epic.isCollapsed : otherCollapsed;
+            return (
+              <div key={epic?.id ?? '__other__'} className="swimlane">
+                <SwimlaneEpicHeader
+                  epic={epic}
+                  tickets={groupTickets}
+                  columns={columns}
+                  tags={tags}
+                  isCollapsedOverride={epic ? undefined : otherCollapsed}
+                  onToggleOther={epic ? undefined : () => setOtherCollapsed(c => !c)}
+                />
 
-                  {!isCollapsed && (
+                {!isCollapsed && (
+                  <div className="swimlane-cols-scroll">
                     <div className="swimlane-cols-row">
                       {sortedColumns.map(col => (
                         <BoardColumn
@@ -220,11 +218,11 @@ export function Board() {
                         />
                       ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>

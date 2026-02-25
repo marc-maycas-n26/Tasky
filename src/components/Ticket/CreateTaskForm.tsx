@@ -19,6 +19,7 @@ interface Props {
   onDescriptionChange: (html: string) => void;
   selectedTemplate: string;
   onTemplateChange: (id: string) => void;
+  hideColumnPicker?: boolean;
 }
 
 export function CreateTaskForm({
@@ -38,6 +39,7 @@ export function CreateTaskForm({
   onDescriptionChange,
   selectedTemplate,
   onTemplateChange,
+  hideColumnPicker,
 }: Props) {
   const sortedCols = [...columns].sort((a, b) => a.order - b.order);
 
@@ -60,14 +62,16 @@ export function CreateTaskForm({
       )}
 
       <div className="create-ticket-row">
-        <div className="form-field" style={{ flex: 1 }}>
-          <label className="form-label">Column *</label>
-          <select className="form-input" value={columnId} onChange={e => onColumnChange(e.target.value)}>
-            {sortedCols.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
+        {!hideColumnPicker && (
+          <div className="form-field" style={{ flex: 1 }}>
+            <label className="form-label">Column *</label>
+            <select className="form-input" value={columnId} onChange={e => onColumnChange(e.target.value)}>
+              {sortedCols.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="form-field" style={{ flex: 1 }}>
           <label className="form-label">Epic</label>
           <select className="form-input" value={epicId} onChange={e => onEpicChange(e.target.value)}>

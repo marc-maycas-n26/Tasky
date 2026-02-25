@@ -13,8 +13,11 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; icon: st
 
 export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: boolean }) {
   const tags = useStore(s => s.tags);
+  const epics = useStore(s => s.epics);
   const openTicket = useStore(s => s.openTicket);
+  const updateTicket = useStore(s => s.updateTicket);
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
+  const ticketEpic = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: ticket.id });
 
@@ -49,6 +52,21 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
 
       <span className="bl-row-key">{ticket.key}</span>
       <span className="bl-row-title">{ticket.title}</span>
+
+      <div className="bl-row-epic-wrap" onClick={e => e.stopPropagation()}>
+        <select
+          className="bl-row-epic-select"
+          value={ticket.epicId ?? ''}
+          onChange={e => updateTicket(ticket.id, { epicId: e.target.value || undefined })}
+          title="Change epic"
+          style={ticketEpic ? { color: ticketEpic.color, borderColor: ticketEpic.color + '55' } : undefined}
+        >
+          <option value="">No epic</option>
+          {epics.map(ep => (
+            <option key={ep.id} value={ep.id}>{ep.title}</option>
+          ))}
+        </select>
+      </div>
 
       <div className="bl-row-meta">
         {ticketTags.length > 0 && ticketTags.map(tag => (

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './ColorPickerPopover.css';
 
-const PRESET_COLORS = [
+export const PRESET_COLORS = [
   '#0052CC', '#0065FF', '#4C9AFF',
   '#00875A', '#36B37E', '#57D9A3',
   '#FF5630', '#DE350B', '#FF7452',
@@ -17,13 +17,25 @@ interface Props {
 
 export function ColorPickerPopover({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function openPopover() {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 6, left: rect.left + rect.width / 2 });
+    }
+    setOpen(v => !v);
+  }
 
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current && !triggerRef.current.contains(target)) {
+        // Check if click is inside the fixed popover (identified by class)
+        const popover = document.querySelector('.cpp-popover');
+        if (!popover || !popover.contains(target)) setOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -31,18 +43,24 @@ export function ColorPickerPopover({ value, onChange }: Props) {
   }, [open]);
 
   return (
-    <div className="cpp-wrapper" ref={wrapperRef}>
+    <div className="cpp-wrapper">
       <button
+        ref={triggerRef}
         type="button"
         className="cpp-trigger"
         style={{ background: value }}
-        onClick={() => setOpen(v => !v)}
+        onClick={openPopover}
         title="Pick a color"
         aria-haspopup="true"
         aria-expanded={open}
       />
       {open && (
-        <div className="cpp-popover" role="dialog" aria-label="Color picker">
+        <div
+          className="cpp-popover"
+          role="dialog"
+          aria-label="Color picker"
+          style={{ top: pos.top, left: pos.left }}
+        >
           <div className="cpp-swatches">
             {PRESET_COLORS.map(c => (
               <button

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store';
 import { Nav } from './components/Common/Nav';
@@ -13,6 +13,7 @@ function AppShell() {
   const init = useStore(s => s.init);
   const isLoading = useStore(s => s.isLoading);
   const lastError = useStore(s => s.lastError);
+  const [sidebarPinned, setSidebarPinned] = useState(true);
 
   useEffect(() => {
     init();
@@ -45,23 +46,34 @@ function AppShell() {
     );
   }
 
+  const mainPaddingLeft = sidebarPinned
+    ? 'var(--sidebar-width-expanded)'
+    : 'var(--sidebar-width-collapsed)';
+
   return (
     <>
-      <Nav />
-      <main style={{
-        paddingLeft: 'var(--sidebar-width-expanded)',
-        height: '100%',
-        overflowY: 'auto',
-      }}>
-        <Routes>
-          <Route path="/" element={<Board />} />
-          <Route path="/backlog" element={<BacklogPage />} />
-          <Route path="/tags" element={<TagsPage />} />
-          <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/trash" element={<TrashPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <Nav pinned={sidebarPinned} onToggle={() => setSidebarPinned(p => !p)} />
+      <main
+        style={{
+          paddingLeft: mainPaddingLeft,
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'padding-left 0.22s ease',
+        }}
+      >
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <Routes>
+            <Route path="/" element={<Board />} />
+            <Route path="/backlog" element={<BacklogPage />} />
+            <Route path="/tags" element={<TagsPage />} />
+            <Route path="/templates" element={<TemplatesPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/trash" element={<TrashPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
     </>
   );

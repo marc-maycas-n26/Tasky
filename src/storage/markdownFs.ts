@@ -294,24 +294,33 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const tickets: Ticket[] = [];
     const trackedKeys = new Set<string>();
 
+    // Migration: derive inBacklog from old isBacklog column flag if missing
+    const backlogColIds = new Set(columns.filter(c => c.isBacklog).map(c => c.id));
+
     for (const t of meta._tickets ?? []) {
-      const folderName = colFolderName.get(t.columnId);
-      if (!folderName) continue;
+      const raw = t as Ticket & { inBacklog?: boolean };
+      const inBacklog = raw.inBacklog ?? backlogColIds.has(raw.columnId);
+      // For backlog tickets, folder may not exist (no column); skip folder lookup
       let description = '';
-      try {
-        const subfolder = await this.getSubfolder(folderName, false);
-        const md = await this.readTextFile(toFilename(t as Ticket), subfolder);
-        description = md ? markdownToHtml(md) : '';
-      } catch { /* subfolder may not exist yet */ }
-      tickets.push({ ...(t as Ticket), description });
-      trackedKeys.add(t.key);
+      if (!inBacklog) {
+        const folderName = colFolderName.get(raw.columnId);
+        if (folderName) {
+          try {
+            const subfolder = await this.getSubfolder(folderName, false);
+            const md = await this.readTextFile(toFilename(raw), subfolder);
+            description = md ? markdownToHtml(md) : '';
+          } catch { /* subfolder may not exist yet */ }
+        }
+      }
+      tickets.push({ ...raw, inBacklog, description });
+      trackedKeys.add(raw.key);
     }
 
     // Auto-import manually-created .md files in any column subfolder
-    const backlogCol = columns.find(c => c.isBacklog) ?? columns[0];
     const { v4: uuidv4 } = await import('uuid');
 
     for (const col of columns) {
+      if (col.isBacklog) continue; // no folder for backlog
       const folderName = toFolderName(col);
       if (!(await this.subfolderExists(folderName))) continue;
       const subfolder = await this.getSubfolder(folderName, false);
@@ -332,6 +341,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
           title,
           description: markdownToHtml(mdText),
           columnId: col.id,
+          inBacklog: false,
           tagIds: [],
           order: tickets.length,
           createdAt: now,
@@ -341,7 +351,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
       }
     }
 
-    // Also scan root for any legacy flat .md files (migration from old format)
+    // Also scan root for any legacy flat .md files — treat as backlog items
     for await (const [name, handle] of this.dirHandle.entries()) {
       if (handle.kind !== 'file' || !name.endsWith('.md')) continue;
       const key = parseKeyFromFilename(name);
@@ -357,24 +367,22 @@ export class MarkdownFsAdapter implements StorageAdapter {
         key,
         title,
         description: markdownToHtml(mdText),
-        columnId: backlogCol?.id ?? columns[0]?.id ?? '',
+        columnId: '',
+        inBacklog: true,
         tagIds: [],
         order: tickets.length,
         createdAt: now,
         updatedAt: now,
       });
       trackedKeys.add(key);
-      // Move file into the backlog subfolder so layout is consistent
-      if (backlogCol) {
-        const dest = await this.getSubfolder(toFolderName(backlogCol));
-        await this.writeTextFile(name, mdText, dest);
-        await this.dirHandle.removeEntry(name);
-      }
     }
+
+    // Strip old isBacklog columns — backlog is now a ticket flag
+    const migratedColumns = columns.filter(c => !c.isBacklog);
 
     return {
       schemaVersion: meta.schemaVersion ?? 1,
-      columns,
+      columns: migratedColumns,
       epics: meta.epics ?? [],
       tags: meta.tags ?? [],
       tickets,

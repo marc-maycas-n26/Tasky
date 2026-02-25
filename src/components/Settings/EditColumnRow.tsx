@@ -1,4 +1,5 @@
 import { getColumnColor } from '../../utils/columnColor';
+import { ColorPickerPopover } from '../Common/ColorPickerPopover';
 import type { Column } from '../../types';
 
 interface Props {
@@ -43,11 +44,9 @@ export function EditColumnRow({
       </td>
       <td>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <input
-            type="color"
+          <ColorPickerPopover
             value={editColor || getColumnColor(col)}
-            onChange={e => onEditColorChange(e.target.value)}
-            style={{ width: 32, height: 28, border: 'none', borderRadius: 4, padding: 2, cursor: 'pointer' }}
+            onChange={onEditColorChange}
           />
           {editColor && (
             <button

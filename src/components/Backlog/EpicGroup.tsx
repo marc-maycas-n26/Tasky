@@ -7,13 +7,13 @@ interface Props {
   epic: Epic | null;
   tickets: Ticket[];
   search: string;
+  inBacklog?: boolean;
 }
 
-export function EpicGroup({ epic, tickets, search }: Props) {
+export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
   const columns = useStore(s => s.columns);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
-  const backlogCol = columns.find(c => c.isBacklog);
   const [collapsed, setCollapsed] = useState(false);
 
   const filtered = search
@@ -74,19 +74,21 @@ export function EpicGroup({ epic, tickets, search }: Props) {
           </span>
         )}
 
-        <button
-          className="bl-epic-group-add"
-          title="Add issue to this group"
-          onClick={e => {
-            e.stopPropagation();
-            openCreateTicket({ epicId: epic?.id, columnId: backlogCol?.id });
-          }}
-        >
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          Add issue
-        </button>
+        {inBacklog && (
+          <button
+            className="bl-epic-group-add"
+            title="Add issue to this group"
+            onClick={e => {
+              e.stopPropagation();
+              openCreateTicket({ epicId: epic?.id, inBacklog: true });
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            Add issue
+          </button>
+        )}
       </div>
 
       {!collapsed && (

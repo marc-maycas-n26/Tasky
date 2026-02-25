@@ -3,7 +3,6 @@ import type { AppState } from '../types';
 
 const now = new Date().toISOString();
 
-const col1 = uuidv4();
 const col2 = uuidv4();
 const col3 = uuidv4();
 const col4 = uuidv4();
@@ -28,10 +27,9 @@ export const SEED_DATA: AppState = {
     projectKey: 'TM',
   },
   columns: [
-    { id: col1, name: 'Backlog', order: 0, isBacklog: true, isTodo: false, createdAt: now, updatedAt: now },
-    { id: col2, name: 'To Do', order: 1, isBacklog: false, isTodo: true, createdAt: now, updatedAt: now },
-    { id: col3, name: 'In Progress', order: 2, isBacklog: false, isTodo: false, createdAt: now, updatedAt: now },
-    { id: col4, name: 'Done', order: 3, isBacklog: false, isTodo: false, createdAt: now, updatedAt: now },
+    { id: col2, name: 'To Do', order: 0, isBacklog: false, isTodo: true, createdAt: now, updatedAt: now },
+    { id: col3, name: 'In Progress', order: 1, isBacklog: false, isTodo: false, createdAt: now, updatedAt: now },
+    { id: col4, name: 'Done', order: 2, isBacklog: false, isTodo: false, createdAt: now, updatedAt: now },
   ],
   epics: [
     {
@@ -76,6 +74,7 @@ export const SEED_DATA: AppState = {
       title: 'Set up project repository',
       description: 'Initialize git repo, add README and .gitignore.',
       columnId: col4,
+      inBacklog: false,
       epicId: epic1,
       tagIds: [tag1],
       order: 0,
@@ -89,6 +88,7 @@ export const SEED_DATA: AppState = {
       title: 'Configure CI pipeline',
       description: 'Add GitHub Actions workflow for lint + test.',
       columnId: col3,
+      inBacklog: false,
       epicId: epic1,
       tagIds: [],
       order: 0,
@@ -102,6 +102,7 @@ export const SEED_DATA: AppState = {
       title: 'Design system tokens',
       description: 'Define color, spacing, and typography design tokens.',
       columnId: col2,
+      inBacklog: false,
       epicId: epic1,
       tagIds: [tag1],
       order: 0,
@@ -114,7 +115,8 @@ export const SEED_DATA: AppState = {
       key: 'TM-4',
       title: 'Explore authentication options',
       description: 'Compare OAuth providers for optional login feature.',
-      columnId: col1,
+      columnId: '',
+      inBacklog: true,
       tagIds: [],
       order: 0,
       priority: 'low',

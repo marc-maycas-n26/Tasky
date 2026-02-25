@@ -57,6 +57,7 @@ export interface Ticket {
   title: string;
   description: string;
   columnId: string;
+  inBacklog: boolean; // true = lives in backlog; false = on the board
   epicId?: string;
   tagIds: string[];
   parentId?: string;

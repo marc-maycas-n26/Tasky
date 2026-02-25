@@ -9,9 +9,10 @@ const STATIC_NAV_ITEMS = [
     label: 'Board',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <rect x="1.5" y="1.5" width="6" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-        <rect x="10.5" y="1.5" width="6" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
-        <rect x="10.5" y="13" width="6" height="3.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="2" y="2" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="10" y="2" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="2" y="10" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="10" y="10" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
       </svg>
     ),
   },
@@ -60,13 +61,19 @@ const STATIC_NAV_ITEMS = [
   },
 ];
 
-export function Nav() {
+interface Props {
+  pinned: boolean;
+  onToggle: () => void;
+}
+
+export function Nav({ pinned, onToggle }: Props) {
   const isSaving = useStore(s => s.isSaving);
   const trashedTickets = useStore(s => s.trashedTickets);
   const trashCount = trashedTickets.filter(tr => !tr.ticket.parentId).length;
 
   return (
-    <nav className="sidebar">
+    <nav className={`sidebar${pinned ? ' sidebar--pinned' : ' sidebar--collapsed'}`}>
+      {/* Brand */}
       <div className="sidebar-brand">
         <span className="sidebar-brand-icon">
           <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -79,6 +86,7 @@ export function Nav() {
         <span className="sidebar-brand-name">Tasky</span>
       </div>
 
+      {/* Nav links — labels always in DOM, hidden via CSS in collapsed state */}
       <div className="sidebar-links">
         {STATIC_NAV_ITEMS.map(item => (
           <NavLink
@@ -109,8 +117,27 @@ export function Nav() {
         </NavLink>
       </div>
 
+      {/* Footer */}
       <div className="sidebar-footer">
-        {isSaving && <span className="sidebar-saving">Saving…</span>}
+        <button
+          className="sidebar-toggle-btn"
+          onClick={onToggle}
+          title={pinned ? 'Collapse sidebar' : 'Pin sidebar open'}
+          aria-label={pinned ? 'Collapse sidebar' : 'Pin sidebar open'}
+        >
+          {pinned ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+        <span className="sidebar-saving-slot">
+          {isSaving && <span className="sidebar-saving">Saving…</span>}
+        </span>
       </div>
     </nav>
   );

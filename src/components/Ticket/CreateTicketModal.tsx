@@ -18,14 +18,16 @@ export function CreateTicketModal() {
   const tags = useStore(s => s.tags);
   const templates = useStore(s => s.templates);
 
-  const sortedCols = [...columns].sort((a, b) => a.order - b.order);
-  const backlogCol = columns.find(c => c.isBacklog) ?? sortedCols[0];
-  const todoCol = columns.find(c => c.isTodo) ?? sortedCols.find(c => !c.isBacklog) ?? sortedCols[0];
+  const sortedCols = [...columns].sort((a, b) => a.order - b.order).filter(c => !c.isBacklog);
+  const todoCol = columns.find(c => c.isTodo) ?? sortedCols[0];
+
+  const isBacklogTicket = createTicketDefaults.inBacklog ?? false;
+  const defaultColumnId = isBacklogTicket ? '' : (createTicketDefaults.columnId ?? todoCol?.id ?? '');
 
   const [issueType, setIssueType] = useState<IssueType>('task');
   const [title, setTitle] = useState(createTicketDefaults.title ?? '');
   const [description, setDescription] = useState(createTicketDefaults.description ?? '');
-  const [columnId, setColumnId] = useState(createTicketDefaults.columnId ?? backlogCol?.id ?? '');
+  const [columnId, setColumnId] = useState(defaultColumnId);
   const [epicId, setEpicId] = useState(createTicketDefaults.epicId ?? '');
   const [priority, setPriority] = useState<Priority | ''>(createTicketDefaults.priority ?? '');
   const [tagIds, setTagIds] = useState<string[]>(createTicketDefaults.tagIds ?? []);
@@ -47,7 +49,7 @@ export function CreateTicketModal() {
     setIssueType(type);
     setError('');
     if (type === 'task') {
-      setColumnId(createTicketDefaults.columnId ?? backlogCol?.id ?? '');
+      setColumnId(defaultColumnId);
     }
   }
 
@@ -78,12 +80,13 @@ export function CreateTicketModal() {
       return;
     }
 
-    if (!columnId) { setError('Column is required'); return; }
+    if (!isBacklogTicket && !columnId) { setError('Column is required'); return; }
 
     const ticket = addTicket({
       title: title.trim(),
       description,
-      columnId,
+      columnId: isBacklogTicket ? '' : columnId,
+      inBacklog: isBacklogTicket,
       epicId: epicId || undefined,
       tagIds,
       priority: priority || undefined,
@@ -95,6 +98,7 @@ export function CreateTicketModal() {
         addTicket({
           title: st.title,
           columnId: todoCol?.id ?? columnId,
+          inBacklog: false,
           epicId: epicId || undefined,
           parentId: ticket.id,
           tagIds: st.tags ?? [],
@@ -188,6 +192,7 @@ export function CreateTicketModal() {
               onDescriptionChange={setDescription}
               selectedTemplate={selectedTemplate}
               onTemplateChange={applyTemplate}
+              hideColumnPicker={isBacklogTicket}
             />
           )}
         </div>

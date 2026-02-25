@@ -172,6 +172,39 @@
   opacity: 1;
 }
 
+/* ── Drag handle ─────────────────────────────────────────────────────────────── */
+.backlog-row-drag-handle {
+  cursor: grab;
+  color: var(--color-text-subtle);
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.1s;
+  user-select: none;
+  padding: 0 2px;
+}
+.backlog-row:hover .backlog-row-drag-handle {
+  opacity: 1;
+}
+.backlog-row-drag-handle:active {
+  cursor: grabbing;
+}
+
+.backlog-row--dragging {
+  opacity: 0.4;
+}
+
+/* ── Drop-over states ────────────────────────────────────────────────────────── */
+.backlog-list--over {
+  background: var(--color-primary-subtle);
+}
+
+.backlog-empty--over {
+  color: var(--color-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+
 /* ── Move to board ───────────────────────────────────────────────────────────── */
 .backlog-row-move-wrap {
   position: relative;

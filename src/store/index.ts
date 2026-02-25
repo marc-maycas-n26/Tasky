@@ -59,6 +59,8 @@ interface StoreState extends AppState {
   purgeTicket(id: string): void;
   purgeExpiredTrash(): void;
   moveTicket(ticketId: string, targetColumnId: string, targetEpicId: string | undefined, newOrder: number): void;
+  moveToBoard(ticketId: string, targetColumnId: string): void;
+  moveToBacklog(ticketId: string): void;
   reorderTickets(columnId: string, epicId: string | undefined, orderedIds: string[]): void;
 
   // comments
@@ -320,17 +322,21 @@ export const useStore = create<StoreState>((set, get) => ({
   addTicket(fields) {
     const s = get();
     const num = s.nextTicketNumber;
+    const inBacklog = fields.inBacklog ?? false;
+    // For backlog tickets, columnId is not meaningful yet — use empty string as placeholder
+    const columnId = inBacklog ? (fields.columnId || '') : fields.columnId;
     const ticket: Ticket = {
       id: uuidv4(),
       key: `${s.settings.projectKey}-${num}`,
       title: fields.title,
       description: fields.description ?? '',
-      columnId: fields.columnId,
+      columnId,
+      inBacklog,
       epicId: fields.epicId,
       tagIds: fields.tagIds ?? [],
       parentId: fields.parentId,
       order: fields.order ?? s.tickets.filter(
-        t => t.columnId === fields.columnId && t.epicId === fields.epicId && !t.parentId
+        t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId && !t.parentId
       ).length,
       priority: fields.priority,
       estimate: fields.estimate,
@@ -413,6 +419,36 @@ export const useStore = create<StoreState>((set, get) => ({
       tickets: s.tickets.map(t =>
         t.id === ticketId
           ? { ...t, columnId: targetColumnId, epicId: targetEpicId, order: newOrder, updatedAt: now() }
+          : t
+      ),
+    }));
+    get().persist();
+  },
+
+  moveToBoard(ticketId, targetColumnId) {
+    const s = get();
+    const ticket = s.tickets.find(t => t.id === ticketId);
+    if (!ticket) return;
+    const newOrder = s.tickets.filter(
+      t => t.columnId === targetColumnId && (t.epicId ?? null) === (ticket.epicId ?? null) && !t.parentId && !t.inBacklog
+    ).length;
+    set(st => ({
+      tickets: st.tickets.map(t =>
+        t.id === ticketId
+          ? { ...t, columnId: targetColumnId, inBacklog: false, order: newOrder, updatedAt: now() }
+          : t
+      ),
+    }));
+    get().persist();
+  },
+
+  moveToBacklog(ticketId) {
+    const s = get();
+    const newOrder = s.tickets.filter(t => t.inBacklog && !t.parentId).length;
+    set(st => ({
+      tickets: st.tickets.map(t =>
+        t.id === ticketId
+          ? { ...t, columnId: '', inBacklog: true, order: newOrder, updatedAt: now() }
           : t
       ),
     }));

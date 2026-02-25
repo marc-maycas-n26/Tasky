@@ -51,8 +51,7 @@ export function EpicDrawer() {
   }
 
   const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
-  const backlogColIds = columns.filter(c => c.isBacklog).map(c => c.id);
-  const doneCount = epicTickets.filter(t => doneColIds.includes(t.columnId)).length;
+  const doneCount = epicTickets.filter(t => doneColIds.includes(t.columnId) && !t.inBacklog).length;
   const progressPct = epicTickets.length > 0 ? Math.round((doneCount / epicTickets.length) * 100) : 0;
 
   return (
@@ -147,9 +146,8 @@ export function EpicDrawer() {
               ) : (
                 <div className="epic-drawer-tickets">
                   {[...epicTickets].sort((a, b) => a.order - b.order).map(t => {
-                    const colName = getColumnName(t.columnId);
-                    const isBacklog = backlogColIds.includes(t.columnId);
-                    const isDone = doneColIds.includes(t.columnId);
+                    const colName = t.inBacklog ? 'Backlog' : getColumnName(t.columnId);
+                    const isDone = !t.inBacklog && doneColIds.includes(t.columnId);
                     return (
                       <button
                         key={t.id}
@@ -166,7 +164,7 @@ export function EpicDrawer() {
                         <span className={`epic-drawer-ticket-title${isDone ? ' epic-drawer-ticket-title--done' : ''}`}>
                           {t.title}
                         </span>
-                        <span className={`epic-drawer-ticket-col${isBacklog ? ' epic-drawer-ticket-col--backlog' : ''}`}>
+                        <span className={`epic-drawer-ticket-col${t.inBacklog ? ' epic-drawer-ticket-col--backlog' : ''}`}>
                           {colName}
                         </span>
                         <span className="epic-drawer-ticket-chevron">

@@ -103,13 +103,23 @@ export class IndexedDbAdapter implements StorageAdapter {
     // Strip the synthetic Dexie `id` field off TrashedTicket rows
     const trashedTickets: TrashedTicket[] = trashedRaw.map(({ id: _id, ...rest }) => rest as TrashedTicket);
 
+    // Migration: if any ticket is missing inBacklog, derive it from the old backlog column flag
+    const backlogColIds = new Set(columns.filter(c => c.isBacklog).map(c => c.id));
+    const migratedTickets = tickets.map(t =>
+      (t as Ticket & { inBacklog?: boolean }).inBacklog == null
+        ? { ...t, inBacklog: backlogColIds.has(t.columnId) }
+        : t
+    );
+    // After migration, remove the old backlog column (it is now represented by inBacklog)
+    const migratedColumns = columns.filter(c => !c.isBacklog);
+
     return {
       schemaVersion: SCHEMA_VERSION,
-      columns,
+      columns: migratedColumns,
       epics,
       tags,
       templates,
-      tickets,
+      tickets: migratedTickets,
       trashedTickets,
       automationRules,
       comments,
