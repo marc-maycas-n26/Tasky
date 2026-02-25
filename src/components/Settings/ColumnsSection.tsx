@@ -142,7 +142,7 @@ export function ColumnsSection() {
                       </td>
                       <td>
                         <div className="table-actions">
-                          <button className="btn btn-icon btn-secondary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
+                          <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
                             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
                           </button>
                           <button className="btn btn-icon btn-sm btn-icon-danger" title="Delete" onClick={() => deleteColumn(col.id)}>
