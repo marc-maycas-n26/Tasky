@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useStore } from '../../store';
 import { ColorPickerPopover } from '../Common/ColorPickerPopover';
 import './TagsPage.css';
@@ -9,17 +9,32 @@ export function TagsPage() {
   const updateTag = useStore(s => s.updateTag);
   const deleteTag = useStore(s => s.deleteTag);
 
+  const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#0052CC');
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const newInputRef = useRef<HTMLInputElement>(null);
+
+  function openAddRow() {
+    setAdding(true);
+    setNewName('');
+    setNewColor('#0052CC');
+    setTimeout(() => newInputRef.current?.focus(), 0);
+  }
 
   function handleAdd() {
-    if (!newName.trim()) return;
+    if (!newName.trim()) { setAdding(false); return; }
     addTag(newName.trim(), newColor);
     setNewName('');
     setNewColor('#0052CC');
+    setAdding(false);
+  }
+
+  function cancelAdd() {
+    setAdding(false);
+    setNewName('');
   }
 
   function startEdit(id: string) {
@@ -43,27 +58,37 @@ export function TagsPage() {
       </div>
 
       <div className="card">
-        <div className="card-header">Add new tag</div>
-        <div className="card-body">
-          <div className="tags-add-row">
+        <div className="card-header columns-card-header">
+          <span>All tags ({tags.length})</span>
+          {!adding && (
+            <button className="btn btn-primary btn-sm" onClick={openAddRow}>
+              + Add tag
+            </button>
+          )}
+        </div>
+
+        {adding && (
+          <div className="card-body columns-add-row">
             <input
+              ref={newInputRef}
               className="form-input"
               placeholder="Tag name"
               value={newName}
               onChange={e => setNewName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleAdd();
+                if (e.key === 'Escape') cancelAdd();
+              }}
               style={{ flex: 1 }}
             />
             <ColorPickerPopover value={newColor} onChange={setNewColor} />
-            <button className="btn btn-primary" onClick={handleAdd}>Add tag</button>
+            <button className="btn btn-primary btn-sm" onClick={handleAdd}>Add</button>
+            <button className="btn btn-secondary btn-sm" onClick={cancelAdd}>Cancel</button>
           </div>
-        </div>
-      </div>
+        )}
 
-      <div className="card">
-        <div className="card-header">All tags ({tags.length})</div>
         {tags.length === 0 ? (
-          <div className="card-empty">No tags yet. Add one above.</div>
+          <div className="card-empty">No tags yet. Click "+ Add tag" to create one.</div>
         ) : (
           <div className="tmpl-list">
             {tags.map(tag => (
