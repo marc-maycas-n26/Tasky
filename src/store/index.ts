@@ -325,6 +325,9 @@ export const useStore = create<StoreState>((set, get) => ({
     const inBacklog = fields.inBacklog ?? false;
     // For backlog tickets, columnId is not meaningful yet — use empty string as placeholder
     const columnId = inBacklog ? (fields.columnId || '') : fields.columnId;
+    // Enforce max 2 levels: a child ticket cannot itself become a parent
+    const parentTicket = fields.parentId ? s.tickets.find(t => t.id === fields.parentId) : undefined;
+    const parentId = parentTicket?.parentId ? undefined : fields.parentId;
     const ticket: Ticket = {
       id: uuidv4(),
       key: `${s.settings.projectKey}-${num}`,
@@ -334,7 +337,7 @@ export const useStore = create<StoreState>((set, get) => ({
       inBacklog,
       epicId: fields.epicId,
       tagIds: fields.tagIds ?? [],
-      parentId: fields.parentId,
+      parentId,
       order: fields.order ?? s.tickets.filter(
         t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId && !t.parentId
       ).length,
