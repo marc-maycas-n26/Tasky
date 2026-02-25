@@ -3,10 +3,6 @@
    .data-table, .table-actions, .color-dot, .form-input-inline, .page-title,
    .page-subtitle, .page-header, .text-subtle) are defined in index.css */
 
-.settings-page {
-  max-width: 900px;
-}
-
 /* ── Scrollable table wrapper ──────────────────────────────────────────────── */
 .settings-table-wrap {
   max-height: 340px;
