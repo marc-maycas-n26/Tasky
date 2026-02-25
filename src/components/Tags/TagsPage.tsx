@@ -65,63 +65,59 @@ export function TagsPage() {
         {tags.length === 0 ? (
           <div className="card-empty">No tags yet. Add one above.</div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Preview</th>
-                <th>Name</th>
-                <th>Color</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tags.map(tag => (
-                <tr key={tag.id}>
-                  {editId === tag.id ? (
-                    <>
-                      <td>
-                        <span className="chip" style={{ background: editColor + '22', color: editColor, border: `1px solid ${editColor}66` }}>
-                          {editName || 'preview'}
-                        </span>
-                      </td>
-                      <td>
-                        <input
-                          className="form-input form-input-inline"
-                          value={editName}
-                          autoFocus
-                          onChange={e => setEditName(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditId(null); }}
-                        />
-                      </td>
-                      <td><ColorPickerPopover value={editColor} onChange={setEditColor} /></td>
-                      <td>
-                        <div className="table-actions">
-                          <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
-                          <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>
-                        <span className="chip" style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}66` }}>
-                          {tag.name}
-                        </span>
-                      </td>
-                      <td>{tag.name}</td>
-                      <td><span className="color-dot" style={{ background: tag.color }} title={tag.color} /></td>
-                      <td>
-                        <div className="table-actions">
-                          <button className="btn btn-secondary btn-sm" onClick={() => startEdit(tag.id)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => deleteTag(tag.id)}>Delete</button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="tmpl-list">
+            {tags.map(tag => (
+              <div key={tag.id} className="tmpl-item">
+                {editId === tag.id ? (
+                  <>
+                    <div className="tmpl-item-info">
+                      <span
+                        className="chip"
+                        style={{ background: editColor + '22', color: editColor, border: `1px solid ${editColor}66` }}
+                      >
+                        {editName || 'preview'}
+                      </span>
+                      <input
+                        className="form-input form-input-inline"
+                        value={editName}
+                        autoFocus
+                        onChange={e => setEditName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditId(null); }}
+                      />
+                      <ColorPickerPopover value={editColor} onChange={setEditColor} />
+                    </div>
+                    <div className="table-actions">
+                      <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="tmpl-item-info">
+                      <span
+                        className="chip"
+                        style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}66` }}
+                      >
+                        {tag.name}
+                      </span>
+                      <span className="tmpl-item-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span className="color-dot" style={{ background: tag.color }} title={tag.color} />
+                        {tag.color}
+                      </span>
+                    </div>
+                    <div className="table-actions">
+                      <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(tag.id)}>
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
+                      </button>
+                      <button className="btn btn-icon btn-sm btn-icon-danger" title="Delete" onClick={() => deleteTag(tag.id)}>
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M5 3.5l.5 8M9 3.5l-.5 8M3 3.5l.5 8.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5L11 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
