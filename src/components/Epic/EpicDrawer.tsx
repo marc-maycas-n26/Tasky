@@ -131,7 +131,7 @@ export function EpicDrawer() {
                 <div className="epic-drawer-progress-bar">
                   <div
                     className="epic-drawer-progress-fill"
-                    style={{ width: `${progressPct}%`, background: epic.color }}
+                    style={{ width: `${progressPct}%` }}
                   />
                 </div>
               </div>
