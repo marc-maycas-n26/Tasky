@@ -3,8 +3,6 @@ import { useStore } from '../../store';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import './TrashPage.css';
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
 function daysLeft(expiresAt: string): number {
   const ms = new Date(expiresAt).getTime() - Date.now();
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
@@ -20,104 +18,87 @@ export function TrashPage() {
   const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null);
   const [confirmEmptyAll, setConfirmEmptyAll] = useState(false);
 
-  // Auto-purge expired items on mount
   useEffect(() => {
     purgeExpiredTrash();
   }, [purgeExpiredTrash]);
 
-  // Only show top-level trashed tickets (not subtasks — they're restored together with the parent)
   const topLevel = trashedTickets.filter(tr => !tr.ticket.parentId);
 
   function getColumnName(colId: string) {
     return columns.find(c => c.id === colId)?.name ?? 'Unknown';
   }
 
+  const sorted = [...topLevel].sort((a, b) => new Date(b.trashedAt).getTime() - new Date(a.trashedAt).getTime());
+
   return (
-    <div className="trash-page">
-      <div className="trash-page-header">
-        <div className="trash-page-title-row">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" className="trash-page-icon">
-            <path d="M3 5.5h16M8.5 5.5V4a.5.5 0 01.5-.5h4a.5.5 0 01.5.5v1.5M5 5.5l1 13a.5.5 0 00.5.5h9a.5.5 0 00.5-.5l1-13M9 9l.5 6M13 9l-.5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <h1 className="trash-page-title">Trash</h1>
-          <span className="trash-page-count">{topLevel.length} {topLevel.length === 1 ? 'item' : 'items'}</span>
-        </div>
-        <p className="trash-page-subtitle">
-          Items are permanently deleted after 30 days.
-        </p>
-        {topLevel.length > 0 && (
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => setConfirmEmptyAll(true)}
-          >
-            Empty trash
-          </button>
-        )}
+    <div className="page-container">
+      <div className="page-header">
+        <h1 className="page-title">Trash</h1>
+        <p className="page-subtitle">Items are permanently deleted after 30 days.</p>
       </div>
 
-      {topLevel.length === 0 ? (
-        <div className="trash-empty">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true" className="trash-empty-icon">
-            <path d="M8 12h32M18 12V9a1 1 0 011-1h10a1 1 0 011 1v3M11 12l2 28a1 1 0 001 1h20a1 1 0 001-1l2-28M20 20l1 12M28 20l-1 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <p>Trash is empty</p>
+      <div className="card">
+        <div className="card-header columns-card-header">
+          <span>All items ({topLevel.length})</span>
+          {topLevel.length > 0 && (
+            <button className="btn btn-sm btn-icon-danger" onClick={() => setConfirmEmptyAll(true)}>
+              Empty trash
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="trash-list">
-          {[...topLevel]
-            .sort((a, b) => new Date(b.trashedAt).getTime() - new Date(a.trashedAt).getTime())
-            .map(({ ticket, trashedAt, expiresAt }) => {
+
+        {topLevel.length === 0 ? (
+          <div className="card-empty">Trash is empty.</div>
+        ) : (
+          <div className="tmpl-list">
+            {sorted.map(({ ticket, trashedAt, expiresAt }) => {
               const days = daysLeft(expiresAt);
-              const subtaskCount = trashedTickets.filter(
-                tr => tr.ticket.parentId === ticket.id
-              ).length;
+              const subtaskCount = trashedTickets.filter(tr => tr.ticket.parentId === ticket.id).length;
               return (
-                <div key={ticket.id} className="trash-item">
-                  <div className="trash-item-icon">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" fill="none"/>
-                      <path d="M5 5h4M5 7h4M5 9h2" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div className="trash-item-body">
+                <div key={ticket.id} className="tmpl-item">
+                  <div className="tmpl-item-info">
                     <div className="trash-item-top">
                       <span className="trash-item-key">{ticket.key}</span>
-                      <span className="trash-item-title">{ticket.title}</span>
+                      <span className="tmpl-item-name">{ticket.title}</span>
                     </div>
-                    <div className="trash-item-meta">
+                    <div className="tmpl-item-meta trash-item-meta">
                       <span className="trash-item-column">{getColumnName(ticket.columnId)}</span>
                       {subtaskCount > 0 && (
-                        <span className="trash-item-subtasks">+{subtaskCount} subtask{subtaskCount > 1 ? 's' : ''}</span>
+                        <span>+{subtaskCount} subtask{subtaskCount > 1 ? 's' : ''}</span>
                       )}
-                      <span className="trash-item-trashed">
-                        Deleted {new Date(trashedAt).toLocaleDateString()}
-                      </span>
+                      <span>Deleted {new Date(trashedAt).toLocaleDateString()}</span>
                       <span className={`trash-item-expires${days <= 3 ? ' trash-item-expires--urgent' : days <= 7 ? ' trash-item-expires--warning' : ''}`}>
                         {days === 0 ? 'Deletes today' : `${days}d left`}
                       </span>
                     </div>
                   </div>
-                  <div className="trash-item-actions">
+                  <div className="table-actions">
                     <button
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-icon btn-primary btn-sm"
+                      title="Restore"
                       onClick={() => restoreTicket(ticket.id)}
-                      title="Restore ticket"
                     >
-                      Restore
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M3 8a5 5 0 105 -5H5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M3 4v4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                     </button>
                     <button
-                      className="btn btn-ghost btn-sm trash-item-delete-btn"
-                      onClick={() => setConfirmPurgeId(ticket.id)}
+                      className="btn btn-icon btn-sm btn-icon-danger"
                       title="Delete permanently"
+                      onClick={() => setConfirmPurgeId(ticket.id)}
                     >
-                      Delete permanently
+                      <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M5 3.5l.5 8M9 3.5l-.5 8M3 3.5l.5 8.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5L11 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
                     </button>
                   </div>
                 </div>
               );
             })}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {confirmPurgeId && (() => {
         const entry = topLevel.find(tr => tr.ticket.id === confirmPurgeId);
@@ -140,10 +121,7 @@ export function TrashPage() {
           message={`All ${topLevel.length} items will be permanently deleted and cannot be recovered.`}
           confirmLabel="Empty trash"
           dangerous
-          onConfirm={() => {
-            topLevel.forEach(tr => purgeTicket(tr.ticket.id));
-            setConfirmEmptyAll(false);
-          }}
+          onConfirm={() => { topLevel.forEach(tr => purgeTicket(tr.ticket.id)); setConfirmEmptyAll(false); }}
           onCancel={() => setConfirmEmptyAll(false)}
         />
       )}
