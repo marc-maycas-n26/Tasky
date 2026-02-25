@@ -46,7 +46,6 @@ export function SubtasksTable({ parentId }: Props) {
             <tr>
               <th>Work</th>
               <th>Priority</th>
-              <th>Story pts</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -74,11 +73,6 @@ export function SubtasksTable({ parentId }: Props) {
                   ) : (
                     <span className="text-subtle">—</span>
                   )}
-                </td>
-                <td>
-                  <span className="text-subtle" style={{ fontSize: 11 }}>
-                    {st.estimate ?? <span className="subtask-add-pts">Add pts</span>}
-                  </span>
                 </td>
                 <td>
                   <select

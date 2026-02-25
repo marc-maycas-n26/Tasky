@@ -339,7 +339,6 @@ export const useStore = create<StoreState>((set, get) => ({
         t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId && !t.parentId
       ).length,
       priority: fields.priority,
-      estimate: fields.estimate,
       dueDate: fields.dueDate,
       createdAt: now(),
       updatedAt: now(),

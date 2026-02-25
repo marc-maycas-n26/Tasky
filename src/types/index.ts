@@ -10,7 +10,6 @@ export interface Column {
   order: number;
   isBacklog: boolean;
   isTodo: boolean;
-  wipLimit?: number;
   color?: string;
   createdAt: string;
   updatedAt: string;
@@ -45,7 +44,7 @@ export interface SubtaskTemplate {
 export interface Template {
   id: string;
   name: string;
-  defaultFields: Partial<Pick<Ticket, 'title' | 'description' | 'epicId' | 'priority' | 'estimate' | 'dueDate'>> & { tagIds?: string[] };
+  defaultFields: Partial<Pick<Ticket, 'title' | 'description' | 'epicId' | 'priority' | 'dueDate'>> & { tagIds?: string[] };
   defaultSubtasks: SubtaskTemplate[];
   createdAt: string;
   updatedAt: string;
@@ -63,7 +62,6 @@ export interface Ticket {
   parentId?: string;
   order: number; // within (columnId + epicId/null + parentId/null)
   priority?: Priority;
-  estimate?: number; // story points
   dueDate?: string; // ISO date string
   createdAt: string;
   updatedAt: string;

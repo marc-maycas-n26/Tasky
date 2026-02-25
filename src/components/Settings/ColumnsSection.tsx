@@ -15,7 +15,6 @@ export function ColumnsSection() {
   const [newName, setNewName] = useState('');
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editWip, setEditWip] = useState('');
   const [editColor, setEditColor] = useState('');
   const newInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,18 +44,12 @@ export function ColumnsSection() {
     const col = columns.find(c => c.id === id)!;
     setEditId(id);
     setEditName(col.name);
-    setEditWip(col.wipLimit != null ? String(col.wipLimit) : '');
     setEditColor(col.color ?? '');
   }
 
   function saveEdit() {
     if (!editId || !editName.trim()) return;
-    const wipNum = editWip === '' ? undefined : parseInt(editWip, 10);
-    updateColumn(editId, {
-      name: editName.trim(),
-      wipLimit: isNaN(wipNum as number) ? undefined : wipNum,
-      color: editColor || undefined,
-    });
+    updateColumn(editId, { name: editName.trim(), color: editColor || undefined });
     setEditId(null);
   }
 
@@ -97,7 +90,6 @@ export function ColumnsSection() {
                 <th style={{ width: 28 }} />
                 <th>Name</th>
                 <th>Color</th>
-                <th>WIP limit</th>
                 <th>Flags</th>
                 <th>Actions</th>
               </tr>
@@ -118,8 +110,6 @@ export function ColumnsSection() {
                       col={col}
                       editName={editName}
                       onEditNameChange={setEditName}
-                      editWip={editWip}
-                      onEditWipChange={setEditWip}
                       editColor={editColor}
                       onEditColorChange={setEditColor}
                       onSave={saveEdit}
@@ -144,7 +134,6 @@ export function ColumnsSection() {
                           title={col.color ?? 'auto'}
                         />
                       </td>
-                      <td>{col.wipLimit ?? <span className="text-subtle">—</span>}</td>
                       <td>
                         <div className="flags-row">
                           {col.isBacklog && <span className="flag-chip">Backlog</span>}

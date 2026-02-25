@@ -54,8 +54,6 @@ export function TicketDrawer() {
     updateTicket(ticket!.id, { tagIds });
   }
 
-  const epicObj = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
-
   return (
     <>
       <div className="overlay" onClick={closeTicket} />
@@ -156,17 +154,6 @@ export function TicketDrawer() {
                 </select>
               </SidebarRow>
 
-              {epicObj && (
-                <SidebarRow label="Team">
-                  <span
-                    className="sidebar-epic-chip"
-                    style={{ background: epicObj.color + '22', color: epicObj.color, border: `1px solid ${epicObj.color}55` }}
-                  >
-                    {epicObj.title}
-                  </span>
-                </SidebarRow>
-              )}
-
               <SidebarRow label="Labels">
                 <div className="sidebar-tags">
                   {tags.map(tag => (
@@ -211,18 +198,6 @@ export function TicketDrawer() {
                     </option>
                   ))}
                 </select>
-              </SidebarRow>
-
-              <SidebarRow label="Story pts">
-                <input
-                  type="number"
-                  min={0}
-                  className="form-input form-input-sm"
-                  style={{ width: 70 }}
-                  value={ticket.estimate ?? ''}
-                  placeholder="—"
-                  onChange={e => updateTicket(ticket.id, { estimate: e.target.value ? Number(e.target.value) : undefined })}
-                />
               </SidebarRow>
 
               {parentTicket && (

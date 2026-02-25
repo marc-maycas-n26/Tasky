@@ -6,8 +6,6 @@ interface Props {
   col: Column;
   editName: string;
   onEditNameChange: (v: string) => void;
-  editWip: string;
-  onEditWipChange: (v: string) => void;
   editColor: string;
   onEditColorChange: (v: string) => void;
   onSave: () => void;
@@ -19,8 +17,6 @@ export function EditColumnRow({
   col,
   editName,
   onEditNameChange,
-  editWip,
-  onEditWipChange,
   editColor,
   onEditColorChange,
   onSave,
@@ -58,17 +54,6 @@ export function EditColumnRow({
             </button>
           )}
         </div>
-      </td>
-      <td>
-        <input
-          className="form-input form-input-inline"
-          type="number"
-          min={1}
-          placeholder="None"
-          value={editWip}
-          onChange={e => onEditWipChange(e.target.value)}
-          style={{ width: 80 }}
-        />
       </td>
       <td>
         <div className="flags-row">
