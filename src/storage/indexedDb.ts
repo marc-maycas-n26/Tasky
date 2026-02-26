@@ -8,6 +8,7 @@ import type {
   Template,
   Ticket,
   TrashedTicket,
+  ReleasedEpic,
   AutomationRule,
   Comment,
   LinkedItem,
@@ -15,7 +16,7 @@ import type {
 } from '../types';
 import { SEED_DATA } from './seed';
 
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 class AppDatabase extends Dexie {
   columns!: Table<Column>;
@@ -24,6 +25,7 @@ class AppDatabase extends Dexie {
   templates!: Table<Template>;
   tickets!: Table<Ticket>;
   trashedTickets!: Table<TrashedTicket & { id: string }>;
+  releasedEpics!: Table<ReleasedEpic & { id: string }>;
   automationRules!: Table<AutomationRule>;
   comments!: Table<Comment>;
   linkedItems!: Table<LinkedItem>;
@@ -63,6 +65,19 @@ class AppDatabase extends Dexie {
       trashedTickets: 'id, trashedAt, expiresAt',
       meta: 'key',
     });
+    this.version(4).stores({
+      columns: 'id, order',
+      epics: 'id, order',
+      tags: 'id',
+      templates: 'id',
+      tickets: 'id, columnId, epicId, parentId, order',
+      automationRules: 'id',
+      comments: 'id, ticketId',
+      linkedItems: 'id, ticketId',
+      trashedTickets: 'id, trashedAt, expiresAt',
+      releasedEpics: 'id, releasedAt',
+      meta: 'key',
+    });
   }
 }
 
@@ -78,7 +93,7 @@ export class IndexedDbAdapter implements StorageAdapter {
   supportsSync = false;
 
   async loadAll(): Promise<AppState> {
-    const [columns, epics, tags, templates, tickets, automationRules, comments, linkedItems, trashedRaw] =
+    const [columns, epics, tags, templates, tickets, automationRules, comments, linkedItems, trashedRaw, releasedRaw] =
       await Promise.all([
         db.columns.toArray(),
         db.epics.toArray(),
@@ -89,6 +104,7 @@ export class IndexedDbAdapter implements StorageAdapter {
         db.comments.toArray(),
         db.linkedItems.toArray(),
         db.trashedTickets.toArray(),
+        db.releasedEpics.toArray(),
       ]);
 
     const metaEntries = await db.meta.toArray();
@@ -102,6 +118,8 @@ export class IndexedDbAdapter implements StorageAdapter {
 
     // Strip the synthetic Dexie `id` field off TrashedTicket rows
     const trashedTickets: TrashedTicket[] = trashedRaw.map(({ id: _id, ...rest }) => rest as TrashedTicket);
+    // Strip the synthetic Dexie `id` field off ReleasedEpic rows
+    const releasedEpics: ReleasedEpic[] = releasedRaw.map(({ id: _id, ...rest }) => rest as ReleasedEpic);
 
     // Migration: if any ticket is missing inBacklog, derive it from the old backlog column flag
     const backlogColIds = new Set(columns.filter(c => c.isBacklog).map(c => c.id));
@@ -121,6 +139,7 @@ export class IndexedDbAdapter implements StorageAdapter {
       templates,
       tickets: migratedTickets,
       trashedTickets,
+      releasedEpics,
       automationRules,
       comments,
       linkedItems,
@@ -132,9 +151,11 @@ export class IndexedDbAdapter implements StorageAdapter {
   async saveAll(state: AppState): Promise<void> {
     // TrashedTicket has no top-level id; use ticket.id as the Dexie primary key
     const trashedRows = (state.trashedTickets ?? []).map(tr => ({ ...tr, id: tr.ticket.id }));
+    // ReleasedEpic has no top-level id; use epic.id as the Dexie primary key
+    const releasedRows = (state.releasedEpics ?? []).map(r => ({ ...r, id: r.epic.id }));
     await db.transaction(
       'rw',
-      [db.columns, db.epics, db.tags, db.templates, db.tickets, db.automationRules, db.comments, db.linkedItems, db.trashedTickets, db.meta],
+      [db.columns, db.epics, db.tags, db.templates, db.tickets, db.automationRules, db.comments, db.linkedItems, db.trashedTickets, db.releasedEpics, db.meta],
       async () => {
         await Promise.all([
           db.columns.clear().then(() => db.columns.bulkPut(state.columns)),
@@ -146,6 +167,7 @@ export class IndexedDbAdapter implements StorageAdapter {
           db.comments.clear().then(() => db.comments.bulkPut(state.comments ?? [])),
           db.linkedItems.clear().then(() => db.linkedItems.bulkPut(state.linkedItems ?? [])),
           db.trashedTickets.clear().then(() => db.trashedTickets.bulkPut(trashedRows)),
+          db.releasedEpics.clear().then(() => db.releasedEpics.bulkPut(releasedRows)),
           db.meta.put({ key: 'nextTicketNumber', value: state.nextTicketNumber }),
           db.meta.put({ key: 'settings', value: state.settings }),
           db.meta.put({ key: 'schemaVersion', value: state.schemaVersion }),

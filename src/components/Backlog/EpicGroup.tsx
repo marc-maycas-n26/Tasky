@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
 import { BacklogRow } from './BacklogRow';
+import { ConfirmDialog } from '../Common/ConfirmDialog';
 import type { Epic, Ticket } from '../../types';
 
 interface Props {
@@ -14,7 +15,9 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
   const columns = useStore(s => s.columns);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
+  const releaseEpic = useStore(s => s.releaseEpic);
   const [collapsed, setCollapsed] = useState(false);
+  const [confirmRelease, setConfirmRelease] = useState(false);
 
   const filtered = search
     ? tickets.filter(t => {
@@ -28,8 +31,10 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
   const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
   const doneCount = tickets.filter(t => doneColIds.includes(t.columnId)).length;
   const pct = tickets.length > 0 ? Math.round((doneCount / tickets.length) * 100) : 0;
+  const allDone = epic !== null && tickets.length > 0 && doneCount === tickets.length;
 
   return (
+    <>
     <div className="bl-epic-group">
       <div
         className="bl-epic-group-header"
@@ -74,6 +79,20 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
           </span>
         )}
 
+        {allDone && (
+          <button
+            className="bl-epic-group-release"
+            title="Release this epic"
+            onClick={e => { e.stopPropagation(); setConfirmRelease(true); }}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M6 1.5C3.5 1.5 1.5 3.5 1.5 6S3.5 10.5 6 10.5 10.5 8.5 10.5 6 8.5 1.5 6 1.5z" stroke="currentColor" strokeWidth="1.3"/>
+              <path d="M4 6l1.5 1.5L8 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Release
+          </button>
+        )}
+
         {inBacklog && (
           <button
             className="bl-epic-group-add"
@@ -101,5 +120,16 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
         )
       )}
     </div>
+
+    {confirmRelease && epic && (
+      <ConfirmDialog
+        title="Release epic?"
+        message={`"${epic.title}" and its ${tickets.length} ticket${tickets.length === 1 ? '' : 's'} will be moved to Releases. This cannot be undone.`}
+        confirmLabel="Release"
+        onConfirm={() => { releaseEpic(epic.id); setConfirmRelease(false); }}
+        onCancel={() => setConfirmRelease(false)}
+      />
+    )}
+    </>
   );
 }

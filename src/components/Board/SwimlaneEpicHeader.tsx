@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../store';
+import { ConfirmDialog } from '../Common/ConfirmDialog';
 import type { Epic, EpicStatus, Ticket } from '../../types';
 
 type Columns = ReturnType<typeof useStore.getState>['columns'];
@@ -38,8 +39,10 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
   const updateEpic = useStore(s => s.updateEpic);
+  const releaseEpic = useStore(s => s.releaseEpic);
 
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [confirmRelease, setConfirmRelease] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,11 +61,13 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
   const computedStatus = getEpicStatus(tickets, columns);
   const status = epic?.status ?? computedStatus;
   const statusLabel = EPIC_STATUS_LABELS[status];
+  const allDone = epic !== null && tickets.length > 0 && computedStatus === 'done';
 
   const groupTagIds = [...new Set(tickets.flatMap(t => t.tagIds))];
   const groupTags = allTags.filter(t => groupTagIds.includes(t.id));
 
   return (
+    <>
     <div
       className="swimlane-epic-header"
       onClick={() => {
@@ -168,6 +173,20 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
         </div>
       )}
 
+      {allDone && (
+        <button
+          className="swimlane-release-btn"
+          title="Release this epic"
+          onClick={e => { e.stopPropagation(); setConfirmRelease(true); }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M6 1.5C3.5 1.5 1.5 3.5 1.5 6S3.5 10.5 6 10.5 10.5 8.5 10.5 6 8.5 1.5 6 1.5z" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M4 6l1.5 1.5L8 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Release
+        </button>
+      )}
+
       <button
         className="swimlane-add-btn"
         title="Create issue in this epic"
@@ -182,5 +201,16 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
         Create
       </button>
     </div>
+
+    {confirmRelease && epic && (
+      <ConfirmDialog
+        title="Release epic?"
+        message={`"${epic.title}" and its ${tickets.length} ticket${tickets.length === 1 ? '' : 's'} will be moved to Releases. This cannot be undone.`}
+        confirmLabel="Release"
+        onConfirm={() => { releaseEpic(epic.id); setConfirmRelease(false); }}
+        onCancel={() => setConfirmRelease(false)}
+      />
+    )}
+    </>
   );
 }

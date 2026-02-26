@@ -8,6 +8,7 @@ import { TagsPage } from './components/Tags/TagsPage';
 import { TemplatesPage } from './components/Templates/TemplatesPage';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { TrashPage } from './components/Trash/TrashPage';
+import { ReleasesPage } from './components/Releases/ReleasesPage';
 
 function AppShell() {
   const init = useStore(s => s.init);
@@ -71,6 +72,7 @@ function AppShell() {
             <Route path="/templates" element={<TemplatesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/trash" element={<TrashPage />} />
+            <Route path="/releases" element={<ReleasesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

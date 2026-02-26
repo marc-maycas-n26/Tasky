@@ -114,6 +114,17 @@ export interface TrashedTicket {
   expiresAt: string;
 }
 
+// ─── Releases ─────────────────────────────────────────────────────────────────
+
+export interface ReleasedEpic {
+  /** The epic at the time of release (snapshot) */
+  epic: Epic;
+  /** All tickets belonging to the epic at the time of release (snapshot) */
+  tickets: Ticket[];
+  /** ISO timestamp when the release was performed */
+  releasedAt: string;
+}
+
 // ─── App state snapshot (used for export/import and cloud sync) ───────────────
 
 export interface AppState {
@@ -123,6 +134,7 @@ export interface AppState {
   tags: Tag[];
   tickets: Ticket[];
   trashedTickets: TrashedTicket[];
+  releasedEpics: ReleasedEpic[];
   templates: Template[];
   automationRules: AutomationRule[];
   comments: Comment[];

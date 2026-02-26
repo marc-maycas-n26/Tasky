@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type {
-  AppState, AppSettings, Column, Epic, Tag, Template, Ticket, TrashedTicket, StorageAdapter,
+  AppState, AppSettings, Column, Epic, Tag, Template, Ticket, TrashedTicket, ReleasedEpic, StorageAdapter,
   Comment, LinkedItem, LinkedItemRelation,
 } from '../types';
 import { IndexedDbAdapter } from '../storage/indexedDb';
@@ -39,6 +39,7 @@ interface StoreState extends AppState {
   deleteEpic(id: string): void;
   toggleEpicCollapsed(id: string): void;
   reorderEpics(ids: string[]): void;
+  releaseEpic(id: string): void;
 
   // tags
   addTag(name: string, color: string): void;
@@ -106,6 +107,7 @@ export const useStore = create<StoreState>((set, get) => ({
   tags: [],
   tickets: [],
   trashedTickets: [],
+  releasedEpics: [],
   templates: [],
   automationRules: [],
   comments: [],
@@ -129,7 +131,8 @@ export const useStore = create<StoreState>((set, get) => ({
       }
       const state = await adapter.loadAll();
       const trashedTickets = state.trashedTickets ?? [];
-      set({ ...state, trashedTickets, isLoading: false });
+      const releasedEpics = state.releasedEpics ?? [];
+      set({ ...state, trashedTickets, releasedEpics, isLoading: false });
       get().purgeExpiredTrash();
     } catch (e) {
       set({ isLoading: false, lastError: String(e) });
@@ -147,6 +150,7 @@ export const useStore = create<StoreState>((set, get) => ({
         tags: s.tags,
         tickets: s.tickets,
         trashedTickets: s.trashedTickets,
+        releasedEpics: s.releasedEpics,
         templates: s.templates,
         automationRules: s.automationRules,
         comments: s.comments,
@@ -175,6 +179,7 @@ export const useStore = create<StoreState>((set, get) => ({
       tags: s.tags,
       tickets: s.tickets,
       trashedTickets: s.trashedTickets,
+      releasedEpics: s.releasedEpics,
       templates: s.templates,
       automationRules: s.automationRules,
       comments: s.comments,
@@ -270,6 +275,26 @@ export const useStore = create<StoreState>((set, get) => ({
         const e = s.epics.find(x => x.id === id)!;
         return { ...e, order: i, updatedAt: now() };
       }),
+    }));
+    get().persist();
+  },
+
+  releaseEpic(id) {
+    const s = get();
+    const epic = s.epics.find(e => e.id === id);
+    if (!epic) return;
+    const epicTickets = s.tickets.filter(t => t.epicId === id && !t.parentId);
+    const released: ReleasedEpic = {
+      epic: { ...epic },
+      tickets: epicTickets.map(t => ({ ...t })),
+      releasedAt: now(),
+    };
+    set(st => ({
+      releasedEpics: [...st.releasedEpics, released],
+      // Remove the epic from the active list
+      epics: st.epics.filter(e => e.id !== id),
+      // Detach all tickets that belonged to the epic (keep tickets but unlink from epic)
+      tickets: st.tickets.filter(t => t.epicId !== id),
     }));
     get().persist();
   },

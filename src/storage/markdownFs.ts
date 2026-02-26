@@ -7,14 +7,22 @@
  * Folder structure:
  *   <chosen folder>/
  *     _tasky_meta.json          ← metadata (columns, epics, tags, settings, …)
- *     Backlog/
- *       TM-4 · Explore auth.md
- *     To Do/
- *       TM-3 · Design tokens.md
- *     In Progress/
- *       TM-2 · Configure CI.md
- *     Done/
- *       TM-1 · Set up repo.md
+ *     _archive/                 ← managed by Tasky — do not rename or move
+ *       Backlog/
+ *         TM-4 · Explore auth.md
+ *       Released/
+ *         20260225/             ← YYYYMMDD of releasedAt, one folder per release
+ *           TM-1 · Set up repo.md
+ *           TM-2 · Configure CI.md
+ *       Deleted/
+ *         TM-5 · Old ticket.md
+ *     userStatus/               ← one subfolder per user-defined column
+ *       To Do/
+ *         TM-3 · Design tokens.md
+ *       In Progress/
+ *         TM-2 · Configure CI.md
+ *       Done/
+ *         TM-1 · Set up repo.md
  *
  * The FileSystemDirectoryHandle is persisted in IndexedDB so it survives
  * page reloads. On reload the browser re-grants permission silently if the
@@ -29,6 +37,22 @@ import Dexie, { type Table } from 'dexie';
 
 const META_FILE = '_tasky_meta.json';
 const HANDLE_DB_KEY = 'markdownFolderHandle';
+
+// ── Folder constants (managed by Tasky — not renameable) ─────────────────────
+const ARCHIVE_FOLDER      = '_archive';
+const BACKLOG_FOLDER      = 'Backlog';
+const RELEASED_FOLDER     = 'Released';
+const DELETED_FOLDER      = 'Deleted';
+const USER_STATUS_FOLDER  = 'userStatus';
+
+/** Convert an ISO timestamp to a YYYYMMDD folder name (local time) */
+function toDateFolder(isoDate: string): string {
+  const d = new Date(isoDate);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
+}
 
 // ── Persist the directory handle in its own tiny IndexedDB ───────────────────
 
@@ -229,6 +253,38 @@ export class MarkdownFsAdapter implements StorageAdapter {
     }
   }
 
+  /** Get (and create if needed) userStatus/<columnFolderName> */
+  private async getColumnFolder(columnFolderName: string, create = true): Promise<FileSystemDirectoryHandle> {
+    const userStatus = await this.dirHandle.getDirectoryHandle(USER_STATUS_FOLDER, { create });
+    return userStatus.getDirectoryHandle(columnFolderName, { create });
+  }
+
+  private async columnFolderExists(columnFolderName: string): Promise<boolean> {
+    try {
+      const userStatus = await this.dirHandle.getDirectoryHandle(USER_STATUS_FOLDER, { create: false });
+      await userStatus.getDirectoryHandle(columnFolderName, { create: false });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Get (and create if needed) _archive, then a named subfolder inside it */
+  private async getArchiveSubfolder(name: string): Promise<FileSystemDirectoryHandle> {
+    const archive = await this.dirHandle.getDirectoryHandle(ARCHIVE_FOLDER, { create: true });
+    return archive.getDirectoryHandle(name, { create: true });
+  }
+
+  /**
+   * Get _archive/Released/<YYYYMMDD> folder for a given ISO timestamp.
+   * Creates all intermediate directories.
+   */
+  private async getReleasedDateFolder(isoDate: string): Promise<FileSystemDirectoryHandle> {
+    const archive  = await this.dirHandle.getDirectoryHandle(ARCHIVE_FOLDER, { create: true });
+    const released = await archive.getDirectoryHandle(RELEASED_FOLDER, { create: true });
+    return released.getDirectoryHandle(toDateFolder(isoDate), { create: true });
+  }
+
   private async readTextFile(
     name: string,
     folder?: FileSystemDirectoryHandle,
@@ -300,16 +356,36 @@ export class MarkdownFsAdapter implements StorageAdapter {
     for (const t of meta._tickets ?? []) {
       const raw = t as Ticket & { inBacklog?: boolean };
       const inBacklog = raw.inBacklog ?? backlogColIds.has(raw.columnId);
-      // For backlog tickets, folder may not exist (no column); skip folder lookup
       let description = '';
-      if (!inBacklog) {
+      if (inBacklog) {
+        // Read description from _archive/Backlog/ (fall back to root for legacy files)
+        try {
+          const backlogFolder = await this.getArchiveSubfolder(BACKLOG_FOLDER);
+          const md = await this.readTextFile(toFilename(raw), backlogFolder);
+          if (md) {
+            description = markdownToHtml(md);
+          } else {
+            // Legacy: file may still be in root
+            const legacyMd = await this.readTextFile(toFilename(raw));
+            description = legacyMd ? markdownToHtml(legacyMd) : '';
+          }
+        } catch { /* folder may not exist yet */ }
+      } else {
         const folderName = colFolderName.get(raw.columnId);
         if (folderName) {
           try {
-            const subfolder = await this.getSubfolder(folderName, false);
+            // Try userStatus/<col>/ first, fall back to legacy root-level folder
+            const subfolder = await this.getColumnFolder(folderName, false);
             const md = await this.readTextFile(toFilename(raw), subfolder);
-            description = md ? markdownToHtml(md) : '';
-          } catch { /* subfolder may not exist yet */ }
+            if (md) {
+              description = markdownToHtml(md);
+            } else {
+              // Legacy: file may still be in a root-level column folder
+              const legacyFolder = await this.getSubfolder(folderName, false);
+              const legacyMd = await this.readTextFile(toFilename(raw), legacyFolder);
+              description = legacyMd ? markdownToHtml(legacyMd) : '';
+            }
+          } catch { /* folder may not exist yet */ }
         }
       }
       tickets.push({ ...raw, inBacklog, description });
@@ -320,38 +396,70 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const { v4: uuidv4 } = await import('uuid');
 
     for (const col of columns) {
-      if (col.isBacklog) continue; // no folder for backlog
+      if (col.isBacklog) continue;
       const folderName = toFolderName(col);
-      if (!(await this.subfolderExists(folderName))) continue;
-      const subfolder = await this.getSubfolder(folderName, false);
-      const mdFiles = await this.listMdInFolder(subfolder);
 
-      for (const filename of mdFiles) {
-        const key = parseKeyFromFilename(filename);
-        if (!key || trackedKeys.has(key)) continue;
+      // Check userStatus/<col>/ first, then root-level legacy folder
+      const folders: Array<FileSystemDirectoryHandle> = [];
+      if (await this.columnFolderExists(folderName)) {
+        folders.push(await this.getColumnFolder(folderName, false));
+      }
+      // Legacy: also scan root-level folder if it still exists
+      if (await this.subfolderExists(folderName)) {
+        folders.push(await this.getSubfolder(folderName, false));
+      }
 
-        const mdText = await this.readTextFile(filename, subfolder) ?? '';
-        const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
-        const title = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
-        const now = new Date().toISOString();
+      for (const subfolder of folders) {
+        const mdFiles = await this.listMdInFolder(subfolder);
+        for (const filename of mdFiles) {
+          const key = parseKeyFromFilename(filename);
+          if (!key || trackedKeys.has(key)) continue;
 
-        tickets.push({
-          id: uuidv4(),
-          key,
-          title,
-          description: markdownToHtml(mdText),
-          columnId: col.id,
-          inBacklog: false,
-          tagIds: [],
-          order: tickets.length,
-          createdAt: now,
-          updatedAt: now,
-        });
-        trackedKeys.add(key);
+          const mdText = await this.readTextFile(filename, subfolder) ?? '';
+          const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
+          const title = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
+          const now = new Date().toISOString();
+
+          tickets.push({
+            id: uuidv4(),
+            key,
+            title,
+            description: markdownToHtml(mdText),
+            columnId: col.id,
+            inBacklog: false,
+            tagIds: [],
+            order: tickets.length,
+            createdAt: now,
+            updatedAt: now,
+          });
+          trackedKeys.add(key);
+        }
       }
     }
 
-    // Also scan root for any legacy flat .md files — treat as backlog items
+    // Auto-import from _archive/Backlog/ — treat as backlog items
+    try {
+      const backlogFolder = await this.getArchiveSubfolder(BACKLOG_FOLDER);
+      const mdFiles = await this.listMdInFolder(backlogFolder);
+      for (const filename of mdFiles) {
+        const key = parseKeyFromFilename(filename);
+        if (!key || trackedKeys.has(key)) continue;
+        const mdText = await this.readTextFile(filename, backlogFolder) ?? '';
+        const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
+        const title = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
+        const now = new Date().toISOString();
+        tickets.push({
+          id: uuidv4(), key, title,
+          description: markdownToHtml(mdText),
+          columnId: '', inBacklog: true,
+          tagIds: [], order: tickets.length,
+          createdAt: now, updatedAt: now,
+        });
+        trackedKeys.add(key);
+      }
+    } catch { /* _archive/Backlog may not exist yet */ }
+
+    // Also scan root for legacy flat .md files — treat as backlog items
     for await (const [name, handle] of this.dirHandle.entries()) {
       if (handle.kind !== 'file' || !name.endsWith('.md')) continue;
       const key = parseKeyFromFilename(name);
@@ -387,6 +495,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
       tags: meta.tags ?? [],
       tickets,
       trashedTickets: meta.trashedTickets ?? [],
+      releasedEpics: meta.releasedEpics ?? [],
       templates: meta.templates ?? [],
       automationRules: meta.automationRules ?? [],
       comments: meta.comments ?? [],
@@ -399,39 +508,88 @@ export class MarkdownFsAdapter implements StorageAdapter {
   async saveAll(state: AppState): Promise<void> {
     const columns = state.columns;
 
-    // Ensure every column subfolder exists
+    // ── userStatus/<col>/ subfolders (board tickets) ─────────────────────────
     const colFolderHandles = new Map<string, FileSystemDirectoryHandle>();
     for (const col of columns) {
-      const fh = await this.getSubfolder(toFolderName(col));
+      const fh = await this.getColumnFolder(toFolderName(col));
       colFolderHandles.set(col.id, fh);
     }
 
-    // Track which (subfolder, filename) pairs should exist after this save
-    const activeFiles = new Map<FileSystemDirectoryHandle, Set<string>>();
+    const activeColFiles = new Map<FileSystemDirectoryHandle, Set<string>>();
     for (const fh of colFolderHandles.values()) {
-      activeFiles.set(fh, new Set());
+      activeColFiles.set(fh, new Set());
     }
 
-    // Write one .md per ticket into its column's subfolder
     for (const ticket of state.tickets) {
+      if (ticket.inBacklog) continue; // handled separately below
       const subfolder = colFolderHandles.get(ticket.columnId);
       if (!subfolder) continue;
       const filename = toFilename(ticket);
       await this.writeTextFile(filename, htmlToMarkdown(ticket.description), subfolder);
-      activeFiles.get(subfolder)!.add(filename);
+      activeColFiles.get(subfolder)!.add(filename);
     }
 
     // Remove stale .md files from each column subfolder
-    for (const [subfolder, active] of activeFiles) {
+    for (const [subfolder, active] of activeColFiles) {
       const existing = await this.listMdInFolder(subfolder);
       for (const name of existing) {
-        if (!active.has(name)) {
-          await this.deleteFileFromFolder(name, subfolder);
-        }
+        if (!active.has(name)) await this.deleteFileFromFolder(name, subfolder);
       }
     }
 
-    // Write metadata (everything except ticket descriptions)
+    // ── _archive/Backlog/ ────────────────────────────────────────────────────
+    const backlogFolder = await this.getArchiveSubfolder(BACKLOG_FOLDER);
+    const activeBacklogFiles = new Set<string>();
+    for (const ticket of state.tickets) {
+      if (!ticket.inBacklog) continue;
+      const filename = toFilename(ticket);
+      await this.writeTextFile(filename, htmlToMarkdown(ticket.description), backlogFolder);
+      activeBacklogFiles.add(filename);
+    }
+    // Remove stale files from backlog folder
+    for (const name of await this.listMdInFolder(backlogFolder)) {
+      if (!activeBacklogFiles.has(name)) await this.deleteFileFromFolder(name, backlogFolder);
+    }
+
+    // ── _archive/Deleted/ ────────────────────────────────────────────────────
+    const deletedFolder = await this.getArchiveSubfolder(DELETED_FOLDER);
+    const activeDeletedFiles = new Set<string>();
+    for (const { ticket } of state.trashedTickets ?? []) {
+      if (ticket.parentId) continue; // skip subtasks — they'd clutter the folder
+      const filename = toFilename(ticket);
+      await this.writeTextFile(filename, htmlToMarkdown(ticket.description), deletedFolder);
+      activeDeletedFiles.add(filename);
+    }
+    // Remove stale files from deleted folder
+    for (const name of await this.listMdInFolder(deletedFolder)) {
+      if (!activeDeletedFiles.has(name)) await this.deleteFileFromFolder(name, deletedFolder);
+    }
+
+    // ── _archive/Released/<YYYYMMDD>/ ────────────────────────────────────────
+    // Build a map of dateKey → { folder handle, active filenames }
+    const releasedDateFolders = new Map<string, { fh: FileSystemDirectoryHandle; active: Set<string> }>();
+    for (const release of state.releasedEpics ?? []) {
+      const dateKey = toDateFolder(release.releasedAt);
+      if (!releasedDateFolders.has(dateKey)) {
+        const fh = await this.getReleasedDateFolder(release.releasedAt);
+        releasedDateFolders.set(dateKey, { fh, active: new Set() });
+      }
+      const { fh, active } = releasedDateFolders.get(dateKey)!;
+      for (const ticket of release.tickets) {
+        if (ticket.parentId) continue; // skip subtasks
+        const filename = toFilename(ticket);
+        await this.writeTextFile(filename, htmlToMarkdown(ticket.description), fh);
+        active.add(filename);
+      }
+    }
+    // Remove stale files inside each dated release folder
+    for (const { fh, active } of releasedDateFolders.values()) {
+      for (const name of await this.listMdInFolder(fh)) {
+        if (!active.has(name)) await this.deleteFileFromFolder(name, fh);
+      }
+    }
+
+    // ── _tasky_meta.json ─────────────────────────────────────────────────────
     const { tickets, ...rest } = state;
     const meta = {
       ...rest,

@@ -295,6 +295,25 @@
   min-width: 28px;
 }
 
+.bl-epic-group-release {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  padding: 3px 9px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: background 0.1s, border-color 0.1s;
+}
+.bl-epic-group-release:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
 .bl-epic-group-add {
   margin-left: auto;
   display: inline-flex;

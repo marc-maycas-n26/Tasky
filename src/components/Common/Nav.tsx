@@ -49,6 +49,17 @@ const STATIC_NAV_ITEMS = [
     ),
   },
   {
+    to: '/releases',
+    end: false,
+    label: 'Releases',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+        <circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M6 9l2.5 2.5L12 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
     to: '/settings',
     end: false,
     label: 'Settings',

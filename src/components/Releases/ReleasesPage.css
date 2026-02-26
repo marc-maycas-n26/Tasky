@@ -1,0 +1,262 @@
+/* ── Filter bar ──────────────────────────────────────────────────────────────── */
+.rl-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.rl-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  min-width: 240px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rl-search-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.rl-search-icon {
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.rl-search-input {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  outline: none;
+  flex: 1;
+  min-width: 0;
+}
+.rl-search-input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.rl-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rl-date-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}
+
+.rl-date-input {
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 5px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.rl-date-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* ── Day list ────────────────────────────────────────────────────────────────── */
+.rl-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rl-day-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rl-day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.rl-day-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.01em;
+}
+
+.rl-day-count {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  background: var(--color-border-light);
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+/* ── Epic cards ──────────────────────────────────────────────────────────────── */
+.rl-epics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rl-epic-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.rl-epic-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--color-surface);
+  transition: background 0.1s;
+  border-radius: var(--radius-lg);
+}
+.rl-epic-header:hover {
+  background: var(--color-bg);
+}
+
+.rl-epic-toggle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.rl-epic-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.rl-epic-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+.rl-epic-ticket-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  background: var(--color-border-light);
+  padding: 1px 6px;
+  border-radius: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.rl-epic-released-at {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.rl-epic-done-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+/* ── Ticket list ─────────────────────────────────────────────────────────────── */
+.rl-ticket-list {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.rl-ticket-empty {
+  padding: 12px 36px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+
+.rl-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 36px;
+  border-top: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+  transition: background 0.1s;
+}
+.rl-ticket-row:first-child {
+  border-top: none;
+}
+.rl-ticket-row:hover {
+  background: var(--color-bg);
+}
+
+.rl-ticket-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--color-text-subtle);
+}
+
+.rl-ticket-key {
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 56px;
+}
+
+.rl-ticket-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.rl-ticket-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.rl-ticket-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
