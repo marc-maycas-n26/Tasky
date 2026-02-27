@@ -59,8 +59,18 @@ export function EditColumnRow({
       </td>
       <td>
         <div className="table-actions">
-          <button className="btn btn-primary" style={{ padding: '10px 12px' }} onClick={onSave}>Save</button>
-          <button className="btn btn-secondary" style={{ padding: '10px 12px' }} onClick={onCancel}>Cancel</button>
+          <button className="btn btn-icon btn-primary btn-sm" title="Save" onClick={onSave}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+              <rect x="5" y="2" width="6" height="4" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+              <rect x="4" y="8" width="8" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+            </svg>
+          </button>
+          <button className="btn btn-icon btn-sm btn-secondary" title="Cancel" onClick={onCancel}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
       </td>
     </>
