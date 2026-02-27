@@ -146,3 +146,9 @@
   font-weight: 600;
 }
 
+/* ── Columns table — more breathing room between cells ──────────────────────── */
+.settings-table-wrap .data-table th,
+.settings-table-wrap .data-table td {
+  padding: 11px 18px;
+}
+

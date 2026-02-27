@@ -39,14 +39,14 @@ export function EditColumnRow({
           }}
         />
       </td>
-      <td>
+      <td style={{ textAlign: 'center' }}>
         <ColorPickerPopover
           value={editColor || getColumnColor(col)}
           onChange={onEditColorChange}
           size={16}
         />
       </td>
-      <td>
+      <td style={{ textAlign: 'center' }}>
         <select
           className="form-input form-input-inline"
           style={{ width: '100%', boxSizing: 'border-box' }}
@@ -59,8 +59,8 @@ export function EditColumnRow({
           <option value="done">Done</option>
         </select>
       </td>
-      <td style={{ textAlign: 'right' }}>
-        <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+      <td style={{ textAlign: 'center' }}>
+        <div className="table-actions" style={{ justifyContent: 'center' }}>
           <button className="btn btn-icon btn-primary btn-sm" title="Save" onClick={onSave}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>

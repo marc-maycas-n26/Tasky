@@ -96,9 +96,9 @@ export function ColumnsSection() {
               <tr>
                 <th />
                 <th>Name</th>
-                <th>Color</th>
-                <th>Role</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th style={{ textAlign: 'center' }}>Color</th>
+                <th style={{ textAlign: 'center' }}>Status</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -127,7 +127,7 @@ export function ColumnsSection() {
                     <>
                       <td className="drag-handle">⠿</td>
                       <td>{col.name}</td>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         <span
                           style={{
                             display: 'inline-block',
@@ -141,15 +141,15 @@ export function ColumnsSection() {
                           title={col.color ?? 'auto'}
                         />
                       </td>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         {col.role && (
                           <span className="flag-chip">
                             {col.role === 'todo' ? 'To Do' : col.role === 'in_progress' ? 'In Progress' : 'Done'}
                           </span>
                         )}
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                      <td style={{ textAlign: 'center' }}>
+                        <div className="table-actions" style={{ justifyContent: 'center' }}>
                           <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
                             <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
                           </button>
