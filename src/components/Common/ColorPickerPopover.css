@@ -1,5 +1,6 @@
 .cpp-wrapper {
   position: relative;
+  display: inline-block;
   flex-shrink: 0;
 }
 
