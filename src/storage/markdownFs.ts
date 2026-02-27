@@ -32,7 +32,7 @@
  * a new ticket in that column on the next load.
  */
 
-import type { AppState, Column, StorageAdapter, Ticket } from '../types';
+import type { AppState, Column, Epic, StorageAdapter, Tag, Ticket } from '../types';
 import Dexie, { type Table } from 'dexie';
 
 const META_FILE = '_tasky_meta.json';
@@ -242,6 +242,149 @@ function parseKeyFromFilename(filename: string): string | null {
   return m ? m[1] : null;
 }
 
+// ── Front matter ──────────────────────────────────────────────────────────────
+//
+// Each .md file is structured as:
+//
+//   ---
+//   id: <uuid>
+//   key: TM-4
+//   title: Build Input and Select components
+//   status: Development          ← column name, or "Backlog"
+//   inBacklog: false
+//   epic: Authentication         ← epic title (resolved on load)
+//   priority: high
+//   tags: [frontend, backend]    ← tag names (resolved on load)
+//   parent: TM-2                 ← parent ticket key (for subtasks)
+//   order: 0
+//   dueDate: 2026-03-15
+//   createdAt: 2026-02-27T10:00:00.000Z
+//   updatedAt: 2026-02-27T10:00:00.000Z
+//   ---
+//
+//   <description body in Markdown>
+//
+// Names (not IDs) are used for epic, tags and status so the file is
+// self-contained and readable/reconstructable in any other app.
+
+interface TicketFrontMatter {
+  id: string;
+  key: string;
+  title: string;
+  status: string;       // column name or "Backlog"
+  inBacklog: boolean;
+  epic?: string;        // epic title
+  priority?: string;
+  tags?: string[];      // tag names
+  parent?: string;      // parent ticket key
+  order: number;
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Serialise a Ticket + lookup tables → full .md file content with front matter.
+ */
+function serializeTicketFile(
+  ticket: Ticket,
+  allColumns: Column[],
+  allEpics: Epic[],
+  allTags: Tag[],
+): string {
+  const columnName = ticket.inBacklog
+    ? 'Backlog'
+    : (allColumns.find(c => c.id === ticket.columnId)?.name ?? ticket.columnId);
+  const epicTitle = ticket.epicId
+    ? (allEpics.find(e => e.id === ticket.epicId)?.title ?? ticket.epicId)
+    : undefined;
+  const tagNames = ticket.tagIds
+    .map(id => allTags.find(t => t.id === id)?.name)
+    .filter((n): n is string => !!n);
+
+  const fm: TicketFrontMatter = {
+    id: ticket.id,
+    key: ticket.key,
+    title: ticket.title,
+    status: columnName,
+    inBacklog: ticket.inBacklog,
+    ...(epicTitle      ? { epic: epicTitle }         : {}),
+    ...(ticket.priority ? { priority: ticket.priority } : {}),
+    ...(tagNames.length ? { tags: tagNames }          : {}),
+    ...(ticket.parentId ? { parent: ticket.parentId } : {}),
+    order: ticket.order,
+    ...(ticket.dueDate  ? { dueDate: ticket.dueDate } : {}),
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+  };
+
+  const lines: string[] = ['---'];
+  for (const [k, v] of Object.entries(fm)) {
+    if (Array.isArray(v)) {
+      lines.push(`${k}: [${v.map(s => `"${s}"`).join(', ')}]`);
+    } else if (typeof v === 'boolean') {
+      lines.push(`${k}: ${v}`);
+    } else {
+      lines.push(`${k}: ${v}`);
+    }
+  }
+  lines.push('---');
+  lines.push('');
+
+  const body = htmlToMarkdown(ticket.description);
+  if (body) lines.push(body);
+
+  return lines.join('\n');
+}
+
+/**
+ * Parse a .md file content → front matter fields + description HTML.
+ * Falls back gracefully if there is no front matter (legacy files).
+ */
+function parseTicketFile(content: string): {
+  frontMatter: Partial<TicketFrontMatter>;
+  description: string;
+} {
+  if (!content.startsWith('---')) {
+    return { frontMatter: {}, description: markdownToHtml(content) };
+  }
+
+  const end = content.indexOf('\n---', 3);
+  if (end === -1) {
+    return { frontMatter: {}, description: markdownToHtml(content) };
+  }
+
+  const fmBlock = content.slice(4, end);           // between the two ---
+  const body    = content.slice(end + 4).replace(/^\n/, ''); // after closing ---
+
+  const frontMatter: Partial<TicketFrontMatter> = {};
+  for (const line of fmBlock.split('\n')) {
+    const colon = line.indexOf(':');
+    if (colon === -1) continue;
+    const key = line.slice(0, colon).trim();
+    const raw = line.slice(colon + 1).trim();
+
+    if (raw.startsWith('[')) {
+      // Array: ["a", "b"] or [a, b]
+      frontMatter[key as keyof TicketFrontMatter] = raw
+        .slice(1, -1)
+        .split(',')
+        .map(s => s.trim().replace(/^["']|["']$/g, ''))
+        .filter(Boolean) as never;
+    } else if (raw === 'true') {
+      frontMatter[key as keyof TicketFrontMatter] = true as never;
+    } else if (raw === 'false') {
+      frontMatter[key as keyof TicketFrontMatter] = false as never;
+    } else if (raw !== '' && !isNaN(Number(raw))) {
+      frontMatter[key as keyof TicketFrontMatter] = Number(raw) as never;
+    } else {
+      frontMatter[key as keyof TicketFrontMatter] = raw as never;
+    }
+  }
+
+  return { frontMatter, description: markdownToHtml(body) };
+}
+
 // ── Adapter ───────────────────────────────────────────────────────────────────
 
 export class MarkdownFsAdapter implements StorageAdapter {
@@ -358,146 +501,173 @@ export class MarkdownFsAdapter implements StorageAdapter {
 
     const meta = JSON.parse(metaText) as AppState & { _tickets?: Omit<Ticket, 'description'>[] };
     const columns: Column[] = meta.columns ?? [];
+    const epics:   Epic[]   = meta.epics   ?? [];
+    const tags:    Tag[]    = meta.tags    ?? [];
 
-    // Build column lookup: id → subfolder name
-    const colFolderName = new Map(columns.map(c => [c.id, toFolderName(c)]));
+    // Build lookups for resolving front-matter names → IDs
+    const colFolderName    = new Map(columns.map(c => [c.id, toFolderName(c)]));
+    const colNameToId      = new Map(columns.map(c => [c.name, c.id]));
+    const epicTitleToId    = new Map(epics.map(e => [e.title, e.id]));
+    const tagNameToId      = new Map(tags.map(t => [t.name, t.id]));
 
-    // Reconstruct tickets from stored metadata + .md file descriptions
     const tickets: Ticket[] = [];
     const trackedKeys = new Set<string>();
 
     // Migration: derive inBacklog from old isBacklog column flag if missing
     const backlogColIds = new Set(columns.filter(c => c.isBacklog).map(c => c.id));
 
+    /**
+     * Merge front-matter fields from a parsed file into a ticket stub.
+     * Front matter wins over meta JSON for all fields it contains.
+     */
+    const applyFrontMatter = (
+      base: Omit<Ticket, 'description'> & { inBacklog?: boolean },
+      fm: Partial<TicketFrontMatter>,
+      fallbackColumnId: string,
+      fallbackInBacklog: boolean,
+    ): Omit<Ticket, 'description'> => {
+      // Resolve status → columnId + inBacklog
+      let columnId  = fallbackColumnId;
+      let inBacklog = fallbackInBacklog;
+      if (fm.status !== undefined) {
+        if (fm.status === 'Backlog') {
+          inBacklog = true;
+          columnId  = '';
+        } else {
+          inBacklog = false;
+          columnId  = colNameToId.get(fm.status) ?? fallbackColumnId;
+        }
+      }
+
+      // Resolve epic title → id
+      const epicId = fm.epic !== undefined
+        ? (epicTitleToId.get(fm.epic) ?? base.epicId)
+        : base.epicId;
+
+      // Resolve tag names → ids
+      const tagIds = fm.tags && fm.tags.length > 0
+        ? fm.tags.map(n => tagNameToId.get(n)).filter((id): id is string => !!id)
+        : base.tagIds;
+
+      return {
+        id:        fm.id        ?? base.id,
+        key:       fm.key       ?? base.key,
+        title:     fm.title     ?? base.title,
+        columnId,
+        inBacklog,
+        epicId,
+        tagIds,
+        parentId:  fm.parent    ?? base.parentId,
+        order:     fm.order     ?? base.order,
+        priority:  (fm.priority as Ticket['priority']) ?? base.priority,
+        dueDate:   fm.dueDate   ?? base.dueDate,
+        createdAt: fm.createdAt ?? base.createdAt,
+        updatedAt: fm.updatedAt ?? base.updatedAt,
+      };
+    };
+
     for (const t of meta._tickets ?? []) {
       const raw = t as Ticket & { inBacklog?: boolean };
       const inBacklog = raw.inBacklog ?? backlogColIds.has(raw.columnId);
-      let description = '';
+      let fileContent: string | null = null;
+
       if (inBacklog) {
-        // Read description from _archive/Backlog/ (fall back to root for legacy files)
         try {
           const backlogFolder = await this.getArchiveSubfolder(BACKLOG_FOLDER);
-          const md = await this.readTextFile(toFilename(raw), backlogFolder);
-          if (md) {
-            description = markdownToHtml(md);
-          } else {
-            // Legacy: file may still be in root
-            const legacyMd = await this.readTextFile(toFilename(raw));
-            description = legacyMd ? markdownToHtml(legacyMd) : '';
-          }
+          fileContent = await this.readTextFile(toFilename(raw), backlogFolder);
+          if (!fileContent) fileContent = await this.readTextFile(toFilename(raw)); // legacy root
         } catch { /* folder may not exist yet */ }
       } else {
         const folderName = colFolderName.get(raw.columnId);
         if (folderName) {
           try {
-            // Try userStatus/<col>/ first, fall back to legacy root-level folder
             const subfolder = await this.getColumnFolder(folderName, false);
-            const md = await this.readTextFile(toFilename(raw), subfolder);
-            if (md) {
-              description = markdownToHtml(md);
-            } else {
-              // Legacy: file may still be in a root-level column folder
+            fileContent = await this.readTextFile(toFilename(raw), subfolder);
+            if (!fileContent) {
+              // Legacy: root-level column folder
               const legacyFolder = await this.getSubfolder(folderName, false);
-              const legacyMd = await this.readTextFile(toFilename(raw), legacyFolder);
-              description = legacyMd ? markdownToHtml(legacyMd) : '';
+              fileContent = await this.readTextFile(toFilename(raw), legacyFolder);
             }
           } catch { /* folder may not exist yet */ }
         }
       }
-      tickets.push({ ...raw, inBacklog, description });
-      trackedKeys.add(raw.key);
+
+      const { frontMatter: fm, description } = fileContent
+        ? parseTicketFile(fileContent)
+        : { frontMatter: {}, description: '' };
+
+      const merged = applyFrontMatter(raw, fm, raw.columnId, inBacklog);
+      tickets.push({ ...merged, description });
+      trackedKeys.add(merged.key);
     }
 
-    // Auto-import manually-created .md files in any column subfolder
+    // Auto-import manually-created .md files (with or without front matter)
     const { v4: uuidv4 } = await import('uuid');
+
+    const importFromFolder = async (
+      subfolder: FileSystemDirectoryHandle,
+      defaultColumnId: string,
+      defaultInBacklog: boolean,
+    ) => {
+      const mdFiles = await this.listMdInFolder(subfolder);
+      for (const filename of mdFiles) {
+        const key = parseKeyFromFilename(filename);
+        if (!key || trackedKeys.has(key)) continue;
+
+        const fileContent = await this.readTextFile(filename, subfolder) ?? '';
+        const { frontMatter: fm, description } = parseTicketFile(fileContent);
+        const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
+        const titleFallback = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
+        const nowStr = new Date().toISOString();
+
+        const stub: Omit<Ticket, 'description'> & { inBacklog?: boolean } = {
+          id: uuidv4(), key,
+          title: titleFallback,
+          columnId: defaultColumnId,
+          inBacklog: defaultInBacklog,
+          tagIds: [], order: tickets.length,
+          createdAt: nowStr, updatedAt: nowStr,
+        };
+        const merged = applyFrontMatter(stub, fm, defaultColumnId, defaultInBacklog);
+        tickets.push({ ...merged, title: fm.title ?? titleFallback, description });
+        trackedKeys.add(key);
+      }
+    };
 
     for (const col of columns) {
       if (col.isBacklog) continue;
       const folderName = toFolderName(col);
-
-      // Check userStatus/<col>/ first, then root-level legacy folder
-      const folders: Array<FileSystemDirectoryHandle> = [];
       if (await this.columnFolderExists(folderName)) {
-        folders.push(await this.getColumnFolder(folderName, false));
+        await importFromFolder(await this.getColumnFolder(folderName, false), col.id, false);
       }
-      // Legacy: also scan root-level folder if it still exists
       if (await this.subfolderExists(folderName)) {
-        folders.push(await this.getSubfolder(folderName, false));
-      }
-
-      for (const subfolder of folders) {
-        const mdFiles = await this.listMdInFolder(subfolder);
-        for (const filename of mdFiles) {
-          const key = parseKeyFromFilename(filename);
-          if (!key || trackedKeys.has(key)) continue;
-
-          const mdText = await this.readTextFile(filename, subfolder) ?? '';
-          const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
-          const title = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
-          const now = new Date().toISOString();
-
-          tickets.push({
-            id: uuidv4(),
-            key,
-            title,
-            description: markdownToHtml(mdText),
-            columnId: col.id,
-            inBacklog: false,
-            tagIds: [],
-            order: tickets.length,
-            createdAt: now,
-            updatedAt: now,
-          });
-          trackedKeys.add(key);
-        }
+        await importFromFolder(await this.getSubfolder(folderName, false), col.id, false);
       }
     }
 
-    // Auto-import from _archive/Backlog/ — treat as backlog items
     try {
       const backlogFolder = await this.getArchiveSubfolder(BACKLOG_FOLDER);
-      const mdFiles = await this.listMdInFolder(backlogFolder);
-      for (const filename of mdFiles) {
-        const key = parseKeyFromFilename(filename);
-        if (!key || trackedKeys.has(key)) continue;
-        const mdText = await this.readTextFile(filename, backlogFolder) ?? '';
-        const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
-        const title = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
-        const now = new Date().toISOString();
-        tickets.push({
-          id: uuidv4(), key, title,
-          description: markdownToHtml(mdText),
-          columnId: '', inBacklog: true,
-          tagIds: [], order: tickets.length,
-          createdAt: now, updatedAt: now,
-        });
-        trackedKeys.add(key);
-      }
+      await importFromFolder(backlogFolder, '', true);
     } catch { /* _archive/Backlog may not exist yet */ }
 
-    // Also scan root for legacy flat .md files — treat as backlog items
+    // Legacy: root-level .md files → backlog
     for await (const [name, handle] of this.dirHandle.entries()) {
       if (handle.kind !== 'file' || !name.endsWith('.md')) continue;
       const key = parseKeyFromFilename(name);
       if (!key || trackedKeys.has(key)) continue;
-
-      const mdText = await this.readTextFile(name) ?? '';
+      const fileContent = await this.readTextFile(name) ?? '';
+      const { frontMatter: fm, description } = parseTicketFile(fileContent);
       const titleMatch = name.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
-      const title = titleMatch ? titleMatch[1] : name.replace(/\.md$/, '');
-      const now = new Date().toISOString();
-
-      tickets.push({
-        id: uuidv4(),
-        key,
-        title,
-        description: markdownToHtml(mdText),
-        columnId: '',
-        inBacklog: true,
-        tagIds: [],
-        order: tickets.length,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const titleFallback = titleMatch ? titleMatch[1] : name.replace(/\.md$/, '');
+      const nowStr = new Date().toISOString();
+      const stub: Omit<Ticket, 'description'> & { inBacklog?: boolean } = {
+        id: uuidv4(), key, title: titleFallback,
+        columnId: '', inBacklog: true,
+        tagIds: [], order: tickets.length,
+        createdAt: nowStr, updatedAt: nowStr,
+      };
+      const merged = applyFrontMatter(stub, fm, '', true);
+      tickets.push({ ...merged, title: fm.title ?? titleFallback, description });
       trackedKeys.add(key);
     }
 
@@ -507,48 +677,51 @@ export class MarkdownFsAdapter implements StorageAdapter {
     return {
       schemaVersion: meta.schemaVersion ?? 1,
       columns: migratedColumns,
-      epics: meta.epics ?? [],
-      tags: meta.tags ?? [],
+      epics,
+      tags,
       tickets,
       trashedTickets: meta.trashedTickets ?? [],
-      releasedEpics: meta.releasedEpics ?? [],
-      templates: meta.templates ?? [],
+      releasedEpics:  meta.releasedEpics  ?? [],
+      templates:      meta.templates      ?? [],
       automationRules: meta.automationRules ?? [],
-      comments: meta.comments ?? [],
-      linkedItems: meta.linkedItems ?? [],
+      comments:       meta.comments       ?? [],
+      linkedItems:    meta.linkedItems    ?? [],
       nextTicketNumber: meta.nextTicketNumber ?? 1,
-      settings: meta.settings ?? { projectKey: 'TM' },
+      settings:       meta.settings       ?? { projectKey: 'TM' },
     };
   }
 
   async saveAll(state: AppState): Promise<void> {
-    const columns = state.columns;
+    const { columns, epics, tags } = state;
+
+    // Helper: write a ticket as a fully self-contained .md file with front matter
+    const writeTicket = async (
+      ticket: Ticket,
+      folder: FileSystemDirectoryHandle,
+    ) => {
+      const content = serializeTicketFile(ticket, columns, epics, tags);
+      await this.writeTextFile(toFilename(ticket), content, folder);
+    };
 
     // ── userStatus/<col>/ subfolders (board tickets) ─────────────────────────
     const colFolderHandles = new Map<string, FileSystemDirectoryHandle>();
     for (const col of columns) {
-      const fh = await this.getColumnFolder(toFolderName(col));
-      colFolderHandles.set(col.id, fh);
+      colFolderHandles.set(col.id, await this.getColumnFolder(toFolderName(col)));
     }
 
     const activeColFiles = new Map<FileSystemDirectoryHandle, Set<string>>();
-    for (const fh of colFolderHandles.values()) {
-      activeColFiles.set(fh, new Set());
-    }
+    for (const fh of colFolderHandles.values()) activeColFiles.set(fh, new Set());
 
     for (const ticket of state.tickets) {
-      if (ticket.inBacklog) continue; // handled separately below
+      if (ticket.inBacklog) continue;
       const subfolder = colFolderHandles.get(ticket.columnId);
       if (!subfolder) continue;
-      const filename = toFilename(ticket);
-      await this.writeTextFile(filename, htmlToMarkdown(ticket.description), subfolder);
-      activeColFiles.get(subfolder)!.add(filename);
+      await writeTicket(ticket, subfolder);
+      activeColFiles.get(subfolder)!.add(toFilename(ticket));
     }
 
-    // Remove stale .md files from each column subfolder
     for (const [subfolder, active] of activeColFiles) {
-      const existing = await this.listMdInFolder(subfolder);
-      for (const name of existing) {
+      for (const name of await this.listMdInFolder(subfolder)) {
         if (!active.has(name)) await this.deleteFileFromFolder(name, subfolder);
       }
     }
@@ -558,11 +731,9 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const activeBacklogFiles = new Set<string>();
     for (const ticket of state.tickets) {
       if (!ticket.inBacklog) continue;
-      const filename = toFilename(ticket);
-      await this.writeTextFile(filename, htmlToMarkdown(ticket.description), backlogFolder);
-      activeBacklogFiles.add(filename);
+      await writeTicket(ticket, backlogFolder);
+      activeBacklogFiles.add(toFilename(ticket));
     }
-    // Remove stale files from backlog folder
     for (const name of await this.listMdInFolder(backlogFolder)) {
       if (!activeBacklogFiles.has(name)) await this.deleteFileFromFolder(name, backlogFolder);
     }
@@ -571,34 +742,31 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const deletedFolder = await this.getArchiveSubfolder(DELETED_FOLDER);
     const activeDeletedFiles = new Set<string>();
     for (const { ticket } of state.trashedTickets ?? []) {
-      if (ticket.parentId) continue; // skip subtasks — they'd clutter the folder
-      const filename = toFilename(ticket);
-      await this.writeTextFile(filename, htmlToMarkdown(ticket.description), deletedFolder);
-      activeDeletedFiles.add(filename);
+      if (ticket.parentId) continue; // skip subtasks
+      await writeTicket(ticket, deletedFolder);
+      activeDeletedFiles.add(toFilename(ticket));
     }
-    // Remove stale files from deleted folder
     for (const name of await this.listMdInFolder(deletedFolder)) {
       if (!activeDeletedFiles.has(name)) await this.deleteFileFromFolder(name, deletedFolder);
     }
 
     // ── _archive/Released/<YYYYMMDD>/ ────────────────────────────────────────
-    // Build a map of dateKey → { folder handle, active filenames }
     const releasedDateFolders = new Map<string, { fh: FileSystemDirectoryHandle; active: Set<string> }>();
     for (const release of state.releasedEpics ?? []) {
       const dateKey = toDateFolder(release.releasedAt);
       if (!releasedDateFolders.has(dateKey)) {
-        const fh = await this.getReleasedDateFolder(release.releasedAt);
-        releasedDateFolders.set(dateKey, { fh, active: new Set() });
+        releasedDateFolders.set(dateKey, {
+          fh: await this.getReleasedDateFolder(release.releasedAt),
+          active: new Set(),
+        });
       }
       const { fh, active } = releasedDateFolders.get(dateKey)!;
       for (const ticket of release.tickets) {
         if (ticket.parentId) continue; // skip subtasks
-        const filename = toFilename(ticket);
-        await this.writeTextFile(filename, htmlToMarkdown(ticket.description), fh);
-        active.add(filename);
+        await writeTicket(ticket, fh);
+        active.add(toFilename(ticket));
       }
     }
-    // Remove stale files inside each dated release folder
     for (const { fh, active } of releasedDateFolders.values()) {
       for (const name of await this.listMdInFolder(fh)) {
         if (!active.has(name)) await this.deleteFileFromFolder(name, fh);
@@ -606,6 +774,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
     }
 
     // ── _tasky_meta.json ─────────────────────────────────────────────────────
+    // tickets array in meta keeps all fields EXCEPT description (that lives in the .md)
     const { tickets, ...rest } = state;
     const meta = {
       ...rest,
