@@ -146,7 +146,3 @@
   font-weight: 600;
 }
 
-/* ── Inline input override ─────────────────────────────────────────────────── */
-.form-input-inline {
-  max-width: 220px;
-}

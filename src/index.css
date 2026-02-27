@@ -481,9 +481,14 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-/* ── Inline form input ─────────────────────────────────────────────────────── */
+/* ── Inline form input (used inside table rows — must not expand row height) ── */
 .form-input-inline {
-  max-width: 200px;
+  padding: 3px 8px;
+  font-size: var(--font-size-sm);
+  border-width: 1.5px;
+  border-radius: var(--radius-sm);
+  width: auto;
+  max-width: 100%;
 }
 
 /* ── Small form input ──────────────────────────────────────────────────────── */

@@ -39,21 +39,10 @@ export function EditColumnRow({
         />
       </td>
       <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ColorPickerPopover
-            value={editColor || getColumnColor(col)}
-            onChange={onEditColorChange}
-          />
-          {editColor && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => onEditColorChange('')}
-              title="Reset to default"
-            >
-              Reset
-            </button>
-          )}
-        </div>
+        <ColorPickerPopover
+          value={editColor || getColumnColor(col)}
+          onChange={onEditColorChange}
+        />
       </td>
       <td>
         <select
