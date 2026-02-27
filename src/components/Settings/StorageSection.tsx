@@ -20,7 +20,7 @@ export function StorageSection() {
   const [fsStatus, setFsStatus] = useState<'idle' | 'picking' | 'loading' | 'error'>('idle');
   const [fsError, setFsError] = useState('');
   const [importError, setImportError] = useState('');
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const folderConnected = adapter instanceof MarkdownFsAdapter;
   const folderName = settings.markdownFolder?.folderName;
@@ -91,10 +91,27 @@ export function StorageSection() {
     }
   }
 
-  async function handleResetToSample() {
-    await clearMarkdownFolder();   // wipes _tasky_meta.json, _archive/, userStatus/
+  async function handleDeleteAll() {
+    // 1. Immediately detach the markdown adapter so no concurrent persist() can
+    //    re-write files to the folder while we are deleting.
+    setAdapter(new IndexedDbAdapter());
+
+    // 2. Wipe the in-memory store state so even if persist() fires there is
+    //    nothing to write.
+    importState({
+      schemaVersion: 1,
+      columns: [], epics: [], tags: [], tickets: [],
+      trashedTickets: [], releasedEpics: [], templates: [],
+      automationRules: [], comments: [], linkedItems: [],
+      nextTicketNumber: 1,
+      settings: { projectKey: 'TM' },
+    });
+
+    // 3. Wipe persisted storage.
+    await clearMarkdownFolder();   // removes _tasky_meta.json, _archive/, userStatus/
     await clearDirectoryHandle();  // forgets the folder handle
-    await clearAppDatabase();      // wipes IndexedDB
+    await clearAppDatabase();      // wipes IndexedDB tables
+
     window.location.reload();
   }
 
@@ -194,24 +211,24 @@ export function StorageSection() {
         <div className="settings-storage-section">
           <h3 className="settings-section-label">Danger zone</h3>
           <div className="settings-row">
-            <button className="btn btn-secondary btn-sm" style={{ color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => setConfirmReset(true)}>
-              Reset to sample data
+            <button className="btn btn-secondary btn-sm" style={{ color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => setConfirmDelete(true)}>
+              Delete all data
             </button>
           </div>
-          <p className="settings-hint">Wipes all data and reloads with the built-in sample project.</p>
+          <p className="settings-hint">Permanently deletes all tickets, columns, epics, tags, and settings. Starts completely fresh. Use Export JSON first if you want a backup.</p>
         </div>
 
       </div>
     </div>
 
-    {confirmReset && (
+    {confirmDelete && (
       <ConfirmDialog
-        title="Reset to sample data?"
-        message="All your current data will be permanently deleted and replaced with the sample project. This cannot be undone."
-        confirmLabel="Reset"
+        title="Delete all data?"
+        message="This will permanently delete all your tickets, columns, epics, tags, and settings. The markdown folder will be cleared and disconnected. This cannot be undone."
+        confirmLabel="Delete everything"
         dangerous
-        onConfirm={handleResetToSample}
-        onCancel={() => setConfirmReset(false)}
+        onConfirm={handleDeleteAll}
+        onCancel={() => setConfirmDelete(false)}
       />
     )}
     </>

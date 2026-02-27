@@ -32,7 +32,7 @@
  * a new ticket in that column on the next load.
  */
 
-import type { AppState, Column, Epic, StorageAdapter, Tag, Ticket } from '../types';
+import type { AppState, Column, Comment, Epic, StorageAdapter, Tag, Ticket } from '../types';
 import Dexie, { type Table } from 'dexie';
 
 const META_FILE = '_tasky_meta.json';
@@ -285,12 +285,14 @@ interface TicketFrontMatter {
 
 /**
  * Serialise a Ticket + lookup tables → full .md file content with front matter.
+ * If ticketComments is provided, a ## Sitrep section is appended after the body.
  */
 function serializeTicketFile(
   ticket: Ticket,
   allColumns: Column[],
   allEpics: Epic[],
   allTags: Tag[],
+  ticketComments: Comment[] = [],
 ): string {
   const columnName = ticket.inBacklog
     ? 'Backlog'
@@ -334,28 +336,45 @@ function serializeTicketFile(
   const body = htmlToMarkdown(ticket.description);
   if (body) lines.push(body);
 
+  // Append sitrep (comments) section if there are any
+  if (ticketComments.length > 0) {
+    // Ensure a blank line before the section header
+    if (body && !lines[lines.length - 1].endsWith('\n')) lines.push('');
+    lines.push('## Sitrep');
+    lines.push('');
+    const sorted = [...ticketComments].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    for (const comment of sorted) {
+      lines.push(`<!-- sitrep:${comment.id} createdAt:${comment.createdAt}${comment.updatedAt && comment.updatedAt !== comment.createdAt ? ` updatedAt:${comment.updatedAt}` : ''} -->`);
+      lines.push(htmlToMarkdown(comment.body).trim());
+      lines.push('');
+    }
+  }
+
   return lines.join('\n');
 }
 
 /**
- * Parse a .md file content → front matter fields + description HTML.
+ * Parse a .md file content → front matter fields + description HTML + sitrep comments.
  * Falls back gracefully if there is no front matter (legacy files).
  */
 function parseTicketFile(content: string): {
   frontMatter: Partial<TicketFrontMatter>;
   description: string;
+  parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string }>;
 } {
   if (!content.startsWith('---')) {
-    return { frontMatter: {}, description: markdownToHtml(content) };
+    return { frontMatter: {}, description: markdownToHtml(content), parsedComments: [] };
   }
 
   const end = content.indexOf('\n---', 3);
   if (end === -1) {
-    return { frontMatter: {}, description: markdownToHtml(content) };
+    return { frontMatter: {}, description: markdownToHtml(content), parsedComments: [] };
   }
 
   const fmBlock = content.slice(4, end);           // between the two ---
-  const body    = content.slice(end + 4).replace(/^\n/, ''); // after closing ---
+  const afterFm = content.slice(end + 4).replace(/^\n/, ''); // after closing ---
 
   const frontMatter: Partial<TicketFrontMatter> = {};
   for (const line of fmBlock.split('\n')) {
@@ -382,7 +401,26 @@ function parseTicketFile(content: string): {
     }
   }
 
-  return { frontMatter, description: markdownToHtml(body) };
+  // Split body from sitrep section (## Sitrep on its own line)
+  const sitrepMatch = afterFm.match(/^([\s\S]*?)\n## Sitrep\n([\s\S]*)$/m);
+  const bodyMd   = sitrepMatch ? sitrepMatch[1] : afterFm;
+  const sitrepMd = sitrepMatch ? sitrepMatch[2] : '';
+
+  // Parse individual sitrep entries separated by <!-- sitrep:id ... --> tags
+  const parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string }> = [];
+  if (sitrepMd) {
+    const entryRegex = /<!--\s*sitrep:(\S+)\s+createdAt:(\S+)(?:\s+updatedAt:(\S+))?\s*-->([\s\S]*?)(?=<!--\s*sitrep:|$)/g;
+    let m: RegExpExecArray | null;
+    while ((m = entryRegex.exec(sitrepMd)) !== null) {
+      const id        = m[1];
+      const createdAt = m[2];
+      const updatedAt = m[3] ?? m[2];
+      const bodyText  = m[4].trim();
+      parsedComments.push({ id, body: markdownToHtml(bodyText), createdAt, updatedAt });
+    }
+  }
+
+  return { frontMatter, description: markdownToHtml(bodyMd), parsedComments };
 }
 
 // ── Adapter ───────────────────────────────────────────────────────────────────
@@ -493,10 +531,15 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const metaText = await this.readTextFile(META_FILE);
 
     if (!metaText) {
-      // First run — seed, then immediately save so files appear
-      const { SEED_DATA } = await import('./seed');
-      await this.saveAll(SEED_DATA);
-      return { ...SEED_DATA };
+      // Empty folder — return a blank state; the app will show the board empty.
+      return {
+        schemaVersion: 1,
+        columns: [], epics: [], tags: [], tickets: [],
+        trashedTickets: [], releasedEpics: [], templates: [],
+        automationRules: [], comments: [], linkedItems: [],
+        nextTicketNumber: 1,
+        settings: { projectKey: 'TM' },
+      };
     }
 
     const meta = JSON.parse(metaText) as AppState & { _tickets?: Omit<Ticket, 'description'>[] };
@@ -511,6 +554,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const tagNameToId      = new Map(tags.map(t => [t.name, t.id]));
 
     const tickets: Ticket[] = [];
+    const parsedCommentsList: Array<{ id: string; ticketId: string; body: string; createdAt: string; updatedAt: string }> = [];
     const trackedKeys = new Set<string>();
 
     // Migration: derive inBacklog from old isBacklog column flag if missing
@@ -592,13 +636,16 @@ export class MarkdownFsAdapter implements StorageAdapter {
         }
       }
 
-      const { frontMatter: fm, description } = fileContent
+      const { frontMatter: fm, description, parsedComments } = fileContent
         ? parseTicketFile(fileContent)
-        : { frontMatter: {}, description: '' };
+        : { frontMatter: {}, description: '', parsedComments: [] };
 
       const merged = applyFrontMatter(raw, fm, raw.columnId, inBacklog);
       tickets.push({ ...merged, description });
       trackedKeys.add(merged.key);
+      for (const c of parsedComments) {
+        parsedCommentsList.push({ ...c, ticketId: merged.id });
+      }
     }
 
     // Auto-import manually-created .md files (with or without front matter)
@@ -615,7 +662,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
         if (!key || trackedKeys.has(key)) continue;
 
         const fileContent = await this.readTextFile(filename, subfolder) ?? '';
-        const { frontMatter: fm, description } = parseTicketFile(fileContent);
+        const { frontMatter: fm, description, parsedComments } = parseTicketFile(fileContent);
         const titleMatch = filename.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
         const titleFallback = titleMatch ? titleMatch[1] : filename.replace(/\.md$/, '');
         const nowStr = new Date().toISOString();
@@ -631,6 +678,9 @@ export class MarkdownFsAdapter implements StorageAdapter {
         const merged = applyFrontMatter(stub, fm, defaultColumnId, defaultInBacklog);
         tickets.push({ ...merged, title: fm.title ?? titleFallback, description });
         trackedKeys.add(key);
+        for (const c of parsedComments) {
+          parsedCommentsList.push({ ...c, ticketId: merged.id });
+        }
       }
     };
 
@@ -656,7 +706,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
       const key = parseKeyFromFilename(name);
       if (!key || trackedKeys.has(key)) continue;
       const fileContent = await this.readTextFile(name) ?? '';
-      const { frontMatter: fm, description } = parseTicketFile(fileContent);
+      const { frontMatter: fm, description, parsedComments } = parseTicketFile(fileContent);
       const titleMatch = name.match(/^[A-Z]+-\d+\s*·\s*(.+)\.md$/);
       const titleFallback = titleMatch ? titleMatch[1] : name.replace(/\.md$/, '');
       const nowStr = new Date().toISOString();
@@ -669,10 +719,23 @@ export class MarkdownFsAdapter implements StorageAdapter {
       const merged = applyFrontMatter(stub, fm, '', true);
       tickets.push({ ...merged, title: fm.title ?? titleFallback, description });
       trackedKeys.add(key);
+      for (const c of parsedComments) {
+        parsedCommentsList.push({ ...c, ticketId: merged.id });
+      }
     }
 
     // Strip old isBacklog columns — backlog is now a ticket flag
     const migratedColumns = columns.filter(c => !c.isBacklog);
+
+    // Merge comments: meta JSON is authoritative; fill gaps with anything parsed from .md files
+    const metaComments: Comment[] = meta.comments ?? [];
+    const metaCommentIds = new Set(metaComments.map(c => c.id));
+    const mergedComments: Comment[] = [
+      ...metaComments,
+      ...parsedCommentsList
+        .filter(c => !metaCommentIds.has(c.id))
+        .map(c => ({ id: c.id, ticketId: c.ticketId, body: c.body, createdAt: c.createdAt, updatedAt: c.updatedAt })),
+    ];
 
     return {
       schemaVersion: meta.schemaVersion ?? 1,
@@ -684,7 +747,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
       releasedEpics:  meta.releasedEpics  ?? [],
       templates:      meta.templates      ?? [],
       automationRules: meta.automationRules ?? [],
-      comments:       meta.comments       ?? [],
+      comments:       mergedComments,
       linkedItems:    meta.linkedItems    ?? [],
       nextTicketNumber: meta.nextTicketNumber ?? 1,
       settings:       meta.settings       ?? { projectKey: 'TM' },
@@ -694,12 +757,21 @@ export class MarkdownFsAdapter implements StorageAdapter {
   async saveAll(state: AppState): Promise<void> {
     const { columns, epics, tags } = state;
 
+    // Build a lookup of comments by ticketId for fast access
+    const commentsByTicketId = new Map<string, Comment[]>();
+    for (const comment of state.comments ?? []) {
+      const list = commentsByTicketId.get(comment.ticketId) ?? [];
+      list.push(comment);
+      commentsByTicketId.set(comment.ticketId, list);
+    }
+
     // Helper: write a ticket as a fully self-contained .md file with front matter
     const writeTicket = async (
       ticket: Ticket,
       folder: FileSystemDirectoryHandle,
     ) => {
-      const content = serializeTicketFile(ticket, columns, epics, tags);
+      const ticketComments = commentsByTicketId.get(ticket.id) ?? [];
+      const content = serializeTicketFile(ticket, columns, epics, tags, ticketComments);
       await this.writeTextFile(toFilename(ticket), content, folder);
     };
 

@@ -14,7 +14,6 @@ import type {
   LinkedItem,
   StorageAdapter,
 } from '../types';
-import { SEED_DATA } from './seed';
 
 const SCHEMA_VERSION = 4;
 
@@ -128,12 +127,6 @@ export class IndexedDbAdapter implements StorageAdapter {
 
     const metaEntries = await db.meta.toArray();
     const meta = Object.fromEntries(metaEntries.map((e) => [e.key, e.value]));
-
-    if (columns.length === 0) {
-      const seed = SEED_DATA;
-      await this.saveAll(seed);
-      return seed;
-    }
 
     // Strip the synthetic Dexie `id` field off TrashedTicket rows
     const trashedTickets: TrashedTicket[] = trashedRaw.map(({ id: _id, ...rest }) => rest as TrashedTicket);
