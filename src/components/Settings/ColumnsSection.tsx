@@ -84,14 +84,21 @@ export function ColumnsSection() {
 
       {sorted.length > 0 && (
         <div className="settings-table-wrap">
-          <table className="data-table" style={{ tableLayout: 'fixed' }}>
+          <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <colgroup>
+              <col style={{ width: 28 }} />
+              <col />
+              <col style={{ width: 44 }} />
+              <col style={{ width: 116 }} />
+              <col style={{ width: 80 }} />
+            </colgroup>
             <thead>
               <tr>
-                <th style={{ width: 28 }} />
+                <th />
                 <th>Name</th>
-                <th style={{ width: 52 }}>Color</th>
-                <th style={{ width: 110 }}>Role</th>
-                <th style={{ width: 88 }}>Actions</th>
+                <th>Color</th>
+                <th>Role</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -141,8 +148,8 @@ export function ColumnsSection() {
                           </span>
                         )}
                       </td>
-                      <td>
-                        <div className="table-actions">
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
                           <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
                             <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
                           </button>
