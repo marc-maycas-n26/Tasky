@@ -87,7 +87,7 @@ export function ColumnsSection() {
       {sorted.length > 0 && (
         <div className="col-list">
 
-          {/* Header */}
+          {/* Header — outside scroll area */}
           <div className="col-list-header">
             <span className="col-list-cell col-list-handle" />
             <span className="col-list-cell col-list-name">Name</span>
@@ -96,6 +96,7 @@ export function ColumnsSection() {
             <span className="col-list-cell col-list-actions">Actions</span>
           </div>
 
+          <div className="col-list-body">
           {sorted.map(col => (
             <div
               key={col.id}
@@ -154,6 +155,7 @@ export function ColumnsSection() {
               )}
             </div>
           ))}
+          </div>
         </div>
       )}
     </div>
