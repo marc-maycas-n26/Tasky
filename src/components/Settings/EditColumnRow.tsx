@@ -29,6 +29,7 @@ export function EditColumnRow({
       <td>
         <input
           className="form-input form-input-inline"
+          style={{ width: '100%', boxSizing: 'border-box' }}
           value={editName}
           autoFocus
           onChange={e => onEditNameChange(e.target.value)}
@@ -48,6 +49,7 @@ export function EditColumnRow({
       <td>
         <select
           className="form-input form-input-inline"
+          style={{ width: '100%', boxSizing: 'border-box' }}
           value={col.role ?? ''}
           onChange={e => onRoleChange((e.target.value as ColumnRole) || undefined)}
         >

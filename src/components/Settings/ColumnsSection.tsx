@@ -84,14 +84,14 @@ export function ColumnsSection() {
 
       {sorted.length > 0 && (
         <div className="settings-table-wrap">
-          <table className="data-table">
+          <table className="data-table" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr>
                 <th style={{ width: 28 }} />
                 <th>Name</th>
-                <th>Color</th>
-                <th>Flags</th>
-                <th>Actions</th>
+                <th style={{ width: 52 }}>Color</th>
+                <th style={{ width: 110 }}>Role</th>
+                <th style={{ width: 88 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
