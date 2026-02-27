@@ -40,6 +40,7 @@ interface StoreState extends AppState {
   toggleEpicCollapsed(id: string): void;
   reorderEpics(ids: string[]): void;
   releaseEpic(id: string): void;
+  releaseDoneTickets(): void;
 
   // tags
   addTag(name: string, color: string): void;
@@ -295,6 +296,66 @@ export const useStore = create<StoreState>((set, get) => ({
       epics: st.epics.filter(e => e.id !== id),
       // Detach all tickets that belonged to the epic (keep tickets but unlink from epic)
       tickets: st.tickets.filter(t => t.epicId !== id),
+    }));
+    get().persist();
+  },
+
+  releaseDoneTickets() {
+    const s = get();
+    const doneColIds = new Set(
+      s.columns
+        .filter(c => c.role === 'done' || c.name.toLowerCase() === 'done')
+        .map(c => c.id)
+    );
+    const doneTickets = s.tickets.filter(t => !t.inBacklog && !t.parentId && doneColIds.has(t.columnId));
+    if (doneTickets.length === 0) return;
+
+    // Group done tickets by epicId (undefined = no epic)
+    const byEpic = new Map<string | undefined, typeof doneTickets>();
+    for (const t of doneTickets) {
+      const key = t.epicId ?? undefined;
+      if (!byEpic.has(key)) byEpic.set(key, []);
+      byEpic.get(key)!.push(t);
+    }
+
+    const releasedAt = now();
+    const newReleases: import('../types').ReleasedEpic[] = [];
+    const epicIdsToRelease = new Set<string>();
+    const ticketIdsToRemove = new Set<string>(doneTickets.map(t => t.id));
+
+    for (const [epicId, tickets] of byEpic) {
+      const epic = epicId ? s.epics.find(e => e.id === epicId) : undefined;
+      // Also include subtasks of released tickets
+      const subtasks = s.tickets.filter(t => t.parentId && ticketIdsToRemove.has(t.parentId));
+      subtasks.forEach(t => ticketIdsToRemove.add(t.id));
+
+      newReleases.push({
+        epic: epic ? { ...epic } : {
+          id: `unassigned-${releasedAt}`,
+          title: 'Unassigned',
+          color: '#97A0AF',
+          order: 0,
+          isCollapsed: false,
+          createdAt: releasedAt,
+          updatedAt: releasedAt,
+        },
+        tickets: tickets.map(t => ({ ...t })),
+        releasedAt,
+      });
+
+      if (epicId) {
+        // Only fully release the epic if ALL its tickets are done
+        const allEpicTickets = s.tickets.filter(t => t.epicId === epicId && !t.parentId);
+        if (allEpicTickets.every(t => ticketIdsToRemove.has(t.id))) {
+          epicIdsToRelease.add(epicId);
+        }
+      }
+    }
+
+    set(st => ({
+      releasedEpics: [...st.releasedEpics, ...newReleases],
+      epics: st.epics.filter(e => !epicIdsToRelease.has(e.id)),
+      tickets: st.tickets.filter(t => !ticketIdsToRemove.has(t.id)),
     }));
     get().persist();
   },

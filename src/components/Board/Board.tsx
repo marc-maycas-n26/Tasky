@@ -11,6 +11,7 @@ import { TicketCard } from '../Ticket/TicketCard';
 import { TicketDrawer } from '../Ticket/TicketDrawer';
 import { EpicDrawer } from '../Epic/EpicDrawer';
 import { CreateTicketModal } from '../Ticket/CreateTicketModal';
+import { ConfirmDialog } from '../Common/ConfirmDialog';
 import type { Ticket, Epic } from '../../types';
 import './Board.css';
 
@@ -25,12 +26,15 @@ export function Board() {
   const isEpicDrawerOpen = useStore(s => s.isEpicDrawerOpen);
   const isCreateTicketOpen = useStore(s => s.isCreateTicketOpen);
   const openCreateTicket = useStore(s => s.openCreateTicket);
+  const releaseDoneTickets = useStore(s => s.releaseDoneTickets);
 
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [search, setSearch] = useState('');
   const [epicFilter, setEpicFilter] = useState<Set<string>>(new Set());
   const [labelFilter, setLabelFilter] = useState<Set<string>>(new Set());
   const [otherCollapsed, setOtherCollapsed] = useState(false);
+  const [confirmRelease, setConfirmRelease] = useState(false);
+  const [nothingToRelease, setNothingToRelease] = useState(false);
 
   const sortedColumns = useMemo(
     () => [...columns].sort((a, b) => a.order - b.order).filter(c => !c.isBacklog),
@@ -139,6 +143,22 @@ export function Board() {
   const epicOptions = sortedEpics.map(e => ({ id: e.id, name: e.title, color: e.color ?? undefined }));
   const labelOptions = tags.map(t => ({ id: t.id, name: t.name, color: t.color }));
 
+  const doneColIds = useMemo(() => new Set(
+    columns
+      .filter(c => c.role === 'done' || c.name.toLowerCase() === 'done')
+      .map(c => c.id)
+  ), [columns]);
+
+  const doneCount = useMemo(
+    () => tickets.filter(t => !t.inBacklog && !t.parentId && doneColIds.has(t.columnId)).length,
+    [tickets, doneColIds]
+  );
+
+  function handleReleaseClick() {
+    if (doneCount === 0) { setNothingToRelease(true); return; }
+    setConfirmRelease(true);
+  }
+
   return (
     <div className="board-root">
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -185,6 +205,15 @@ export function Board() {
           )}
 
           <div className="board-toolbar-right">
+            <button className="btn btn-secondary" onClick={handleReleaseClick} title="Release all done tickets">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <path d="M7 1.5C4 1.5 1.5 4 1.5 7S4 12.5 7 12.5 12.5 10 12.5 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                <path d="M9.5 1.5h3v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12.5 1.5L7 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+              Release done
+              {doneCount > 0 && <span className="board-release-badge">{doneCount}</span>}
+            </button>
             <button className="btn btn-primary" onClick={() => openCreateTicket({})}>
               + Create issue
             </button>
@@ -233,6 +262,27 @@ export function Board() {
       {isTicketDrawerOpen && <TicketDrawer />}
       {isEpicDrawerOpen && <EpicDrawer />}
       {isCreateTicketOpen && <CreateTicketModal />}
+
+      {confirmRelease && (
+        <ConfirmDialog
+          title="Release done tickets?"
+          message={`${doneCount} ticket${doneCount !== 1 ? 's' : ''} will be moved to the Releases archive and removed from the board. This cannot be undone.`}
+          confirmLabel="Release"
+          onConfirm={() => { releaseDoneTickets(); setConfirmRelease(false); }}
+          onCancel={() => setConfirmRelease(false)}
+        />
+      )}
+
+      {nothingToRelease && (
+        <ConfirmDialog
+          title="Nothing to release"
+          message="There are no tickets in a Done column. Move tickets to Done before releasing."
+          confirmLabel="OK"
+          cancelLabel=""
+          onConfirm={() => setNothingToRelease(false)}
+          onCancel={() => setNothingToRelease(false)}
+        />
+      )}
     </div>
   );
 }

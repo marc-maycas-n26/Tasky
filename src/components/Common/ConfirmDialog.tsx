@@ -58,9 +58,11 @@ export function ConfirmDialog({
           <p className="confirm-dialog-message">{message}</p>
         </div>
         <div className="confirm-dialog-actions">
-          <button className="btn btn-secondary" onClick={onCancel}>
-            {cancelLabel}
-          </button>
+          {cancelLabel && (
+            <button className="btn btn-secondary" onClick={onCancel}>
+              {cancelLabel}
+            </button>
+          )}
           <button
             ref={confirmRef}
             className={`btn ${dangerous ? 'btn-danger' : 'btn-primary'}`}
