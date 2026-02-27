@@ -5,7 +5,7 @@
   right: 0;
   bottom: 0;
   width: min(780px, 100vw);
-  background: #fff;
+  background: var(--color-surface);
   z-index: 201;
   display: flex;
   flex-direction: column;
@@ -102,7 +102,7 @@
 /* ── Progress ───────────────────────────────────────────────────────────────── */
 .epic-drawer-progress-bar {
   height: 8px;
-  background: #BFDBFE;
+  background: var(--color-border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -135,7 +135,7 @@
   padding: 9px 12px;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
   transition: background 0.1s, border-color 0.1s;
@@ -231,9 +231,9 @@
   font-weight: 400;
 }
 .epic-drawer-status-pill--todo.epic-drawer-status-pill--active {
-  background: #F3F4F6;
-  color: #6B7280;
-  border-color: #D1D5DB;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
 }
 .epic-drawer-status-pill--inprogress.epic-drawer-status-pill--active {
   background: var(--color-primary-light);

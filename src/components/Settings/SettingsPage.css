@@ -152,6 +152,49 @@
   padding: 11px 18px;
 }
 
+/* ── Theme toggle ───────────────────────────────────────────────────────────── */
+.theme-toggle {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+  align-self: flex-start;
+  width: fit-content;
+}
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  border-right: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.theme-toggle-btn:last-child {
+  border-right: none;
+}
+.theme-toggle-btn:hover:not(.theme-toggle-btn--active) {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+.theme-toggle-btn--active {
+  background: var(--color-primary);
+  color: #fff;
+}
+.theme-toggle-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
 /* ── Columns div list ───────────────────────────────────────────────────────── */
 .col-list {
   border-top: 1px solid var(--color-border-light);

@@ -69,7 +69,7 @@
   transition: background 0.1s, box-shadow 0.1s;
 }
 .bl-epic-btn:hover {
-  background: #fff;
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
@@ -215,7 +215,7 @@
   background: var(--color-bg);
 }
 .bl-epic-group-header:hover {
-  background: #F0F1F5;
+  background: var(--color-surface-raised);
 }
 
 .bl-epic-group-toggle {

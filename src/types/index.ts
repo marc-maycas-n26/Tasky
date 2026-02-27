@@ -149,6 +149,7 @@ export interface AppState {
 
 export interface AppSettings {
   projectKey: string; // e.g. "TM"
+  theme?: 'light' | 'dark' | 'system';
   markdownFolder?: {
     folderName: string; // display name of the picked folder
   };

@@ -68,6 +68,56 @@
   --drawer-width: 520px;
 }
 
+/* ── Dark theme ─────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-bg: #0F0F11;
+  --color-surface: #1A1A1F;
+  --color-surface-raised: #222228;
+  --color-border: #2E2E38;
+  --color-border-light: #252530;
+
+  --color-text-primary: #F0F0F3;
+  --color-text-secondary: #C0C0CC;
+  --color-text-subtle: #7878A0;
+
+  --color-primary: #7C6FE0;
+  --color-primary-hover: #9080E8;
+  --color-primary-light: rgba(124, 111, 224, 0.12);
+  --color-primary-subtle: rgba(124, 111, 224, 0.18);
+
+  --color-danger: #F87171;
+  --color-danger-hover: #EF4444;
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+
+  --color-nav-bg: #0A0A0D;
+  --color-nav-text: rgba(255, 255, 255, 0.80);
+  --color-nav-hover: rgba(255, 255, 255, 0.06);
+  --color-nav-active: rgba(255, 255, 255, 0.12);
+
+  --color-swimlane-header: #14141A;
+  --color-card-bg: #1A1A1F;
+  --color-card-hover: #202028;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-drawer: -2px 0 20px rgba(0,0,0,0.5);
+  --shadow-dropdown: 0 8px 24px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+
+  --color-overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* Dark-mode overrides for hardcoded hover border colors */
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  border-color: #3A3A48;
+}
+[data-theme="dark"] .form-input:hover,
+[data-theme="dark"] .form-textarea:hover,
+[data-theme="dark"] .form-select:hover {
+  border-color: #3A3A48;
+}
+
 /* ── Reset ─────────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;

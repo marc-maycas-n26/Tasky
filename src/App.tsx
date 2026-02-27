@@ -12,6 +12,27 @@ import { ReleasesPage } from './components/Releases/ReleasesPage';
 import { MarkdownFsAdapter, saveDirectoryHandle } from './storage/markdownFs';
 import './App.css';
 
+// ── Theme applicator ───────────────────────────────────────────────────────────
+
+function ThemeApplicator() {
+  const theme = useStore(s => s.settings.theme ?? 'system');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'system') {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const apply = (dark: boolean) => root.setAttribute('data-theme', dark ? 'dark' : 'light');
+      apply(mql.matches);
+      mql.addEventListener('change', e => apply(e.matches));
+      return () => mql.removeEventListener('change', e => apply(e.matches));
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
+
+  return null;
+}
+
 // ── Folder-required gate ───────────────────────────────────────────────────────
 
 function FolderGate({ onConnected }: { onConnected: () => void }) {
@@ -194,6 +215,7 @@ function AppShell() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ThemeApplicator />
       <AppShell />
     </BrowserRouter>
   );
