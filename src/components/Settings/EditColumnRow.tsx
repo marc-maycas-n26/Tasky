@@ -42,6 +42,7 @@ export function EditColumnRow({
         <ColorPickerPopover
           value={editColor || getColumnColor(col)}
           onChange={onEditColorChange}
+          size={16}
         />
       </td>
       <td>

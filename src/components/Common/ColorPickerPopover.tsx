@@ -13,9 +13,10 @@ export const PRESET_COLORS = [
 interface Props {
   value: string;
   onChange: (color: string) => void;
+  size?: number;
 }
 
-export function ColorPickerPopover({ value, onChange }: Props) {
+export function ColorPickerPopover({ value, onChange, size = 28 }: Props) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -48,7 +49,7 @@ export function ColorPickerPopover({ value, onChange }: Props) {
         ref={triggerRef}
         type="button"
         className="cpp-trigger"
-        style={{ background: value }}
+        style={{ background: value, width: size, height: size }}
         onClick={openPopover}
         title="Pick a color"
         aria-haspopup="true"
