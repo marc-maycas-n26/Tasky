@@ -89,9 +89,9 @@ export function ColumnsSection() {
           <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
             <colgroup>
               <col style={{ width: 32 }} />
-              <col />
-              <col style={{ width: 70 }} />
-              <col style={{ width: 148 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 160 }} />
               <col style={{ width: 96 }} />
             </colgroup>
             <thead>
