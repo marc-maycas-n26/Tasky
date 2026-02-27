@@ -49,7 +49,7 @@ export function EditColumnRow({
       <td style={{ textAlign: 'center' }}>
         <select
           className="form-input form-input-inline"
-          style={{ width: '100%', boxSizing: 'border-box' }}
+          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center' }}
           value={col.role ?? ''}
           onChange={e => onRoleChange((e.target.value as ColumnRole) || undefined)}
         >
