@@ -19,7 +19,7 @@ export function CreateTicketModal() {
   const templates = useStore(s => s.templates);
 
   const sortedCols = [...columns].sort((a, b) => a.order - b.order).filter(c => !c.isBacklog);
-  const todoCol = columns.find(c => c.isTodo) ?? sortedCols[0];
+  const todoCol = columns.find(c => c.role === 'todo' || c.isTodo) ?? sortedCols[0];
 
   const isBacklogTicket = createTicketDefaults.inBacklog ?? false;
   const defaultColumnId = isBacklogTicket ? '' : (createTicketDefaults.columnId ?? todoCol?.id ?? '');

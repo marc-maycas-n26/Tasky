@@ -4,12 +4,15 @@ export type Priority = 'lowest' | 'low' | 'medium' | 'high' | 'highest';
 
 export type EpicStatus = 'todo' | 'inprogress' | 'done';
 
+export type ColumnRole = 'todo' | 'in_progress' | 'done';
+
 export interface Column {
   id: string;
   name: string;
   order: number;
   isBacklog: boolean;
-  isTodo: boolean;
+  isTodo: boolean;       // legacy — superseded by role; kept for backward compat
+  role?: ColumnRole;     // 'todo' | 'in_progress' | 'done' | undefined (none)
   color?: string;
   createdAt: string;
   updatedAt: string;

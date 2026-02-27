@@ -114,7 +114,7 @@ export function ColumnsSection() {
                       onEditColorChange={setEditColor}
                       onSave={saveEdit}
                       onCancel={() => setEditId(null)}
-                      onFlagChange={(flag, value) => updateColumn(col.id, { [flag]: value })}
+                      onRoleChange={role => updateColumn(col.id, { role, isTodo: role === 'todo' })}
                     />
                   ) : (
                     <>
@@ -135,10 +135,11 @@ export function ColumnsSection() {
                         />
                       </td>
                       <td>
-                        <div className="flags-row">
-                          {col.isBacklog && <span className="flag-chip">Backlog</span>}
-                          {col.isTodo && <span className="flag-chip">To-do</span>}
-                        </div>
+                        {col.role && (
+                          <span className="flag-chip">
+                            {col.role === 'todo' ? 'To Do' : col.role === 'in_progress' ? 'In Progress' : 'Done'}
+                          </span>
+                        )}
                       </td>
                       <td>
                         <div className="table-actions">

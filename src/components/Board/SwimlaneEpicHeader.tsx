@@ -9,7 +9,7 @@ type Tags = ReturnType<typeof useStore.getState>['tags'];
 function getEpicStatus(tickets: Ticket[], columns: Columns): 'todo' | 'inprogress' | 'done' {
   if (tickets.length === 0) return 'todo';
   const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
-  const todoColIds = columns.filter(c => c.isTodo).map(c => c.id);
+  const todoColIds = columns.filter(c => c.role === 'todo' || c.isTodo).map(c => c.id);
   const allDone = tickets.every(t => doneColIds.includes(t.columnId));
   if (allDone) return 'done';
   const allTodo = tickets.every(t => todoColIds.includes(t.columnId));
@@ -56,7 +56,7 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
     return () => document.removeEventListener('mousedown', handleClick);
   }, [statusMenuOpen]);
 
-  const todoCol = columns.find(c => c.isTodo) ?? columns.find(c => !c.isBacklog) ?? columns[0];
+  const todoCol = columns.find(c => c.role === 'todo' || c.isTodo) ?? columns.find(c => !c.isBacklog) ?? columns[0];
   const isCollapsed = isCollapsedOverride ?? epic?.isCollapsed ?? false;
   const computedStatus = getEpicStatus(tickets, columns);
   const status = epic?.status ?? computedStatus;

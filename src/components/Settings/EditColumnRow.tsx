@@ -1,6 +1,6 @@
 import { getColumnColor } from '../../utils/columnColor';
 import { ColorPickerPopover } from '../Common/ColorPickerPopover';
-import type { Column } from '../../types';
+import type { Column, ColumnRole } from '../../types';
 
 interface Props {
   col: Column;
@@ -10,7 +10,7 @@ interface Props {
   onEditColorChange: (v: string) => void;
   onSave: () => void;
   onCancel: () => void;
-  onFlagChange: (flag: 'isBacklog' | 'isTodo', value: boolean) => void;
+  onRoleChange: (role: ColumnRole | undefined) => void;
 }
 
 export function EditColumnRow({
@@ -21,7 +21,7 @@ export function EditColumnRow({
   onEditColorChange,
   onSave,
   onCancel,
-  onFlagChange,
+  onRoleChange,
 }: Props) {
   return (
     <>
@@ -56,24 +56,16 @@ export function EditColumnRow({
         </div>
       </td>
       <td>
-        <div className="flags-row">
-          <label className="flag-label">
-            <input
-              type="checkbox"
-              checked={col.isBacklog}
-              onChange={e => onFlagChange('isBacklog', e.target.checked)}
-            />
-            Backlog
-          </label>
-          <label className="flag-label">
-            <input
-              type="checkbox"
-              checked={col.isTodo}
-              onChange={e => onFlagChange('isTodo', e.target.checked)}
-            />
-            To-do
-          </label>
-        </div>
+        <select
+          className="form-input form-input-inline"
+          value={col.role ?? ''}
+          onChange={e => onRoleChange((e.target.value as ColumnRole) || undefined)}
+        >
+          <option value="">None</option>
+          <option value="todo">To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
       </td>
       <td>
         <div className="table-actions">
