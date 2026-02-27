@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../../store';
-import { MarkdownFsAdapter, saveDirectoryHandle, clearDirectoryHandle } from '../../storage/markdownFs';
+import { MarkdownFsAdapter, saveDirectoryHandle, clearDirectoryHandle, clearMarkdownFolder } from '../../storage/markdownFs';
 import { IndexedDbAdapter, clearAppDatabase } from '../../storage/indexedDb';
+import { ConfirmDialog } from '../Common/ConfirmDialog';
 import type { AppState } from '../../types';
 
 const FS_SUPPORTED = 'showDirectoryPicker' in window;
@@ -19,6 +20,7 @@ export function StorageSection() {
   const [fsStatus, setFsStatus] = useState<'idle' | 'picking' | 'loading' | 'error'>('idle');
   const [fsError, setFsError] = useState('');
   const [importError, setImportError] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const folderConnected = adapter instanceof MarkdownFsAdapter;
   const folderName = settings.markdownFolder?.folderName;
@@ -89,6 +91,13 @@ export function StorageSection() {
     }
   }
 
+  async function handleResetToSample() {
+    await clearMarkdownFolder();   // wipes _tasky_meta.json, _archive/, userStatus/
+    await clearDirectoryHandle();  // forgets the folder handle
+    await clearAppDatabase();      // wipes IndexedDB
+    window.location.reload();
+  }
+
   async function handleDisconnect() {
     await clearDirectoryHandle();
     setAdapter(new IndexedDbAdapter());
@@ -99,6 +108,7 @@ export function StorageSection() {
   }
 
   return (
+    <>
     <div className="card">
       <div className="card-header">Storage &amp; Data</div>
       <div className="card-body settings-storage-body">
@@ -178,7 +188,32 @@ export function StorageSection() {
           </p>
         </div>
 
+        <div className="settings-divider" />
+
+        {/* ── Danger zone ── */}
+        <div className="settings-storage-section">
+          <h3 className="settings-section-label">Danger zone</h3>
+          <div className="settings-row">
+            <button className="btn btn-secondary btn-sm" style={{ color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }} onClick={() => setConfirmReset(true)}>
+              Reset to sample data
+            </button>
+          </div>
+          <p className="settings-hint">Wipes all data and reloads with the built-in sample project.</p>
+        </div>
+
       </div>
     </div>
+
+    {confirmReset && (
+      <ConfirmDialog
+        title="Reset to sample data?"
+        message="All your current data will be permanently deleted and replaced with the sample project. This cannot be undone."
+        confirmLabel="Reset"
+        dangerous
+        onConfirm={handleResetToSample}
+        onCancel={() => setConfirmReset(false)}
+      />
+    )}
+    </>
   );
 }

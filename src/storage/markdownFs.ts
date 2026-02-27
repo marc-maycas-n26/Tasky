@@ -79,6 +79,22 @@ export async function clearDirectoryHandle() {
 }
 
 /**
+ * Delete all Tasky-managed files and folders from the connected directory.
+ * Removes: _tasky_meta.json, _archive/, userStatus/
+ * Leaves any unrelated files the user may have in the folder untouched.
+ */
+export async function clearMarkdownFolder(): Promise<void> {
+  const handle = await loadDirectoryHandle();
+  if (!handle) return;
+  const toRemove = [META_FILE, ARCHIVE_FOLDER, USER_STATUS_FOLDER];
+  for (const name of toRemove) {
+    try {
+      await handle.removeEntry(name, { recursive: true });
+    } catch { /* entry may not exist yet — ignore */ }
+  }
+}
+
+/**
  * Try to restore a previously-granted handle. Returns the handle if
  * permission is already granted or can be granted without a prompt.
  * Returns null if the user must pick the folder again.

@@ -7,7 +7,7 @@ interface Props {
   confirmLabel?: string;
   cancelLabel?: string;
   dangerous?: boolean;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 }
 

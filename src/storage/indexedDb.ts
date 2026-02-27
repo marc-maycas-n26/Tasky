@@ -83,9 +83,28 @@ class AppDatabase extends Dexie {
 
 const db = new AppDatabase();
 
-/** Wipe the entire app database. Called when switching to markdown-only mode. */
+/** Wipe all data from the app database, keeping the schema intact. */
 export async function clearAppDatabase(): Promise<void> {
-  await db.delete();
+  await db.transaction(
+    'rw',
+    [db.columns, db.epics, db.tags, db.templates, db.tickets, db.automationRules,
+     db.comments, db.linkedItems, db.trashedTickets, db.releasedEpics, db.meta],
+    async () => {
+      await Promise.all([
+        db.columns.clear(),
+        db.epics.clear(),
+        db.tags.clear(),
+        db.templates.clear(),
+        db.tickets.clear(),
+        db.automationRules.clear(),
+        db.comments.clear(),
+        db.linkedItems.clear(),
+        db.trashedTickets.clear(),
+        db.releasedEpics.clear(),
+        db.meta.clear(),
+      ]);
+    }
+  );
 }
 
 export class IndexedDbAdapter implements StorageAdapter {
