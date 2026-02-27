@@ -25,11 +25,11 @@ export function EditColumnRow({
 }: Props) {
   return (
     <>
-      <td className="drag-handle">⠿</td>
-      <td>
+      <span className="col-list-cell col-list-handle drag-handle">⠿</span>
+      <span className="col-list-cell col-list-name">
         <input
           className="form-input form-input-inline"
-          style={{ width: '100%', boxSizing: 'border-box', height: 36 }}
+          style={{ width: '100%', boxSizing: 'border-box' }}
           value={editName}
           autoFocus
           onChange={e => onEditNameChange(e.target.value)}
@@ -38,18 +38,18 @@ export function EditColumnRow({
             if (e.key === 'Escape') onCancel();
           }}
         />
-      </td>
-      <td style={{ textAlign: 'center' }}>
+      </span>
+      <span className="col-list-cell col-list-color">
         <ColorPickerPopover
           value={editColor || getColumnColor(col)}
           onChange={onEditColorChange}
-          size={16}
+          size={14}
         />
-      </td>
-      <td style={{ textAlign: 'center' }}>
+      </span>
+      <span className="col-list-cell col-list-status">
         <select
           className="form-input form-input-inline"
-          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center', height: 36 }}
+          style={{ width: '100%', boxSizing: 'border-box', textAlign: 'center' }}
           value={col.role ?? ''}
           onChange={e => onRoleChange((e.target.value as ColumnRole) || undefined)}
         >
@@ -58,23 +58,21 @@ export function EditColumnRow({
           <option value="in_progress">In Progress</option>
           <option value="done">Done</option>
         </select>
-      </td>
-      <td style={{ textAlign: 'center' }}>
-        <div className="table-actions" style={{ justifyContent: 'center' }}>
-          <button className="btn btn-icon btn-primary btn-sm" title="Save" onClick={onSave}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
-              <rect x="5" y="2" width="6" height="4" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
-              <rect x="4" y="8" width="8" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
-            </svg>
-          </button>
-          <button className="btn btn-icon btn-sm btn-secondary" title="Cancel" onClick={onCancel}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-      </td>
+      </span>
+      <span className="col-list-cell col-list-actions">
+        <button className="btn btn-icon btn-primary btn-sm" title="Save" onClick={onSave}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+            <rect x="5" y="2" width="6" height="4" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+            <rect x="4" y="8" width="8" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+          </svg>
+        </button>
+        <button className="btn btn-icon btn-sm btn-secondary" title="Cancel" onClick={onCancel}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </span>
     </>
   );
 }

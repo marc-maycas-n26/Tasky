@@ -146,22 +146,79 @@
   font-weight: 600;
 }
 
-/* ── All settings tables — more breathing room between cells ────────────────── */
+/* ── All other settings tables — more breathing room between cells ───────────── */
 .settings-table-wrap .data-table th,
 .settings-table-wrap .data-table td {
   padding: 11px 18px;
 }
 
-/* ── Drag handle keeps its own tighter padding ──────────────────────────────── */
-.settings-table-wrap .data-table td.drag-handle {
-  padding: 11px 4px;
+/* ── Columns div list ───────────────────────────────────────────────────────── */
+.col-list {
+  border-top: 1px solid var(--color-border-light);
+  max-height: 340px;
+  overflow-y: auto;
 }
 
-/* ── Editing row — remove vertical padding so fixed-height inputs control height */
-.settings-table-wrap .data-table tr.row-editing td {
-  padding-top: 0;
-  padding-bottom: 0;
-  vertical-align: middle;
-  height: 58px;
+.col-list-header,
+.col-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.col-list-header {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.col-list-row {
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  transition: background 0.1s;
+}
+.col-list-row:last-child { border-bottom: none; }
+.col-list-row:hover { background: var(--color-bg); }
+.col-list-row--editing { background: var(--color-primary-light) !important; }
+.col-list-row--drag-over { background: var(--color-primary-subtle) !important; }
+
+.col-list-cell {
+  display: flex;
+  align-items: center;
+  padding: 11px 18px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.col-list-handle {
+  width: 32px;
+  padding: 11px 4px;
+  justify-content: center;
+}
+
+.col-list-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.col-list-color {
+  width: 80px;
+  justify-content: center;
+}
+
+.col-list-status {
+  width: 148px;
+  justify-content: center;
+}
+
+.col-list-actions {
+  width: 96px;
+  justify-content: center;
+  gap: 6px;
 }
 

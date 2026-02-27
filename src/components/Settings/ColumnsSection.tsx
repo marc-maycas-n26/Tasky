@@ -85,87 +85,75 @@ export function ColumnsSection() {
       )}
 
       {sorted.length > 0 && (
-        <div className="settings-table-wrap">
-          <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
-            <colgroup>
-              <col style={{ width: 32 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 90 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 96 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th />
-                <th>Name</th>
-                <th style={{ textAlign: 'center' }}>Color</th>
-                <th style={{ textAlign: 'center' }}>Status</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map(col => (
-                <tr
-                  key={col.id}
-                  draggable
-                  onDragStart={() => handleDragStart(col.id)}
-                  onDragOver={e => handleDragOver(e, col.id)}
-                  onDrop={() => handleDrop(col.id)}
-                  onDragLeave={handleDragLeave}
-                  className={editId === col.id ? 'row-editing' : dragOverId === col.id ? 'row-drag-over' : ''}
-                >
-                  {editId === col.id ? (
-                    <EditColumnRow
-                      col={col}
-                      editName={editName}
-                      onEditNameChange={setEditName}
-                      editColor={editColor}
-                      onEditColorChange={setEditColor}
-                      onSave={saveEdit}
-                      onCancel={() => setEditId(null)}
-                      onRoleChange={role => updateColumn(col.id, { role, isTodo: role === 'todo' })}
+        <div className="col-list">
+
+          {/* Header */}
+          <div className="col-list-header">
+            <span className="col-list-cell col-list-handle" />
+            <span className="col-list-cell col-list-name">Name</span>
+            <span className="col-list-cell col-list-color">Color</span>
+            <span className="col-list-cell col-list-status">Status</span>
+            <span className="col-list-cell col-list-actions">Actions</span>
+          </div>
+
+          {sorted.map(col => (
+            <div
+              key={col.id}
+              className={`col-list-row${editId === col.id ? ' col-list-row--editing' : ''}${dragOverId === col.id ? ' col-list-row--drag-over' : ''}`}
+              draggable
+              onDragStart={() => handleDragStart(col.id)}
+              onDragOver={e => handleDragOver(e, col.id)}
+              onDrop={() => handleDrop(col.id)}
+              onDragLeave={handleDragLeave}
+            >
+              {editId === col.id ? (
+                <EditColumnRow
+                  col={col}
+                  editName={editName}
+                  onEditNameChange={setEditName}
+                  editColor={editColor}
+                  onEditColorChange={setEditColor}
+                  onSave={saveEdit}
+                  onCancel={() => setEditId(null)}
+                  onRoleChange={role => updateColumn(col.id, { role, isTodo: role === 'todo' })}
+                />
+              ) : (
+                <>
+                  <span className="col-list-cell col-list-handle drag-handle">⠿</span>
+                  <span className="col-list-cell col-list-name">{col.name}</span>
+                  <span className="col-list-cell col-list-color">
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        background: getColumnColor(col),
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        flexShrink: 0,
+                      }}
+                      title={col.color ?? 'auto'}
                     />
-                  ) : (
-                    <>
-                      <td className="drag-handle">⠿</td>
-                      <td>{col.name}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: 16,
-                            height: 16,
-                            borderRadius: '50%',
-                            background: getColumnColor(col),
-                            verticalAlign: 'middle',
-                            border: '1px solid rgba(0,0,0,0.1)',
-                          }}
-                          title={col.color ?? 'auto'}
-                        />
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {col.role && (
-                          <span className="flag-chip">
-                            {col.role === 'todo' ? 'To Do' : col.role === 'in_progress' ? 'In Progress' : 'Done'}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div className="table-actions" style={{ justifyContent: 'center' }}>
-                          <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
-                            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
-                          </button>
-                          <button className="btn btn-icon btn-sm btn-icon-danger" title="Delete" onClick={() => deleteColumn(col.id)}>
-                            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M5 3.5l.5 8M9 3.5l-.5 8M3 3.5l.5 8.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5L11 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>
+                  <span className="col-list-cell col-list-status">
+                    {col.role && (
+                      <span className="flag-chip">
+                        {col.role === 'todo' ? 'To Do' : col.role === 'in_progress' ? 'In Progress' : 'Done'}
+                      </span>
+                    )}
+                  </span>
+                  <span className="col-list-cell col-list-actions">
+                    <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(col.id)}>
+                      <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
+                    </button>
+                    <button className="btn btn-icon btn-sm btn-icon-danger" title="Delete" onClick={() => deleteColumn(col.id)}>
+                      <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v1M5 3.5l.5 8M9 3.5l-.5 8M3 3.5l.5 8.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5L11 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  </span>
+                </>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
