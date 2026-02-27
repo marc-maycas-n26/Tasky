@@ -59,8 +59,8 @@ export function EditColumnRow({
       </td>
       <td>
         <div className="table-actions">
-          <button className="btn btn-primary btn-sm" onClick={onSave}>Save</button>
-          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-primary" style={{ padding: '10px 12px' }} onClick={onSave}>Save</button>
+          <button className="btn btn-secondary" style={{ padding: '10px 12px' }} onClick={onCancel}>Cancel</button>
         </div>
       </td>
     </>
