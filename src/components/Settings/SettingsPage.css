@@ -157,3 +157,11 @@
   padding: 11px 4px;
 }
 
+/* ── Editing row — remove vertical padding so fixed-height inputs control height */
+.settings-table-wrap .data-table tr.row-editing td {
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+  height: 58px;
+}
+
