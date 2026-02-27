@@ -86,11 +86,11 @@ export function ColumnsSection() {
         <div className="settings-table-wrap">
           <table className="data-table" style={{ tableLayout: 'fixed', width: '100%' }}>
             <colgroup>
-              <col style={{ width: 28 }} />
+              <col style={{ width: 32 }} />
               <col />
-              <col style={{ width: 44 }} />
-              <col style={{ width: 116 }} />
-              <col style={{ width: 80 }} />
+              <col style={{ width: 70 }} />
+              <col style={{ width: 148 }} />
+              <col style={{ width: 96 }} />
             </colgroup>
             <thead>
               <tr>
