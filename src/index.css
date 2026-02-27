@@ -429,6 +429,7 @@ a:hover { text-decoration: underline; }
 }
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: var(--color-bg); }
+.data-table tr.row-editing td { background: var(--color-primary-light); }
 
 .table-actions {
   display: flex;

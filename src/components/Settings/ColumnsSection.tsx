@@ -103,7 +103,7 @@ export function ColumnsSection() {
                   onDragOver={e => handleDragOver(e, col.id)}
                   onDrop={() => handleDrop(col.id)}
                   onDragLeave={handleDragLeave}
-                  className={dragOverId === col.id ? 'row-drag-over' : ''}
+                  className={editId === col.id ? 'row-editing' : dragOverId === col.id ? 'row-drag-over' : ''}
                 >
                   {editId === col.id ? (
                     <EditColumnRow
