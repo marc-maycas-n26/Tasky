@@ -137,6 +137,11 @@
 }
 
 /* Dark-mode form + label overrides */
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="time"] {
+  color-scheme: dark;
+}
 [data-theme="dark"] .form-input,
 [data-theme="dark"] .form-textarea,
 [data-theme="dark"] .form-select {

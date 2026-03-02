@@ -25,6 +25,7 @@
   background: var(--color-surface-raised);
   flex-wrap: wrap;
   flex-shrink: 0;
+  border-radius: calc(var(--radius-md) - 1.5px) calc(var(--radius-md) - 1.5px) 0 0;
 }
 
 .rte-toolbar-group {
@@ -179,6 +180,66 @@
 /* Nested task lists */
 .rte-content .tiptap ul[data-type="taskList"] ul[data-type="taskList"] {
   margin: 2px 0 2px 20px;
+}
+
+/* ── Emoji picker ────────────────────────────────────────────────────────── */
+.rte-emoji-wrap {
+  position: relative;
+}
+
+.rte-emoji-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 500;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+}
+
+/* ── Emoji :shortcode: suggestion dropdown ───────────────────────────────── */
+.emoji-suggestion {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 200px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.emoji-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s;
+}
+.emoji-suggestion-item:hover,
+.emoji-suggestion-item--active {
+  background: var(--color-primary-light);
+}
+
+.emoji-suggestion-glyph {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.emoji-suggestion-name {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
 }
 
 /* ── Mini dialogs ────────────────────────────────────────────────────────── */

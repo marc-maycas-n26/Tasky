@@ -6,7 +6,10 @@ import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
+import EmojiPicker, { Theme, type EmojiClickData } from 'emoji-picker-react';
+import { Emoji } from '@tiptap/extension-emoji';
+import { emojiSuggestion } from './EmojiSuggestion';
 import './RichTextEditor.css';
 
 interface Props {
@@ -17,6 +20,8 @@ interface Props {
 }
 
 export function RichTextEditor({ value, onChange, placeholder = 'Add a description…', readOnly = false }: Props) {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -29,6 +34,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       Placeholder.configure({ placeholder }),
       TaskList,
       TaskItem.configure({ nested: true }),
+      Emoji.configure({ enableEmoticons: true, suggestion: emojiSuggestion }),
     ],
     content: value,
     editable: !readOnly,
@@ -45,6 +51,27 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       editor.commands.setContent(value || '');
     }
   }, [value, editor]);
+
+  // ── Emoji picker ─────────────────────────────────────────────────────────
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const handleEmojiClick = useCallback((data: EmojiClickData) => {
+    if (!editor) return;
+    editor.chain().focus().insertContent(data.emoji).run();
+    setPickerOpen(false);
+  }, [editor]);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [pickerOpen]);
 
   // ── Link dialog ──────────────────────────────────────────────────────────
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -177,6 +204,28 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
               ☑
             </ToolBtn>
           </ToolbarGroup>
+
+          <div className="rte-toolbar-sep" />
+
+          <div className="rte-emoji-wrap" ref={pickerRef}>
+            <ToolbarGroup>
+              <ToolBtn active={pickerOpen} title="Insert emoji (or type :shortcode:)" onClick={() => setPickerOpen(p => !p)}>
+                😊
+              </ToolBtn>
+            </ToolbarGroup>
+            {pickerOpen && (
+              <div className="rte-emoji-popover">
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme={isDark ? Theme.DARK : Theme.LIGHT}
+                  searchPlaceholder="Search emojis…"
+                  lazyLoadEmojis
+                  width={320}
+                  height={380}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
