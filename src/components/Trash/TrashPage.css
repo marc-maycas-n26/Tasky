@@ -34,7 +34,7 @@
 }
 
 .trash-item-expires--warning {
-  color: #D97706;
+  color: var(--color-warning-text);
   background: rgba(245, 158, 11, 0.1);
 }
 

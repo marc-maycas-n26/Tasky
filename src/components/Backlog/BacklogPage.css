@@ -300,7 +300,7 @@
   align-items: center;
   gap: 4px;
   font-size: var(--font-size-xs);
-  color: #059669;
+  color: var(--color-status-done);
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.3);
   cursor: pointer;

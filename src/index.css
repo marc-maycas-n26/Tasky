@@ -45,6 +45,20 @@
   --color-success: #10B981;
   --color-warning: #F59E0B;
 
+  /* Status text colours — used for coloured labels/pills */
+  --color-status-done: #059669;
+  --color-status-review: #7C3AED;
+  --color-status-blocked: #EF4444;
+  --color-status-done-border: #6EE7B7;
+  --color-warning-text: #D97706;
+
+  /* Priority text colours */
+  --color-priority-lowest: #6B7280;
+  --color-priority-low: #3B82F6;
+  --color-priority-medium: #D97706;
+  --color-priority-high: #EF4444;
+  --color-priority-highest: #DC2626;
+
   /* Nav — dark slate, not navy */
   --color-nav-bg: #18181B;
   --color-nav-text: rgba(255, 255, 255, 0.85);
@@ -106,16 +120,45 @@
   --shadow-dropdown: 0 8px 24px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
 
   --color-overlay: rgba(0, 0, 0, 0.65);
+
+  /* Status text colours — brighter for dark backgrounds */
+  --color-status-done: #34D399;
+  --color-status-review: #A78BFA;
+  --color-status-blocked: #F87171;
+  --color-status-done-border: #059669;
+  --color-warning-text: #FCD34D;
+
+  /* Priority text colours — brighter for dark backgrounds */
+  --color-priority-lowest: #9CA3AF;
+  --color-priority-low: #60A5FA;
+  --color-priority-medium: #FCD34D;
+  --color-priority-high: #F87171;
+  --color-priority-highest: #FCA5A5;
 }
 
-/* Dark-mode overrides for hardcoded hover border colors */
-[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+/* Dark-mode form + label overrides */
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .form-select {
+  background: var(--color-surface-raised);
   border-color: #3A3A48;
 }
 [data-theme="dark"] .form-input:hover,
 [data-theme="dark"] .form-textarea:hover,
 [data-theme="dark"] .form-select:hover {
+  border-color: #52525E;
+}
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-textarea:focus,
+[data-theme="dark"] .form-select:focus {
+  border-color: var(--color-primary);
+}
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
   border-color: #3A3A48;
+}
+/* Sidebar row labels — bump up from subtle to secondary in dark */
+[data-theme="dark"] .sidebar-row-label {
+  color: var(--color-text-secondary);
 }
 
 /* ── Reset ─────────────────────────────────────────────────────────────────── */

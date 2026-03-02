@@ -205,7 +205,7 @@
 }
 .swimlane-epic-status--done {
   background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  color: var(--color-status-done);
 }
 
 .swimlane-status-menu {
@@ -267,8 +267,8 @@
 }
 .swimlane-status-menu-item--done {
   background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border-color: #6EE7B7;
+  color: var(--color-status-done);
+  border-color: var(--color-status-done-border);
 }
 .swimlane-status-menu-item .swimlane-status-check {
   margin-left: auto;
@@ -281,7 +281,7 @@
   align-items: center;
   gap: 5px;
   font-size: var(--font-size-xs);
-  color: #059669;
+  color: var(--color-status-done);
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 3px 10px;

@@ -4,11 +4,11 @@ import { StatusBadge } from './StatusBadge';
 import type { Priority, Ticket } from '../../types';
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; icon: string }> = {
-  lowest:  { label: 'Lowest',  color: '#6B7280', icon: '↓↓' },
-  low:     { label: 'Low',     color: '#3B82F6', icon: '↓' },
-  medium:  { label: 'Medium',  color: '#F59E0B', icon: '=' },
-  high:    { label: 'High',    color: '#EF4444', icon: '↑' },
-  highest: { label: 'Highest', color: '#DC2626', icon: '↑↑' },
+  lowest:  { label: 'Lowest',  color: 'var(--color-priority-lowest)',  icon: '↓↓' },
+  low:     { label: 'Low',     color: 'var(--color-priority-low)',     icon: '↓' },
+  medium:  { label: 'Medium',  color: 'var(--color-priority-medium)',  icon: '=' },
+  high:    { label: 'High',    color: 'var(--color-priority-high)',    icon: '↑' },
+  highest: { label: 'Highest', color: 'var(--color-priority-highest)', icon: '↑↑' },
 };
 
 export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: boolean }) {

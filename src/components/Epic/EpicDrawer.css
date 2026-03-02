@@ -242,8 +242,8 @@
 }
 .epic-drawer-status-pill--done.epic-drawer-status-pill--active {
   background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border-color: #6EE7B7;
+  color: var(--color-status-done);
+  border-color: var(--color-status-done-border);
 }
 .epic-drawer-status-pill--auto.epic-drawer-status-pill--active {
   background: var(--color-border-light);

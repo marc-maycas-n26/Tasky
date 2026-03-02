@@ -10,7 +10,6 @@ import { SettingsPage } from './components/Settings/SettingsPage';
 import { TrashPage } from './components/Trash/TrashPage';
 import { ReleasesPage } from './components/Releases/ReleasesPage';
 import { MarkdownFsAdapter, saveDirectoryHandle } from './storage/markdownFs';
-import './App.css';
 
 // ── Theme applicator ───────────────────────────────────────────────────────────
 
