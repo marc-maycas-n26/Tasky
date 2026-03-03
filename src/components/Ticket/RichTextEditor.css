@@ -131,6 +131,7 @@
 .rte-content .tiptap a {
   color: var(--color-primary);
   text-decoration: underline;
+  cursor: pointer;
 }
 .rte-content .tiptap img {
   max-width: 100%;
