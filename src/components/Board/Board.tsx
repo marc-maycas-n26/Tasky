@@ -27,6 +27,7 @@ export function Board() {
   const isCreateTicketOpen = useStore(s => s.isCreateTicketOpen);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const releaseDoneTickets = useStore(s => s.releaseDoneTickets);
+  const releasedEpics = useStore(s => s.releasedEpics);
 
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [search, setSearch] = useState('');
@@ -154,6 +155,25 @@ export function Board() {
     [tickets, doneColIds]
   );
 
+  const lastReleaseDate = useMemo(() => {
+    if (releasedEpics.length === 0) return null;
+    const latest = releasedEpics.reduce((a, b) => a.releasedAt > b.releasedAt ? a : b);
+    return new Date(latest.releasedAt);
+  }, [releasedEpics]);
+
+  const lastReleaseLabel = useMemo(() => {
+    if (!lastReleaseDate) return null;
+    const weeks = Math.floor((Date.now() - lastReleaseDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    if (weeks === 0) return 'Released this week';
+    if (weeks === 1) return '1 week ago';
+    return `${weeks} weeks ago`;
+  }, [lastReleaseDate]);
+
+  const lastReleaseDateLabel = useMemo(() => {
+    if (!lastReleaseDate) return null;
+    return lastReleaseDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }, [lastReleaseDate]);
+
   function handleReleaseClick() {
     if (doneCount === 0) { setNothingToRelease(true); return; }
     setConfirmRelease(true);
@@ -205,13 +225,18 @@ export function Board() {
           )}
 
           <div className="board-toolbar-right">
+            {lastReleaseLabel && (
+              <span className="board-last-release" title={lastReleaseDateLabel ?? undefined}>
+                {lastReleaseLabel}
+              </span>
+            )}
             <button className="btn btn-secondary" onClick={handleReleaseClick} title="Release all done tickets">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                 <path d="M7 1.5C4 1.5 1.5 4 1.5 7S4 12.5 7 12.5 12.5 10 12.5 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 <path d="M9.5 1.5h3v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M12.5 1.5L7 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
               </svg>
-              Release done
+              Release
               {doneCount > 0 && <span className="board-release-badge">{doneCount}</span>}
             </button>
             <button className="btn btn-primary" onClick={() => openCreateTicket({})}>

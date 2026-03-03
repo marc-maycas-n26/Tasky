@@ -509,6 +509,12 @@
   color: var(--color-text-subtle);
 }
 
+.board-last-release {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  cursor: default;
+}
+
 .board-release-badge {
   display: inline-flex;
   align-items: center;
