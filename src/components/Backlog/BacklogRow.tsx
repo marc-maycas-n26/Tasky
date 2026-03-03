@@ -52,19 +52,6 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
       <span className="bl-row-key">{ticket.key}</span>
       <span className="bl-row-title">{ticket.title}</span>
 
-      <div className="bl-row-epic-wrap">
-        {ticketEpic ? (
-          <span
-            className="bl-row-epic"
-            style={{ background: ticketEpic.color + '22', color: ticketEpic.color, border: `1px solid ${ticketEpic.color}55` }}
-          >
-            {ticketEpic.title}
-          </span>
-        ) : (
-          <span className="bl-row-epic-none">No epic</span>
-        )}
-      </div>
-
       <div className="bl-row-meta">
         {ticketTags.length > 0 && ticketTags.map(tag => (
           <span
@@ -78,11 +65,10 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
         {priority && (
           <span
             className="bl-row-priority"
-            style={{ background: priority.color + '18', color: priority.color, border: `1px solid ${priority.color}33` }}
+            style={{ color: priority.color }}
             title={priority.label}
           >
             <span className="bl-row-priority-icon">{priority.icon}</span>
-            {priority.label}
           </span>
         )}
       </div>

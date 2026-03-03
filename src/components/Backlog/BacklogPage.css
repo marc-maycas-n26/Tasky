@@ -416,16 +416,10 @@
 .bl-row-epic:hover { opacity: 0.8; }
 
 .bl-row-priority {
-  font-size: var(--font-size-xs);
-  white-space: nowrap;
-  padding: 2px 7px;
-  border-radius: 20px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-weight: 600;
-  width: 90px;
   justify-content: center;
+  width: 28px;
   flex-shrink: 0;
 }
 
@@ -454,7 +448,7 @@
   border: 1.5px solid;
   white-space: nowrap;
   transition: opacity 0.1s, box-shadow 0.1s;
-  width: 110px;
+  width: 150px;
   justify-content: space-between;
   flex-shrink: 0;
 }
@@ -521,19 +515,6 @@
   flex-shrink: 0;
 }
 
-/* ── Epic chip (read-only) ───────────────────────────────────────────────────── */
-.bl-row-epic-wrap {
-  flex-shrink: 0;
-  width: 130px;
-  display: flex;
-  align-items: center;
-}
-
-.bl-row-epic-none {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-subtle);
-  padding: 2px 0;
-}
 
 /* ── Drag handle ─────────────────────────────────────────────────────────────── */
 .bl-row-drag-handle {
