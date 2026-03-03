@@ -198,9 +198,20 @@
 /* ── Epic group ──────────────────────────────────────────────────────────────── */
 .bl-epic-group {
   border-top: 1px solid var(--color-border-light);
+  transition: opacity 0.15s;
 }
 .bl-epic-group:first-child {
   border-top: none;
+}
+
+.bl-epic-group--dimmed {
+  opacity: 0.35;
+}
+
+.bl-epic-group--drop-target {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
 }
 
 .bl-epic-group-header {
@@ -536,6 +547,10 @@
 
 .bl-row--dragging {
   opacity: 0.4;
+}
+
+.bl-row--drop-over {
+  border-top: 2px solid var(--color-primary);
 }
 
 .bl-row--ghost {

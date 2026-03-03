@@ -9,9 +9,11 @@ interface Props {
   tickets: Ticket[];
   search: string;
   inBacklog?: boolean;
+  activeTicket?: Ticket | null;
+  overEpicId?: string | null;
 }
 
-export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
+export function EpicGroup({ epic, tickets, search, inBacklog = true, activeTicket, overEpicId }: Props) {
   const columns = useStore(s => s.columns);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
@@ -33,9 +35,16 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true }: Props) {
   const pct = tickets.length > 0 ? Math.round((doneCount / tickets.length) * 100) : 0;
   const allDone = epic !== null && tickets.length > 0 && doneCount === tickets.length;
 
+  // Drag-over state: is the user dragging a ticket from a *different* epic over this group?
+  const thisEpicId = epic?.id ?? null;
+  const isDragging = !!activeTicket;
+  const isDraggingFromThisEpic = isDragging && (activeTicket!.epicId ?? null) === thisEpicId;
+  const isTargetEpic = isDragging && overEpicId !== undefined && (overEpicId ?? null) === thisEpicId;
+  const isDimmed = isDragging && !isDraggingFromThisEpic && !isTargetEpic;
+
   return (
     <>
-    <div className="bl-epic-group">
+    <div className={`bl-epic-group${isDimmed ? ' bl-epic-group--dimmed' : ''}${isTargetEpic && !isDraggingFromThisEpic ? ' bl-epic-group--drop-target' : ''}`}>
       <div
         className="bl-epic-group-header"
         onClick={() => setCollapsed(c => !c)}

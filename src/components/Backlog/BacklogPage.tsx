@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
-  type DragEndEvent, type DragStartEvent,
+  type DragEndEvent, type DragStartEvent, type DragOverEvent,
 } from '@dnd-kit/core';
 import { useStore } from '../../store';
 import { CreateTicketModal } from '../Ticket/CreateTicketModal';
@@ -27,6 +27,7 @@ export function BacklogPage() {
 
   const [search, setSearch] = useState('');
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+  const [overEpicId, setOverEpicId] = useState<string | null | undefined>(undefined);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -43,10 +44,20 @@ export function BacklogPage() {
   function handleDragStart(e: DragStartEvent) {
     const ticket = tickets.find(t => t.id === e.active.id);
     setActiveTicket(ticket ?? null);
+    setOverEpicId(undefined);
+  }
+
+  function handleDragOver(e: DragOverEvent) {
+    const overId = e.over?.id as string | undefined;
+    if (!overId) { setOverEpicId(undefined); return; }
+    const overTicket = tickets.find(t => t.id === overId);
+    // null = "No epic" group, undefined = not over a ticket row
+    setOverEpicId(overTicket ? (overTicket.epicId ?? null) : undefined);
   }
 
   function handleDragEnd(e: DragEndEvent) {
     setActiveTicket(null);
+    setOverEpicId(undefined);
     const { active, over } = e;
     if (!over) return;
 
@@ -108,7 +119,7 @@ export function BacklogPage() {
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
     <div className="bl-page">
       {/* Toolbar */}
       <div className="bl-toolbar">
@@ -173,8 +184,8 @@ export function BacklogPage() {
 
       {/* Content */}
       <div className="bl-content">
-        <BacklogSection tickets={boardTickets} search={search} inBacklog={false} />
-        <BacklogSection tickets={backlogTickets} search={search} inBacklog={true} />
+        <BacklogSection tickets={boardTickets} search={search} inBacklog={false} activeTicket={activeTicket} overEpicId={overEpicId} />
+        <BacklogSection tickets={backlogTickets} search={search} inBacklog={true} activeTicket={activeTicket} overEpicId={overEpicId} />
       </div>
 
       {isTicketDrawerOpen && <TicketDrawer />}

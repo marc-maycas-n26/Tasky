@@ -8,9 +8,11 @@ interface Props {
   tickets: Ticket[];
   search: string;
   inBacklog: boolean;
+  activeTicket?: Ticket | null;
+  overEpicId?: string | null;
 }
 
-export function BacklogSection({ tickets: allTickets, search, inBacklog }: Props) {
+export function BacklogSection({ tickets: allTickets, search, inBacklog, activeTicket, overEpicId }: Props) {
   const epics = useStore(s => s.epics);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const [collapsed, setCollapsed] = useState(false);
@@ -65,10 +67,12 @@ export function BacklogSection({ tickets: allTickets, search, inBacklog }: Props
         ) : (
           <div className="bl-epic-groups">
             {epicGroups.map(({ epic, tickets }) => (
-              <EpicGroup key={epic.id} epic={epic} tickets={tickets} search={search} inBacklog={inBacklog} />
+              <EpicGroup key={epic.id} epic={epic} tickets={tickets} search={search} inBacklog={inBacklog}
+                activeTicket={activeTicket} overEpicId={overEpicId} />
             ))}
             {noEpicTickets.length > 0 && (
-              <EpicGroup key="__no_epic__" epic={null} tickets={noEpicTickets} search={search} inBacklog={inBacklog} />
+              <EpicGroup key="__no_epic__" epic={null} tickets={noEpicTickets} search={search} inBacklog={inBacklog}
+                activeTicket={activeTicket} overEpicId={overEpicId} />
             )}
           </div>
         )

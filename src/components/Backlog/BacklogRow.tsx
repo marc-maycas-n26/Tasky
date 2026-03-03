@@ -19,14 +19,14 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
   const ticketEpic = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({ id: ticket.id });
-  const { setNodeRef: setDropRef } = useDroppable({ id: ticket.id });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: ticket.id });
 
   const priority = ticket.priority ? PRIORITY_CONFIG[ticket.priority] : null;
 
   return (
     <div
       ref={el => { setDragRef(el); setDropRef(el); }}
-      className={`bl-row${indented ? ' bl-row--indented' : ''}${isDragging ? ' bl-row--dragging' : ''}`}
+      className={`bl-row${indented ? ' bl-row--indented' : ''}${isDragging ? ' bl-row--dragging' : ''}${isOver && !isDragging ? ' bl-row--drop-over' : ''}`}
       onClick={() => !isDragging && openTicket(ticket.id)}
       role="button"
       tabIndex={0}
