@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { useStore } from '../../store';
 import { StatusBadge } from './StatusBadge';
-import type { Priority, Ticket } from '../../types';
+import type { Ticket, Priority } from '../../types';
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; icon: string }> = {
   lowest:  { label: 'Lowest',  color: 'var(--color-priority-lowest)',  icon: '↓↓' },
@@ -15,7 +15,6 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
   const tags = useStore(s => s.tags);
   const epics = useStore(s => s.epics);
   const openTicket = useStore(s => s.openTicket);
-  const updateTicket = useStore(s => s.updateTicket);
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
   const ticketEpic = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
 
@@ -53,19 +52,17 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
       <span className="bl-row-key">{ticket.key}</span>
       <span className="bl-row-title">{ticket.title}</span>
 
-      <div className="bl-row-epic-wrap" onClick={e => e.stopPropagation()}>
-        <select
-          className="bl-row-epic-select"
-          value={ticket.epicId ?? ''}
-          onChange={e => updateTicket(ticket.id, { epicId: e.target.value || undefined })}
-          title="Change epic"
-          style={ticketEpic ? { color: ticketEpic.color, borderColor: ticketEpic.color + '55' } : undefined}
-        >
-          <option value="">No epic</option>
-          {epics.map(ep => (
-            <option key={ep.id} value={ep.id}>{ep.title}</option>
-          ))}
-        </select>
+      <div className="bl-row-epic-wrap">
+        {ticketEpic ? (
+          <span
+            className="bl-row-epic"
+            style={{ background: ticketEpic.color + '22', color: ticketEpic.color, border: `1px solid ${ticketEpic.color}55` }}
+          >
+            {ticketEpic.title}
+          </span>
+        ) : (
+          <span className="bl-row-epic-none">No epic</span>
+        )}
       </div>
 
       <div className="bl-row-meta">
