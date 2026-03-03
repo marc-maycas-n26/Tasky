@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
+import { CustomLink } from './CustomLink';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
@@ -22,13 +22,16 @@ interface Props {
 export function RichTextEditor({ value, onChange, placeholder = 'Add a description…', readOnly = false }: Props) {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
+  const [confirmLink, setConfirmLink] = useState<string | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
-      Link.configure({
-        openOnClick: readOnly,
-        HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
+      CustomLink.configure({
+        openOnClick: false,
+        HTMLAttributes: { rel: 'noopener noreferrer' },
+        onLinkClick: (href: string) => setConfirmLink(href),
       }),
       Image.configure({ inline: false, allowBase64: true }),
       Placeholder.configure({ placeholder }),
@@ -269,6 +272,28 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
             <div className="rte-dialog-actions">
               <button className="btn btn-secondary btn-sm" onClick={() => setImageDialogOpen(false)}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={applyImage}>Insert</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Link confirmation dialog */}
+      {confirmLink && (
+        <div className="rte-dialog-backdrop" onClick={() => setConfirmLink(null)}>
+          <div
+            className="rte-dialog"
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => {
+              if (e.key === 'Escape') setConfirmLink(null);
+              if (e.key === 'Enter') { window.open(confirmLink, '_blank', 'noopener,noreferrer'); setConfirmLink(null); }
+            }}
+          >
+            <div className="rte-dialog-title">Open external link?</div>
+            <span className="rte-link-preview">{confirmLink}</span>
+            <div className="rte-dialog-tip">Tip: ⌘+click (Mac) or Ctrl+click (Win) to open directly</div>
+            <div className="rte-dialog-actions">
+              <button className="btn btn-secondary btn-sm" onClick={() => setConfirmLink(null)}>Cancel</button>
+              <button autoFocus className="btn btn-primary btn-sm" onClick={() => { window.open(confirmLink, '_blank', 'noopener,noreferrer'); setConfirmLink(null); }}>Open</button>
             </div>
           </div>
         </div>

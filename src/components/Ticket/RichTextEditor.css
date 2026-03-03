@@ -277,3 +277,15 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+.rte-link-preview {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  word-break: break-all;
+  display: block;
+}
+
+.rte-dialog-tip {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+}
