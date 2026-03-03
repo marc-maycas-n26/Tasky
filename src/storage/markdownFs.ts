@@ -116,10 +116,58 @@ export async function restoreDirectoryHandle(): Promise<FileSystemDirectoryHandl
 
 // ── HTML ↔ Markdown conversion ───────────────────────────────────────────────
 
+const BLOCK_TAGS = new Set(['p','h1','h2','h3','h4','ul','ol','li','pre','blockquote','div','hr','table']);
+
 function htmlToMarkdown(html: string): string {
   if (!html) return '';
   const div = document.createElement('div');
   div.innerHTML = html;
+
+  // Pass 1: wrap bare <li> elements (not inside a list) into a <ul>
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const child of Array.from(div.childNodes)) {
+      const el = child as HTMLElement;
+      if (el.nodeType === Node.ELEMENT_NODE && el.tagName?.toLowerCase() === 'li') {
+        const ul = document.createElement('ul');
+        div.insertBefore(ul, el);
+        ul.appendChild(el);
+        changed = true;
+        break;
+      }
+    }
+  }
+
+  // Pass 2: group consecutive inline/text nodes into a <p>
+  // so bare text and inline elements (links, spans) get proper paragraph breaks
+  const children = Array.from(div.childNodes);
+  let inlineBuffer: ChildNode[] = [];
+
+  function flushInline() {
+    if (!inlineBuffer.length) return;
+    const hasContent = inlineBuffer.some(n =>
+      n.nodeType === Node.TEXT_NODE ? (n.textContent ?? '').trim() !== '' : true
+    );
+    if (hasContent) {
+      const p = document.createElement('p');
+      inlineBuffer.forEach(n => p.appendChild(n.cloneNode(true)));
+      div.insertBefore(p, inlineBuffer[0]);
+    }
+    inlineBuffer.forEach(n => { if (n.parentNode === div) div.removeChild(n); });
+    inlineBuffer = [];
+  }
+
+  for (const child of children) {
+    const tag = (child as HTMLElement).tagName?.toLowerCase();
+    if (child.nodeType === Node.TEXT_NODE || !BLOCK_TAGS.has(tag)) {
+      inlineBuffer.push(child);
+    } else {
+      flushInline();
+    }
+  }
+  flushInline();
+
   return nodeToMd(div).trim();
 }
 
@@ -170,7 +218,15 @@ function nodeToMd(node: Node, indent = ''): string {
     case 'li':               return `${indent}- ${inner}\n`;
     case 'ul': case 'ol':   return `${inner}\n`;
     case 'br':               return '\n';
-    case 'p':                return `${inner}\n\n`;
+    case 'p': {
+      // If the <p> contains block-level children (malformed HTML from paste),
+      // don't wrap with paragraph — just render inner content directly
+      const blockTags = new Set(['ul','ol','li','h1','h2','h3','h4','pre','blockquote','div']);
+      const hasBlock = Array.from(el.childNodes).some(
+        c => c.nodeType === Node.ELEMENT_NODE && blockTags.has((c as HTMLElement).tagName?.toLowerCase())
+      );
+      return hasBlock ? `${inner}\n` : `${inner}\n\n`;
+    }
     case 'hr':               return `---\n\n`;
     default:                 return inner;
   }
@@ -219,10 +275,21 @@ function markdownToHtml(md: string): string {
     .replace(/`(.+?)`/g,      '<code>$1</code>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
     .replace(/^- (.+)$/gm,    '<li>$1</li>')
-    .replace(/\n{2,}/g,       '</p><p>')
     .trim();
-  if (!html.startsWith('<')) html = `<p>${html}</p>`;
-  return html;
+
+  // Split on paragraph boundaries, preserving blank paragraphs.
+  // Each <p> emits inner + '\n\n', so:
+  //   one paragraph gap  = '\n\n'  → </p><p>
+  //   two paragraph gaps = '\n\n\n\n' → </p><p></p><p>  (blank paragraph preserved)
+  const BLOCK_START = /^<(h[1-4]|ul|ol|li|pre|blockquote|hr|div|table)/i;
+  const parts = html.split('\n\n');
+  const wrapped = parts.map(part => {
+    if (part === '') return '<p></p>';         // blank paragraph
+    if (BLOCK_START.test(part)) return part;  // block-level HTML — don't wrap
+    return `<p>${part}</p>`;                  // text or inline HTML — wrap in <p>
+  }).join('');
+
+  return wrapped || '<p></p>';
 }
 
 // ── Filename helpers ──────────────────────────────────────────────────────────
