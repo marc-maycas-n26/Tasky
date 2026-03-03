@@ -1,4 +1,4 @@
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../../store';
 import { StatusBadge } from './StatusBadge';
 import type { Ticket, Priority } from '../../types';
@@ -18,13 +18,14 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
   const ticketEpic = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: ticket.id });
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({ id: ticket.id });
+  const { setNodeRef: setDropRef } = useDroppable({ id: ticket.id });
 
   const priority = ticket.priority ? PRIORITY_CONFIG[ticket.priority] : null;
 
   return (
     <div
-      ref={setNodeRef}
+      ref={el => { setDragRef(el); setDropRef(el); }}
       className={`bl-row${indented ? ' bl-row--indented' : ''}${isDragging ? ' bl-row--dragging' : ''}`}
       onClick={() => !isDragging && openTicket(ticket.id)}
       role="button"

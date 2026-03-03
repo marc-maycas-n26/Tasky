@@ -23,6 +23,7 @@ export function BacklogPage() {
   const reorderTickets = useStore(s => s.reorderTickets);
   const moveToBoard = useStore(s => s.moveToBoard);
   const moveToBacklog = useStore(s => s.moveToBacklog);
+  const updateTicket = useStore(s => s.updateTicket);
 
   const [search, setSearch] = useState('');
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
@@ -88,15 +89,21 @@ export function BacklogPage() {
         return;
       }
 
-      // Same-section reorder
-      const sameSection = tickets.filter(t =>
-        t.inBacklog === dragged.inBacklog && !t.parentId
+      // Same-section drop — reassign epic if dropped into a different epic group
+      if (overTicket.epicId !== dragged.epicId) {
+        updateTicket(draggedId, { epicId: overTicket.epicId ?? undefined });
+      }
+
+      // Reorder within the target epic group
+      const targetEpicId = overTicket.epicId;
+      const sameGroup = tickets.filter(t =>
+        t.inBacklog === dragged.inBacklog && !t.parentId && (t.epicId ?? null) === (targetEpicId ?? null)
       ).sort((a, b) => a.order - b.order);
-      const withoutDragged = sameSection.filter(t => t.id !== draggedId);
+      const withoutDragged = sameGroup.filter(t => t.id !== draggedId);
       const overIdx = withoutDragged.findIndex(t => t.id === overId);
       const insertIdx = overIdx === -1 ? withoutDragged.length : overIdx;
       withoutDragged.splice(insertIdx, 0, dragged);
-      reorderTickets(dragged.columnId, dragged.epicId, withoutDragged.map(t => t.id));
+      reorderTickets(dragged.columnId, targetEpicId, withoutDragged.map(t => t.id));
     }
   }
 
