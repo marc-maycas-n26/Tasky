@@ -395,6 +395,8 @@ function serializeTicketFile(
       lines.push(`${k}: [${v.map(s => `"${s}"`).join(', ')}]`);
     } else if (typeof v === 'boolean') {
       lines.push(`${k}: ${v}`);
+    } else if (typeof v === 'string' && /[:\[\]{}"'#|>&*!,%@`]/.test(v)) {
+      lines.push(`${k}: "${v.replace(/"/g, '\\"')}"`);
     } else {
       lines.push(`${k}: ${v}`);
     }
@@ -466,7 +468,10 @@ function parseTicketFile(content: string): {
     } else if (raw !== '' && !isNaN(Number(raw)) && !(['title', 'key', 'status', 'epic', 'priority', 'parent', 'id', 'dueDate', 'createdAt', 'updatedAt'].includes(key))) {
       frontMatter[key as keyof TicketFrontMatter] = Number(raw) as never;
     } else {
-      frontMatter[key as keyof TicketFrontMatter] = raw as never;
+      const unquoted = raw.startsWith('"') && raw.endsWith('"')
+        ? raw.slice(1, -1).replace(/\\"/g, '"')
+        : raw;
+      frontMatter[key as keyof TicketFrontMatter] = unquoted as never;
     }
   }
 
