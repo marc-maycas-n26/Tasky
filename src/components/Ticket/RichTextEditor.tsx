@@ -123,9 +123,9 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       const items = Array.from(e.clipboardData?.items ?? []);
       const imageItem = items.find(item => item.type.startsWith('image/'));
       if (!imageItem) return;
-      e.preventDefault();
       const file = imageItem.getAsFile();
       if (!file) return;
+      e.preventDefault();
       const reader = new FileReader();
       reader.onload = () => {
         editor.chain().focus().setImage({ src: reader.result as string }).run();
