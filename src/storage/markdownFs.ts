@@ -295,7 +295,7 @@ function markdownToHtml(md: string): string {
 // ── Filename helpers ──────────────────────────────────────────────────────────
 
 function toFilename(ticket: Ticket): string {
-  const safeTitle = ticket.title.replace(/[/\\:*?"<>|]/g, '-').slice(0, 80);
+  const safeTitle = (ticket.title ?? '').replace(/[/\\:*?"<>|]/g, '-').slice(0, 80);
   return `${ticket.key} · ${safeTitle}.md`;
 }
 
