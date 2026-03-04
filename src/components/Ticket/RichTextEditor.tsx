@@ -20,11 +20,12 @@ interface Props {
 }
 
 export function RichTextEditor({ value, onChange, placeholder = 'Add a description…', readOnly = false }: Props) {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
   const [confirmLink, setConfirmLink] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  // Keep onChange stable inside useEditor closure
   const onChangeRef = useRef(onChange);
-  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+  onChangeRef.current = onChange;
 
   const editor = useEditor({
     extensions: [
@@ -53,8 +54,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
         const reader = new FileReader();
         reader.onload = () => {
           const node = view.state.schema.nodes.image.create({ src: reader.result as string });
-          const tr = view.state.tr.replaceSelectionWith(node);
-          view.dispatch(tr);
+          view.dispatch(view.state.tr.replaceSelectionWith(node));
         };
         reader.readAsDataURL(file);
         return true;
@@ -96,8 +96,6 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
   }, [pickerOpen]);
 
   // ── Image lightbox ───────────────────────────────────────────────────────
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-
   useEffect(() => {
     if (!editor) return;
     function handleClick(e: MouseEvent) {
@@ -111,6 +109,15 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     el.addEventListener('click', handleClick, true);
     return () => el.removeEventListener('click', handleClick, true);
   }, [editor]);
+
+  useEffect(() => {
+    if (!lightboxSrc) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.stopPropagation(); setLightboxSrc(null); }
+    }
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [lightboxSrc]);
 
   // ── Link dialog ──────────────────────────────────────────────────────────
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -138,10 +145,10 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
 
-  const openImageDialog = useCallback(() => {
+  const openImageDialog = () => {
     setImageUrl('https://');
     setImageDialogOpen(true);
-  }, []);
+  };
 
   const applyImage = useCallback(() => {
     if (!editor) return;
@@ -159,8 +166,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const src = reader.result as string;
-      editor.chain().focus().setImage({ src }).run();
+      editor.chain().focus().setImage({ src: reader.result as string }).run();
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -168,24 +174,26 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
 
   if (!editor) return null;
 
-  const isActive = (name: string, attrs?: Record<string, unknown>) =>
-    editor.isActive(name, attrs);
+  const openConfirmedLink = () => {
+    window.open(confirmLink!, '_blank', 'noopener,noreferrer');
+    setConfirmLink(null);
+  };
 
   return (
     <div className={`rte-root${readOnly ? ' rte-root--readonly' : ''}`}>
       {!readOnly && (
         <div className="rte-toolbar">
           <ToolbarGroup>
-            <ToolBtn active={isActive('bold')} title="Bold (⌘B)" onClick={() => editor.chain().focus().toggleBold().run()}>
+            <ToolBtn active={editor.isActive('bold')} title="Bold (⌘B)" onClick={() => editor.chain().focus().toggleBold().run()}>
               <strong>B</strong>
             </ToolBtn>
-            <ToolBtn active={isActive('italic')} title="Italic (⌘I)" onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <ToolBtn active={editor.isActive('italic')} title="Italic (⌘I)" onClick={() => editor.chain().focus().toggleItalic().run()}>
               <em>I</em>
             </ToolBtn>
-            <ToolBtn active={isActive('underline')} title="Underline (⌘U)" onClick={() => editor.chain().focus().toggleUnderline().run()}>
+            <ToolBtn active={editor.isActive('underline')} title="Underline (⌘U)" onClick={() => editor.chain().focus().toggleUnderline().run()}>
               <u>U</u>
             </ToolBtn>
-            <ToolBtn active={isActive('strike')} title="Strikethrough" onClick={() => editor.chain().focus().toggleStrike().run()}>
+            <ToolBtn active={editor.isActive('strike')} title="Strikethrough" onClick={() => editor.chain().focus().toggleStrike().run()}>
               <s>S</s>
             </ToolBtn>
           </ToolbarGroup>
@@ -193,13 +201,13 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
           <div className="rte-toolbar-sep" />
 
           <ToolbarGroup>
-            <ToolBtn active={isActive('heading', { level: 1 })} title="Heading 1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+            <ToolBtn active={editor.isActive('heading', { level: 1 })} title="Heading 1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
               H1
             </ToolBtn>
-            <ToolBtn active={isActive('heading', { level: 2 })} title="Heading 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+            <ToolBtn active={editor.isActive('heading', { level: 2 })} title="Heading 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
               H2
             </ToolBtn>
-            <ToolBtn active={isActive('heading', { level: 3 })} title="Heading 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+            <ToolBtn active={editor.isActive('heading', { level: 3 })} title="Heading 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
               H3
             </ToolBtn>
           </ToolbarGroup>
@@ -207,16 +215,16 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
           <div className="rte-toolbar-sep" />
 
           <ToolbarGroup>
-            <ToolBtn active={isActive('bulletList')} title="Bullet list" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <ToolBtn active={editor.isActive('bulletList')} title="Bullet list" onClick={() => editor.chain().focus().toggleBulletList().run()}>
               ≡
             </ToolBtn>
-            <ToolBtn active={isActive('orderedList')} title="Numbered list" onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ToolBtn active={editor.isActive('orderedList')} title="Numbered list" onClick={() => editor.chain().focus().toggleOrderedList().run()}>
               1.
             </ToolBtn>
-            <ToolBtn active={isActive('blockquote')} title="Blockquote" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+            <ToolBtn active={editor.isActive('blockquote')} title="Blockquote" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
               "
             </ToolBtn>
-            <ToolBtn active={isActive('code')} title="Inline code" onClick={() => editor.chain().focus().toggleCode().run()}>
+            <ToolBtn active={editor.isActive('code')} title="Inline code" onClick={() => editor.chain().focus().toggleCode().run()}>
               {'<>'}
             </ToolBtn>
           </ToolbarGroup>
@@ -224,7 +232,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
           <div className="rte-toolbar-sep" />
 
           <ToolbarGroup>
-            <ToolBtn active={isActive('link')} title="Insert / edit link" onClick={openLinkDialog}>
+            <ToolBtn active={editor.isActive('link')} title="Insert / edit link" onClick={openLinkDialog}>
               🔗
             </ToolBtn>
             <ToolBtn active={false} title="Insert image from URL" onClick={openImageDialog}>
@@ -239,7 +247,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
           <div className="rte-toolbar-sep" />
 
           <ToolbarGroup>
-            <ToolBtn active={isActive('taskList')} title="Checklist" onClick={() => editor.chain().focus().toggleTaskList().run()}>
+            <ToolBtn active={editor.isActive('taskList')} title="Checklist" onClick={() => editor.chain().focus().toggleTaskList().run()}>
               ☑
             </ToolBtn>
           </ToolbarGroup>
@@ -256,7 +264,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
               <div className="rte-emoji-popover">
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
-                  theme={isDark ? Theme.DARK : Theme.LIGHT}
+                  theme={document.documentElement.getAttribute('data-theme') === 'dark' ? Theme.DARK : Theme.LIGHT}
                   searchPlaceholder="Search emojis…"
                   lazyLoadEmojis
                   width={320}
@@ -272,102 +280,73 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
 
       {/* Link dialog */}
       {linkDialogOpen && (
-        <div className="rte-dialog-backdrop" onClick={() => setLinkDialogOpen(false)}>
-          <div className="rte-dialog" onClick={e => e.stopPropagation()}>
-            <div className="rte-dialog-title">Insert link</div>
-            <input
-              className="form-input"
-              value={linkUrl}
-              autoFocus
-              onChange={e => setLinkUrl(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') applyLink(); if (e.key === 'Escape') setLinkDialogOpen(false); }}
-              placeholder="https://…"
-            />
-            <div className="rte-dialog-actions">
-              <button className="btn btn-secondary btn-sm" onClick={() => setLinkDialogOpen(false)}>Cancel</button>
-              <button className="btn btn-danger btn-sm" onClick={() => { editor.chain().focus().unsetLink().run(); setLinkDialogOpen(false); }}>Remove</button>
-              <button className="btn btn-primary btn-sm" onClick={applyLink}>Apply</button>
-            </div>
+        <RteDialog title="Insert link" onClose={() => setLinkDialogOpen(false)}>
+          <input
+            className="form-input"
+            value={linkUrl}
+            autoFocus
+            onChange={e => setLinkUrl(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') applyLink(); if (e.key === 'Escape') setLinkDialogOpen(false); }}
+            placeholder="https://…"
+          />
+          <div className="rte-dialog-actions">
+            <button className="btn btn-secondary btn-sm" onClick={() => setLinkDialogOpen(false)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={() => { editor.chain().focus().unsetLink().run(); setLinkDialogOpen(false); }}>Remove</button>
+            <button className="btn btn-primary btn-sm" onClick={applyLink}>Apply</button>
           </div>
-        </div>
+        </RteDialog>
       )}
 
       {/* Image URL dialog */}
       {imageDialogOpen && (
-        <div className="rte-dialog-backdrop" onClick={() => setImageDialogOpen(false)}>
-          <div className="rte-dialog" onClick={e => e.stopPropagation()}>
-            <div className="rte-dialog-title">Insert image URL</div>
-            <input
-              className="form-input"
-              value={imageUrl}
-              autoFocus
-              onChange={e => setImageUrl(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') applyImage(); if (e.key === 'Escape') setImageDialogOpen(false); }}
-              placeholder="https://example.com/image.png"
-            />
-            <div className="rte-dialog-actions">
-              <button className="btn btn-secondary btn-sm" onClick={() => setImageDialogOpen(false)}>Cancel</button>
-              <button className="btn btn-primary btn-sm" onClick={applyImage}>Insert</button>
-            </div>
+        <RteDialog title="Insert image URL" onClose={() => setImageDialogOpen(false)}>
+          <input
+            className="form-input"
+            value={imageUrl}
+            autoFocus
+            onChange={e => setImageUrl(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') applyImage(); if (e.key === 'Escape') setImageDialogOpen(false); }}
+            placeholder="https://example.com/image.png"
+          />
+          <div className="rte-dialog-actions">
+            <button className="btn btn-secondary btn-sm" onClick={() => setImageDialogOpen(false)}>Cancel</button>
+            <button className="btn btn-primary btn-sm" onClick={applyImage}>Insert</button>
           </div>
-        </div>
+        </RteDialog>
       )}
 
       {/* Image lightbox */}
       {lightboxSrc && (
-        <LightboxEscapeHandler onClose={() => setLightboxSrc(null)}>
-          <div
-            className="rte-lightbox-backdrop"
-            onClick={() => setLightboxSrc(null)}
-          >
-            <button className="rte-lightbox-close" onClick={() => setLightboxSrc(null)} aria-label="Close">✕</button>
-            <img
-              className="rte-lightbox-img"
-              src={lightboxSrc}
-              alt=""
-              onClick={e => e.stopPropagation()}
-            />
-          </div>
-        </LightboxEscapeHandler>
+        <div className="rte-lightbox-backdrop" onClick={() => setLightboxSrc(null)}>
+          <button className="rte-lightbox-close" onClick={() => setLightboxSrc(null)} aria-label="Close">✕</button>
+          <img className="rte-lightbox-img" src={lightboxSrc} alt="" onClick={e => e.stopPropagation()} />
+        </div>
       )}
 
       {/* Link confirmation dialog */}
       {confirmLink && (
-        <div className="rte-dialog-backdrop" onClick={() => setConfirmLink(null)}>
-          <div
-            className="rte-dialog"
-            onClick={e => e.stopPropagation()}
-            onKeyDown={e => {
-              if (e.key === 'Escape') setConfirmLink(null);
-              if (e.key === 'Enter') { window.open(confirmLink, '_blank', 'noopener,noreferrer'); setConfirmLink(null); }
-            }}
-          >
-            <div className="rte-dialog-title">Open external link?</div>
-            <span className="rte-link-preview">{confirmLink}</span>
-            <div className="rte-dialog-tip">Tip: ⌘+click (Mac) or Ctrl+click (Win) to open directly</div>
-            <div className="rte-dialog-actions">
-              <button className="btn btn-secondary btn-sm" onClick={() => setConfirmLink(null)}>Cancel</button>
-              <button autoFocus className="btn btn-primary btn-sm" onClick={() => { window.open(confirmLink, '_blank', 'noopener,noreferrer'); setConfirmLink(null); }}>Open</button>
-            </div>
+        <RteDialog title="Open external link?" onClose={() => setConfirmLink(null)}>
+          <span className="rte-link-preview">{confirmLink}</span>
+          <div className="rte-dialog-tip">Tip: ⌘+click (Mac) or Ctrl+click (Win) to open directly</div>
+          <div className="rte-dialog-actions">
+            <button className="btn btn-secondary btn-sm" onClick={() => setConfirmLink(null)}>Cancel</button>
+            <button autoFocus className="btn btn-primary btn-sm" onClick={openConfirmedLink}>Open</button>
           </div>
-        </div>
+        </RteDialog>
       )}
     </div>
   );
 }
 
-function LightboxEscapeHandler({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [onClose]);
-  return <>{children}</>;
+function RteDialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="rte-dialog-backdrop" onClick={onClose}>
+      <div className="rte-dialog" onClick={e => e.stopPropagation()}>
+        <div className="rte-dialog-title">{title}</div>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function ToolbarGroup({ children }: { children: React.ReactNode }) {

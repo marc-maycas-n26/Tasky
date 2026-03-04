@@ -21,15 +21,10 @@ export const CustomLink = Link.extend({
         handleClick: (view, _pos, event) => {
           if (event.button !== 0) return false
 
-          let link: HTMLAnchorElement | null = null
-          if (event.target instanceof HTMLAnchorElement) {
-            link = event.target
-          } else {
-            const el = event.target as HTMLElement | null
-            if (!el) return false
-            link = el.closest<HTMLAnchorElement>('a')
-            if (link && !this.editor.view.dom.contains(link)) link = null
-          }
+          const link: HTMLAnchorElement | null =
+            event.target instanceof HTMLAnchorElement
+              ? event.target
+              : (event.target as HTMLElement).closest<HTMLAnchorElement>('a')
 
           if (!link) return false
 
