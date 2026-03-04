@@ -461,7 +461,7 @@ function parseTicketFile(content: string): {
       frontMatter[key as keyof TicketFrontMatter] = true as never;
     } else if (raw === 'false') {
       frontMatter[key as keyof TicketFrontMatter] = false as never;
-    } else if (raw !== '' && !isNaN(Number(raw))) {
+    } else if (raw !== '' && !isNaN(Number(raw)) && !(['title', 'key', 'status', 'epic', 'priority', 'parent', 'id', 'dueDate', 'createdAt', 'updatedAt'].includes(key))) {
       frontMatter[key as keyof TicketFrontMatter] = Number(raw) as never;
     } else {
       frontMatter[key as keyof TicketFrontMatter] = raw as never;
