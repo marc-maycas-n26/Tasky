@@ -215,6 +215,7 @@ function nodeToMd(node: Node, indent = ''): string {
     case 'code':             return `\`${inner}\``;
     case 'pre':              return `\`\`\`\n${el.textContent ?? ''}\n\`\`\`\n\n`;
     case 'a':                return `[${inner}](${el.getAttribute('href') ?? ''})`;
+    case 'img':              return `![${el.getAttribute('alt') ?? ''}](${el.getAttribute('src') ?? ''})\n\n`;
     case 'li':               return `${indent}- ${inner}\n`;
     case 'ul': case 'ol':   return `${inner}\n`;
     case 'br':               return '\n';
@@ -273,6 +274,7 @@ function markdownToHtml(md: string): string {
     .replace(/\*(.+?)\*/g,    '<em>$1</em>')
     .replace(/__(.+?)__/g,    '<u>$1</u>')
     .replace(/`(.+?)`/g,      '<code>$1</code>')
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
     .replace(/^- (.+)$/gm,    '<li>$1</li>')
     .trim();
@@ -295,7 +297,7 @@ function markdownToHtml(md: string): string {
 // ── Filename helpers ──────────────────────────────────────────────────────────
 
 function toFilename(ticket: Ticket): string {
-  const safeTitle = (ticket.title ?? '').replace(/[/\\:*?"<>|]/g, '-').slice(0, 80);
+  const safeTitle = String(ticket.title ?? '').replace(/[/\\:*?"<>|]/g, '-').slice(0, 80);
   return `${ticket.key} · ${safeTitle}.md`;
 }
 

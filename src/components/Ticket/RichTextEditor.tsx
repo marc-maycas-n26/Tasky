@@ -23,6 +23,8 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   const [confirmLink, setConfirmLink] = useState<string | null>(null);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
   const editor = useEditor({
     extensions: [
@@ -41,9 +43,26 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     ],
     content: value,
     editable: !readOnly,
+    editorProps: {
+      handlePaste(view, event) {
+        const items = Array.from(event.clipboardData?.items ?? []);
+        const imageItem = items.find(item => item.type.startsWith('image/'));
+        if (!imageItem) return false;
+        const file = imageItem.getAsFile();
+        if (!file) return false;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const node = view.state.schema.nodes.image.create({ src: reader.result as string });
+          const tr = view.state.tr.replaceSelectionWith(node);
+          view.dispatch(tr);
+        };
+        reader.readAsDataURL(file);
+        return true;
+      },
+    },
     onUpdate({ editor }) {
       const html = editor.getHTML();
-      onChange(html === '<p></p>' ? '' : html);
+      onChangeRef.current(html === '<p></p>' ? '' : html);
     },
   });
 
@@ -115,27 +134,6 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     }
     setImageDialogOpen(false);
   }, [editor, imageUrl]);
-
-  // ── Paste image from clipboard ───────────────────────────────────────────
-  useEffect(() => {
-    if (!editor) return;
-    function handlePaste(e: ClipboardEvent) {
-      const items = Array.from(e.clipboardData?.items ?? []);
-      const imageItem = items.find(item => item.type.startsWith('image/'));
-      if (!imageItem) return;
-      const file = imageItem.getAsFile();
-      if (!file) return;
-      e.preventDefault();
-      const reader = new FileReader();
-      reader.onload = () => {
-        editor.chain().focus().setImage({ src: reader.result as string }).run();
-      };
-      reader.readAsDataURL(file);
-    }
-    const el = editor.view.dom;
-    el.addEventListener('paste', handlePaste);
-    return () => el.removeEventListener('paste', handlePaste);
-  }, [editor]);
 
   // ── File upload (base64) ─────────────────────────────────────────────────
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
