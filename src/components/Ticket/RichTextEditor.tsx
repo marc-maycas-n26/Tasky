@@ -116,6 +116,27 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     setImageDialogOpen(false);
   }, [editor, imageUrl]);
 
+  // ── Paste image from clipboard ───────────────────────────────────────────
+  useEffect(() => {
+    if (!editor) return;
+    function handlePaste(e: ClipboardEvent) {
+      const items = Array.from(e.clipboardData?.items ?? []);
+      const imageItem = items.find(item => item.type.startsWith('image/'));
+      if (!imageItem) return;
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        editor.chain().focus().setImage({ src: reader.result as string }).run();
+      };
+      reader.readAsDataURL(file);
+    }
+    const el = editor.view.dom;
+    el.addEventListener('paste', handlePaste);
+    return () => el.removeEventListener('paste', handlePaste);
+  }, [editor]);
+
   // ── File upload (base64) ─────────────────────────────────────────────────
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editor) return;
