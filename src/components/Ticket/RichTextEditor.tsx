@@ -95,6 +95,23 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     return () => document.removeEventListener('mousedown', handleClick);
   }, [pickerOpen]);
 
+  // ── Image lightbox ───────────────────────────────────────────────────────
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editor) return;
+    function handleClick(e: MouseEvent) {
+      const img = (e.target as HTMLElement).closest('img');
+      if (!img) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setLightboxSrc((img as HTMLImageElement).src);
+    }
+    const el = editor.view.dom;
+    el.addEventListener('click', handleClick, true);
+    return () => el.removeEventListener('click', handleClick, true);
+  }, [editor]);
+
   // ── Link dialog ──────────────────────────────────────────────────────────
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -296,6 +313,24 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
         </div>
       )}
 
+      {/* Image lightbox */}
+      {lightboxSrc && (
+        <LightboxEscapeHandler onClose={() => setLightboxSrc(null)}>
+          <div
+            className="rte-lightbox-backdrop"
+            onClick={() => setLightboxSrc(null)}
+          >
+            <button className="rte-lightbox-close" onClick={() => setLightboxSrc(null)} aria-label="Close">✕</button>
+            <img
+              className="rte-lightbox-img"
+              src={lightboxSrc}
+              alt=""
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        </LightboxEscapeHandler>
+      )}
+
       {/* Link confirmation dialog */}
       {confirmLink && (
         <div className="rte-dialog-backdrop" onClick={() => setConfirmLink(null)}>
@@ -319,6 +354,20 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       )}
     </div>
   );
+}
+
+function LightboxEscapeHandler({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [onClose]);
+  return <>{children}</>;
 }
 
 function ToolbarGroup({ children }: { children: React.ReactNode }) {

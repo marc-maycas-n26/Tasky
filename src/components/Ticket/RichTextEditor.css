@@ -133,6 +133,10 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.rte-content .tiptap img {
+  cursor: zoom-in;
+}
 .rte-content .tiptap img {
   max-width: 100%;
   border-radius: var(--radius-sm);
@@ -288,4 +292,48 @@
 .rte-dialog-tip {
   font-size: var(--font-size-xs);
   color: var(--color-text-subtle);
+}
+
+/* ── Image lightbox ──────────────────────────────────────────────────────── */
+.rte-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  outline: none;
+}
+
+.rte-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  user-select: none;
+}
+
+.rte-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.rte-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
