@@ -258,6 +258,7 @@
   vertical-align: middle;
 }
 
+.subtask-row { height: 36px; }
 .subtask-row:hover { background: var(--color-bg); }
 
 .subtask-work-cell {

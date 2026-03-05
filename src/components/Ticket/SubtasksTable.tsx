@@ -59,17 +59,19 @@ export function SubtasksTable({ parentId }: Props) {
           <tbody>
             {subTickets.map(st => (
               <tr key={st.id} className="subtask-row">
-                <td className="subtask-work-cell">
-                  <span className="subtask-link-icon">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <rect x="1.5" y="1.5" width="9" height="9" rx="1" stroke="#5E6C84" strokeWidth="1.2" fill="none"/>
-                      <path d="M4 4h4M4 6h4M4 8h2" stroke="#5E6C84" strokeWidth="0.9" strokeLinecap="round"/>
-                    </svg>
-                  </span>
-                  <button className="subtask-key-link" onClick={() => openTicket(st.id)}>
-                    {st.key}
-                  </button>
-                  <span className="subtask-title-text">{st.title}</span>
+                <td>
+                  <div className="subtask-work-cell">
+                    <span className="subtask-link-icon">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <rect x="1.5" y="1.5" width="9" height="9" rx="1" stroke="#5E6C84" strokeWidth="1.2" fill="none"/>
+                        <path d="M4 4h4M4 6h4M4 8h2" stroke="#5E6C84" strokeWidth="0.9" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                    <button className="subtask-key-link" onClick={() => openTicket(st.id)}>
+                      {st.key}
+                    </button>
+                    <span className="subtask-title-text">{st.title}</span>
+                  </div>
                 </td>
                 <td>
                   {st.priority ? (
