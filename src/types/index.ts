@@ -76,6 +76,7 @@ export interface Comment {
   body: string;
   createdAt: string;
   updatedAt: string;
+  isSystem?: boolean;
 }
 
 export type LinkedItemRelation = 'clones' | 'is cloned by' | 'relates to' | 'blocks' | 'is blocked by';

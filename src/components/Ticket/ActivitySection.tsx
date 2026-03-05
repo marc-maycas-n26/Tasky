@@ -9,6 +9,13 @@ const UserAvatar = () => (
   </svg>
 );
 
+const SystemIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <circle cx="9" cy="9" r="8" stroke="var(--color-border)" strokeWidth="1.5" fill="var(--color-bg)"/>
+    <path d="M6 9l2 2 4-4" stroke="var(--color-primary)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 interface Props {
   ticketId: string;
 }
@@ -26,6 +33,16 @@ export function ActivitySection({ ticketId }: Props) {
     if (!body.trim()) return;
     addComment(ticketId, body.trim());
     setBody('');
+  }
+
+  function renderCommentBody(text: string) {
+    // Render **bold** markers in system messages
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) =>
+      part.startsWith('**') && part.endsWith('**')
+        ? <strong key={i}>{part.slice(2, -2)}</strong>
+        : part
+    );
   }
 
   return (
@@ -67,7 +84,18 @@ export function ActivitySection({ ticketId }: Props) {
 
           {ticketComments.length > 0 && (
             <div className="comment-list">
-              {ticketComments.map(c => (
+              {ticketComments.map(c => c.isSystem ? (
+                <div key={c.id} className="system-event-row">
+                  <span className="system-event-icon"><SystemIcon /></span>
+                  <span className="system-event-body">{renderCommentBody(c.body)}</span>
+                  <span className="system-event-time">{new Date(c.createdAt).toLocaleString()}</span>
+                  <button
+                    className="system-event-delete btn btn-ghost btn-sm"
+                    onClick={() => deleteComment(c.id)}
+                    title="Remove"
+                  >✕</button>
+                </div>
+              ) : (
                 <div key={c.id} className="comment-row">
                   <span className="comment-avatar"><UserAvatar /></span>
                   <div className="comment-body-wrap">

@@ -233,7 +233,13 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
+  table-layout: fixed;
 }
+
+.subtasks-table col.col-work     { width: auto; }
+.subtasks-table col.col-priority { width: 80px; }
+.subtasks-table col.col-status   { width: 160px; }
+.subtasks-table col.col-action   { width: 32px; }
 
 .subtasks-table th {
   text-align: left;
@@ -242,12 +248,12 @@
   color: var(--color-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 5px 10px;
+  padding: 5px 8px;
   border-bottom: 1px solid var(--color-border-light);
 }
 
 .subtasks-table td {
-  padding: 8px 10px;
+  padding: 7px 8px;
   border-bottom: 1px solid var(--color-border-light);
   vertical-align: middle;
 }
@@ -296,6 +302,7 @@
   background: var(--color-bg);
   cursor: pointer;
   color: var(--color-text-secondary);
+  width: 100%;
 }
 
 .subtask-add-pts {
@@ -515,6 +522,47 @@
   padding: 0;
 }
 .comment-delete:hover { color: var(--color-danger); }
+
+/* ── System event rows ──────────────────────────────────────────────────────── */
+.system-event-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-left: 2px solid var(--color-border-light);
+  padding-left: 10px;
+  margin-left: 3px;
+}
+
+.system-event-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.system-event-body {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.system-event-time {
+  font-size: 11px;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.system-event-delete {
+  font-size: 11px;
+  color: var(--color-text-subtle);
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.system-event-row:hover .system-event-delete { opacity: 1; }
+.system-event-delete:hover { color: var(--color-danger); }
 
 .activity-hint {
   font-size: var(--font-size-xs);

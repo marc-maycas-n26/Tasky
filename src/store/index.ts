@@ -67,6 +67,7 @@ interface StoreState extends AppState {
 
   // comments
   addComment(ticketId: string, body: string): void;
+  addSystemComment(ticketId: string, body: string): void;
   deleteComment(id: string): void;
 
   // linked items
@@ -441,6 +442,17 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   updateTicket(id, patch) {
+    if ('columnId' in patch && patch.columnId !== undefined) {
+      const s = get();
+      const ticket = s.tickets.find(t => t.id === id);
+      const fromCol = s.columns.find(c => c.id === ticket?.columnId);
+      const toCol = s.columns.find(c => c.id === patch.columnId);
+      if (fromCol && toCol && fromCol.id !== toCol.id) {
+        const body = `Status changed from **${fromCol.name}** to **${toCol.name}**`;
+        const comment: Comment = { id: uuidv4(), ticketId: id, body, createdAt: now(), updatedAt: now(), isSystem: true };
+        set(s => ({ comments: [...s.comments, comment] }));
+      }
+    }
     set(s => ({
       tickets: s.tickets.map(t => t.id === id ? { ...t, ...patch, updatedAt: now() } : t),
     }));
@@ -503,6 +515,15 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   moveTicket(ticketId, targetColumnId, targetEpicId, newOrder) {
+    const s = get();
+    const ticket = s.tickets.find(t => t.id === ticketId);
+    const fromCol = s.columns.find(c => c.id === ticket?.columnId);
+    const toCol = s.columns.find(c => c.id === targetColumnId);
+    if (fromCol && toCol && fromCol.id !== toCol.id) {
+      const body = `Status changed from **${fromCol.name}** to **${toCol.name}**`;
+      const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now(), isSystem: true };
+      set(st => ({ comments: [...st.comments, comment] }));
+    }
     set(s => ({
       tickets: s.tickets.map(t =>
         t.id === ticketId
@@ -557,6 +578,12 @@ export const useStore = create<StoreState>((set, get) => ({
   // ── comments ───────────────────────────────────────────────────────────────
   addComment(ticketId, body) {
     const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now() };
+    set(s => ({ comments: [...s.comments, comment] }));
+    get().persist();
+  },
+
+  addSystemComment(ticketId, body) {
+    const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now(), isSystem: true };
     set(s => ({ comments: [...s.comments, comment] }));
     get().persist();
   },

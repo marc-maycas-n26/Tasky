@@ -42,6 +42,12 @@ export function SubtasksTable({ parentId }: Props) {
 
       {subTickets.length > 0 && (
         <table className="subtasks-table">
+          <colgroup>
+            <col className="col-work" />
+            <col className="col-priority" />
+            <col className="col-status" />
+            <col className="col-action" />
+          </colgroup>
           <thead>
             <tr>
               <th>Work</th>

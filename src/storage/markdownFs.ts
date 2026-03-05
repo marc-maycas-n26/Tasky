@@ -417,7 +417,8 @@ function serializeTicketFile(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
     for (const comment of sorted) {
-      lines.push(`<!-- sitrep:${comment.id} createdAt:${comment.createdAt}${comment.updatedAt && comment.updatedAt !== comment.createdAt ? ` updatedAt:${comment.updatedAt}` : ''} -->`);
+      const systemPart = comment.isSystem ? ' system:true' : '';
+      lines.push(`<!-- sitrep:${comment.id} createdAt:${comment.createdAt}${comment.updatedAt && comment.updatedAt !== comment.createdAt ? ` updatedAt:${comment.updatedAt}` : ''}${systemPart} -->`);
       lines.push(htmlToMarkdown(comment.body).trim());
       lines.push('');
     }
@@ -433,7 +434,7 @@ function serializeTicketFile(
 function parseTicketFile(content: string): {
   frontMatter: Partial<TicketFrontMatter>;
   description: string;
-  parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string }>;
+  parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string; isSystem?: boolean }>;
 } {
   if (!content.startsWith('---')) {
     return { frontMatter: {}, description: markdownToHtml(content), parsedComments: [] };
@@ -481,16 +482,17 @@ function parseTicketFile(content: string): {
   const sitrepMd = sitrepMatch ? sitrepMatch[2] : '';
 
   // Parse individual sitrep entries separated by <!-- sitrep:id ... --> tags
-  const parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string }> = [];
+  const parsedComments: Array<{ id: string; body: string; createdAt: string; updatedAt: string; isSystem?: boolean }> = [];
   if (sitrepMd) {
-    const entryRegex = /<!--\s*sitrep:(\S+)\s+createdAt:(\S+)(?:\s+updatedAt:(\S+))?\s*-->([\s\S]*?)(?=<!--\s*sitrep:|$)/g;
+    const entryRegex = /<!--\s*sitrep:(\S+)\s+createdAt:(\S+)(?:\s+updatedAt:(\S+))?(?:\s+system:(true))?\s*-->([\s\S]*?)(?=<!--\s*sitrep:|$)/g;
     let m: RegExpExecArray | null;
     while ((m = entryRegex.exec(sitrepMd)) !== null) {
       const id        = m[1];
       const createdAt = m[2];
       const updatedAt = m[3] ?? m[2];
-      const bodyText  = m[4].trim();
-      parsedComments.push({ id, body: markdownToHtml(bodyText), createdAt, updatedAt });
+      const isSystem  = m[4] === 'true' ? true : undefined;
+      const bodyText  = m[5].trim();
+      parsedComments.push({ id, body: markdownToHtml(bodyText), createdAt, updatedAt, isSystem });
     }
   }
 
@@ -628,7 +630,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const tagNameToId      = new Map(tags.map(t => [t.name, t.id]));
 
     const tickets: Ticket[] = [];
-    const parsedCommentsList: Array<{ id: string; ticketId: string; body: string; createdAt: string; updatedAt: string }> = [];
+    const parsedCommentsList: Array<{ id: string; ticketId: string; body: string; createdAt: string; updatedAt: string; isSystem?: boolean }> = [];
     const trackedKeys = new Set<string>();
 
     // Migration: derive inBacklog from old isBacklog column flag if missing
@@ -808,7 +810,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
       ...metaComments,
       ...parsedCommentsList
         .filter(c => !metaCommentIds.has(c.id))
-        .map(c => ({ id: c.id, ticketId: c.ticketId, body: c.body, createdAt: c.createdAt, updatedAt: c.updatedAt })),
+        .map(c => ({ id: c.id, ticketId: c.ticketId, body: c.body, createdAt: c.createdAt, updatedAt: c.updatedAt, isSystem: c.isSystem })),
     ];
 
     return {
