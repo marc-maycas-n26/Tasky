@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
-import { PRIORITY_COLORS, PRIORITY_ICONS } from '../../constants/priorities';
+import { PRIORITIES, PRIORITY_COLORS, PRIORITY_ICONS } from '../../constants/priorities';
+import type { Priority } from '../../types';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 
 interface Props {
@@ -74,13 +75,19 @@ export function SubtasksTable({ parentId }: Props) {
                   </div>
                 </td>
                 <td>
-                  {st.priority ? (
-                    <span style={{ color: PRIORITY_COLORS[st.priority], fontSize: 11, fontWeight: 600 }}>
-                      {PRIORITY_ICONS[st.priority]} {st.priority.charAt(0).toUpperCase() + st.priority.slice(1)}
-                    </span>
-                  ) : (
-                    <span className="text-subtle">—</span>
-                  )}
+                  <select
+                    className="subtask-status-select"
+                    value={st.priority ?? ''}
+                    style={{ color: st.priority ? PRIORITY_COLORS[st.priority] : undefined }}
+                    onChange={e => updateTicket(st.id, { priority: (e.target.value as Priority) || undefined })}
+                  >
+                    <option value="">—</option>
+                    {PRIORITIES.map(p => (
+                      <option key={p} value={p} style={{ color: PRIORITY_COLORS[p] }}>
+                        {PRIORITY_ICONS[p]} {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td>
                   <select
