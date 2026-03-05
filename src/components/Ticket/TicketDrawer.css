@@ -264,6 +264,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
 }
 
 .subtask-link-icon {
