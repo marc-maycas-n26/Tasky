@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
 
-const UserAvatar = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-    <circle cx="14" cy="14" r="14" fill="#DFE1E6"/>
-    <circle cx="14" cy="11" r="4" fill="#97A0AF"/>
-    <path d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9" fill="#97A0AF"/>
-  </svg>
-);
-
 const SystemIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
     <circle cx="9" cy="9" r="8" stroke="var(--color-border)" strokeWidth="1.5" fill="var(--color-bg)"/>
@@ -63,7 +55,6 @@ export function ActivitySection({ ticketId }: Props) {
       {tab === 'sitrep' && (
         <>
           <div className="comment-input-row">
-            <span className="comment-avatar"><UserAvatar /></span>
             <div className="comment-input-wrapper">
               <textarea
                 className="comment-input"
@@ -97,7 +88,6 @@ export function ActivitySection({ ticketId }: Props) {
                 </div>
               ) : (
                 <div key={c.id} className="comment-row">
-                  <span className="comment-avatar"><UserAvatar /></span>
                   <div className="comment-body-wrap">
                     <div className="comment-meta">
                       <span className="comment-author">You</span>
