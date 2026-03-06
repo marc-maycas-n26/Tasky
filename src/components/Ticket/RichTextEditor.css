@@ -84,6 +84,16 @@
   line-height: 1.6;
 }
 
+/* ── Compact mode (sitrep input) ─────────────────────────────────────────── */
+.rte-root--compact .rte-content {
+  min-height: unset;
+  padding: 8px 12px;
+}
+.rte-root--compact .rte-content .tiptap {
+  min-height: unset;
+  font-size: var(--font-size-sm);
+}
+
 /* Placeholder */
 .rte-content .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

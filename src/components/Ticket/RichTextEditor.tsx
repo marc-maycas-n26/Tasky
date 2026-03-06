@@ -17,15 +17,21 @@ interface Props {
   onChange: (html: string) => void;
   placeholder?: string;
   readOnly?: boolean;
+  onCtrlEnter?: () => void;
+  compact?: boolean; // collapsed until focused; shows full toolbar when active
 }
 
-export function RichTextEditor({ value, onChange, placeholder = 'Add a description…', readOnly = false }: Props) {
+export function RichTextEditor({ value, onChange, placeholder = 'Add a description…', readOnly = false, onCtrlEnter, compact = false }: Props) {
   const [confirmLink, setConfirmLink] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [compactFocused, setCompactFocused] = useState(false);
+  const isExpanded = !compact || compactFocused || (!!value && value !== '<p></p>');
 
-  // Keep onChange stable inside useEditor closure
+  // Keep onChange and onCtrlEnter stable inside useEditor closure
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onCtrlEnterRef = useRef(onCtrlEnter);
+  onCtrlEnterRef.current = onCtrlEnter;
 
   const editor = useEditor({
     extensions: [
@@ -45,6 +51,13 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     content: value,
     editable: !readOnly,
     editorProps: {
+      handleKeyDown(_view, event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+          onCtrlEnterRef.current?.();
+          return true;
+        }
+        return false;
+      },
       handlePaste(view, event) {
         const items = Array.from(event.clipboardData?.items ?? []);
         const imageItem = items.find(item => item.type.startsWith('image/'));
@@ -63,6 +76,12 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     onUpdate({ editor }) {
       const html = editor.getHTML();
       onChangeRef.current(html === '<p></p>' ? '' : html);
+    },
+    onFocus() {
+      setCompactFocused(true);
+    },
+    onBlur() {
+      setCompactFocused(false);
     },
   });
 
@@ -180,8 +199,8 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
   };
 
   return (
-    <div className={`rte-root${readOnly ? ' rte-root--readonly' : ''}`}>
-      {!readOnly && (
+    <div className={`rte-root${readOnly ? ' rte-root--readonly' : ''}${compact && !isExpanded ? ' rte-root--compact' : ''}`}>
+      {!readOnly && isExpanded && (
         <div className="rte-toolbar">
           <ToolbarGroup>
             <ToolBtn active={editor.isActive('bold')} title="Bold (⌘B)" onClick={() => editor.chain().focus().toggleBold().run()}>

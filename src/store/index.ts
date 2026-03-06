@@ -68,6 +68,7 @@ interface StoreState extends AppState {
   // comments
   addComment(ticketId: string, body: string): void;
   addSystemComment(ticketId: string, body: string): void;
+  updateComment(id: string, body: string): void;
   deleteComment(id: string): void;
 
   // linked items
@@ -585,6 +586,13 @@ export const useStore = create<StoreState>((set, get) => ({
   addSystemComment(ticketId, body) {
     const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now(), isSystem: true };
     set(s => ({ comments: [...s.comments, comment] }));
+    get().persist();
+  },
+
+  updateComment(id, body) {
+    set(s => ({
+      comments: s.comments.map(c => c.id === id ? { ...c, body, updatedAt: now() } : c),
+    }));
     get().persist();
   },
 
