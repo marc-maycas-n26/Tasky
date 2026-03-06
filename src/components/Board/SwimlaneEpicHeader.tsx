@@ -19,6 +19,12 @@ function getEpicStatus(tickets: Ticket[], columns: Columns): 'todo' | 'inprogres
 
 const EPIC_STATUS_LABELS = { todo: 'TO DO', inprogress: 'IN PROGRESS', done: 'DONE' };
 
+interface DragHandleProps {
+  ref: (el: HTMLElement | null) => void;
+  listeners: Record<string, unknown> | undefined;
+  attributes: Record<string, unknown>;
+}
+
 interface Props {
   epic: Epic | null;
   tickets: Ticket[];
@@ -26,6 +32,7 @@ interface Props {
   tags: Tags;
   isCollapsedOverride?: boolean;
   onToggleOther?: () => void;
+  dragHandleProps?: DragHandleProps;
 }
 
 const EPIC_STATUS_OPTIONS: { value: EpicStatus; label: string }[] = [
@@ -34,7 +41,7 @@ const EPIC_STATUS_OPTIONS: { value: EpicStatus; label: string }[] = [
   { value: 'done', label: 'Done' },
 ];
 
-export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCollapsedOverride, onToggleOther }: Props) {
+export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCollapsedOverride, onToggleOther, dragHandleProps }: Props) {
   const toggleEpicCollapsed = useStore(s => s.toggleEpicCollapsed);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const openEpic = useStore(s => s.openEpic);
@@ -75,6 +82,26 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
         else onToggleOther?.();
       }}
     >
+      {dragHandleProps && (
+        <span
+          ref={dragHandleProps.ref}
+          className="swimlane-drag-handle"
+          title="Drag to reorder"
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
+          {...(dragHandleProps.listeners as React.HTMLAttributes<HTMLSpanElement>)}
+          {...(dragHandleProps.attributes as React.HTMLAttributes<HTMLSpanElement>)}
+        >
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
+            <circle cx="4" cy="3" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="3" r="1.2" fill="currentColor"/>
+            <circle cx="4" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="7" r="1.2" fill="currentColor"/>
+            <circle cx="4" cy="11" r="1.2" fill="currentColor"/>
+            <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
+          </svg>
+        </span>
+      )}
       <span className="swimlane-toggle-btn" aria-label={isCollapsed ? 'Expand' : 'Collapse'}>
         {isCollapsed ? (
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

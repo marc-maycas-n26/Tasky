@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
-  type DragEndEvent, type DragStartEvent,
+  type DragEndEvent, type DragStartEvent, type DragOverEvent,
 } from '@dnd-kit/core';
+import {
+  SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useStore } from '../../store';
 import { BoardColumn } from './BoardColumn';
 import { FilterDropdown } from './FilterDropdown';
@@ -27,9 +31,12 @@ export function Board() {
   const isCreateTicketOpen = useStore(s => s.isCreateTicketOpen);
   const openCreateTicket = useStore(s => s.openCreateTicket);
   const releaseDoneTickets = useStore(s => s.releaseDoneTickets);
+  const reorderEpics = useStore(s => s.reorderEpics);
   const releasedEpics = useStore(s => s.releasedEpics);
 
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+  const [activeEpicId, setActiveEpicId] = useState<string | null>(null);
+  const [overEpicId, setOverEpicId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [epicFilter, setEpicFilter] = useState<Set<string>>(new Set());
   const [labelFilter, setLabelFilter] = useState<Set<string>>(new Set());
@@ -49,6 +56,12 @@ export function Board() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  // Separate sensors for swimlane reordering (requires longer drag distance
+  // so it doesn't conflict with the collapse-click on the header)
+  const epicSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 12 } })
   );
 
   function toggleEpicFilter(id: string) {
@@ -87,6 +100,26 @@ export function Board() {
   function handleDragStart(e: DragStartEvent) {
     const ticket = tickets.find(t => t.id === e.active.id);
     setActiveTicket(ticket ?? null);
+  }
+
+  function handleEpicDragStart(e: DragStartEvent) {
+    setActiveEpicId(e.active.id as string);
+  }
+
+  function handleEpicDragOver(e: DragOverEvent) {
+    setOverEpicId(e.over ? e.over.id as string : null);
+  }
+
+  function handleEpicDragEnd(e: DragEndEvent) {
+    setActiveEpicId(null);
+    setOverEpicId(null);
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sortedEpics.findIndex(ep => ep.id === active.id);
+    const newIndex = sortedEpics.findIndex(ep => ep.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(sortedEpics, oldIndex, newIndex);
+    reorderEpics(reordered.map(ep => ep.id));
   }
 
   function handleDragEnd(e: DragEndEvent) {
@@ -244,40 +277,84 @@ export function Board() {
             </button>
           </div>
         </div>
-        <div className="board-swimlanes">
-          {epicGroups.map(({ epic, tickets: groupTickets }) => {
-            const isCollapsed = epic ? epic.isCollapsed : otherCollapsed;
-            return (
-              <div key={epic?.id ?? '__other__'} className="swimlane">
-                <SwimlaneEpicHeader
-                  epic={epic}
-                  tickets={groupTickets}
-                  columns={columns}
-                  tags={tags}
-                  isCollapsedOverride={epic ? undefined : otherCollapsed}
-                  onToggleOther={epic ? undefined : () => setOtherCollapsed(c => !c)}
-                />
-
-                {!isCollapsed && (
-                  <div className="swimlane-cols-scroll">
-                    <div className="swimlane-cols-row">
-                      {sortedColumns.map(col => (
-                        <BoardColumn
-                          key={col.id}
-                          column={col}
-                          epicId={epic?.id}
-                          tickets={groupTickets
-                            .filter(t => t.columnId === col.id)
-                            .sort((a, b) => a.order - b.order)}
-                        />
-                      ))}
+        <DndContext sensors={epicSensors} onDragStart={handleEpicDragStart} onDragOver={handleEpicDragOver} onDragEnd={handleEpicDragEnd}>
+          <SortableContext
+            items={sortedEpics.map(ep => ep.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="board-swimlanes">
+              {epicGroups.map(({ epic, tickets: groupTickets }) => {
+                const isCollapsed = epic ? epic.isCollapsed : otherCollapsed;
+                if (!epic) {
+                  return (
+                    <div key="__other__" className="swimlane">
+                      <SwimlaneEpicHeader
+                        epic={null}
+                        tickets={groupTickets}
+                        columns={columns}
+                        tags={tags}
+                        isCollapsedOverride={otherCollapsed}
+                        onToggleOther={() => setOtherCollapsed(c => !c)}
+                      />
+                      {!isCollapsed && (
+                        <div className="swimlane-cols-scroll">
+                          <div className="swimlane-cols-row">
+                            {sortedColumns.map(col => (
+                              <BoardColumn
+                                key={col.id}
+                                column={col}
+                                epicId={undefined}
+                                tickets={groupTickets
+                                  .filter(t => t.columnId === col.id)
+                                  .sort((a, b) => a.order - b.order)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  );
+                }
+                return (
+                  <SortableSwimlane key={epic.id} epicId={epic.id} isOver={overEpicId === epic.id && activeEpicId !== epic.id}>
+                    {dragHandleProps => (
+                      <>
+                        <SwimlaneEpicHeader
+                          epic={epic}
+                          tickets={groupTickets}
+                          columns={columns}
+                          tags={tags}
+                          dragHandleProps={dragHandleProps}
+                        />
+                        {!isCollapsed && (
+                          <div className="swimlane-cols-scroll">
+                            <div className="swimlane-cols-row">
+                              {sortedColumns.map(col => (
+                                <BoardColumn
+                                  key={col.id}
+                                  column={col}
+                                  epicId={epic.id}
+                                  tickets={groupTickets
+                                    .filter(t => t.columnId === col.id)
+                                    .sort((a, b) => a.order - b.order)}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </SortableSwimlane>
+                );
+              })}
+            </div>
+          </SortableContext>
+          <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
+            {activeEpicId ? (
+              <EpicDragGhost epic={sortedEpics.find(ep => ep.id === activeEpicId)!} />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
 
         <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
           {activeTicket ? <TicketCard ticket={activeTicket} isDragging /> : null}
@@ -308,6 +385,51 @@ export function Board() {
           onCancel={() => setNothingToRelease(false)}
         />
       )}
+    </div>
+  );
+}
+
+// ── Sortable swimlane wrapper ──────────────────────────────────────────────────
+
+type DragHandleProps = {
+  ref: (el: HTMLElement | null) => void;
+  listeners: ReturnType<typeof useSortable>['listeners'];
+  attributes: ReturnType<typeof useSortable>['attributes'];
+};
+
+function SortableSwimlane({
+  epicId,
+  isOver,
+  children,
+}: {
+  epicId: string;
+  isOver: boolean;
+  children: (dragHandleProps: DragHandleProps) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } =
+    useSortable({ id: epicId });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`swimlane${isOver ? ' swimlane--drop-target' : ''}`}
+      style={{ opacity: isDragging ? 0 : undefined }}
+    >
+      {children({ ref: setActivatorNodeRef, listeners, attributes })}
+    </div>
+  );
+}
+
+// Lightweight ghost shown in the DragOverlay during swimlane drag
+function EpicDragGhost({ epic }: { epic: Epic }) {
+  return (
+    <div className="swimlane-drag-ghost">
+      <span className="swimlane-epic-icon" style={{ color: epic.color ?? '#8993A4' }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2.5 1.5h9a1 1 0 011 1v10l-5.5-2.75L1.5 12.5v-10a1 1 0 011-1z" fill={epic.color ?? '#FFAB00'} />
+        </svg>
+      </span>
+      <span className="swimlane-epic-title">{epic.title}</span>
     </div>
   );
 }
