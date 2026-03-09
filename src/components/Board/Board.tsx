@@ -195,10 +195,11 @@ export function Board() {
       .map(c => c.id)
   ), [columns]);
 
-  const doneCount = useMemo(
-    () => tickets.filter(t => !t.inBacklog && doneColIds.has(t.columnId)).length,
+  const doneTickets = useMemo(
+    () => tickets.filter(t => !t.inBacklog && doneColIds.has(t.columnId)),
     [tickets, doneColIds]
   );
+  const doneCount = doneTickets.length;
 
   const lastReleaseDate = useMemo(() => {
     if (releasedEpics.length === 0) return null;
@@ -397,10 +398,9 @@ export function Board() {
       {isCreateTicketOpen && <CreateTicketModal />}
 
       {confirmRelease && (
-        <ConfirmDialog
-          title="Release done tickets?"
-          message={`${doneCount} ticket${doneCount !== 1 ? 's' : ''} will be moved to the Releases archive and removed from the board. This cannot be undone.`}
-          confirmLabel="Release"
+        <ReleaseConfirmDialog
+          tickets={doneTickets}
+          epics={sortedEpics}
           onConfirm={() => { releaseDoneTickets(); setConfirmRelease(false); }}
           onCancel={() => setConfirmRelease(false)}
         />
@@ -447,6 +447,93 @@ function SortableSwimlane({
       style={{ opacity: isDragging ? 0 : undefined }}
     >
       {children({ ref: setActivatorNodeRef, listeners, attributes })}
+    </div>
+  );
+}
+
+// ── Release confirm dialog ────────────────────────────────────────────────────
+
+function ReleaseConfirmDialog({
+  tickets,
+  epics,
+  onConfirm,
+  onCancel,
+}: {
+  tickets: Ticket[];
+  epics: Epic[];
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const epicMap = new Map(epics.map(e => [e.id, e]));
+
+  // Group tickets by epic (preserving epic order, ungrouped at the end)
+  const groups: { epic: Epic | null; tickets: Ticket[] }[] = [];
+  const seen = new Set<string | undefined>();
+  for (const epic of epics) {
+    const group = tickets.filter(t => t.epicId === epic.id);
+    if (group.length > 0) {
+      groups.push({ epic, tickets: group });
+      seen.add(epic.id);
+    }
+  }
+  const noEpic = tickets.filter(t => !seen.has(t.epicId));
+  if (noEpic.length > 0) groups.push({ epic: null, tickets: noEpic });
+
+  return (
+    <div className="confirm-dialog-backdrop" onClick={onCancel}>
+      <div
+        className="release-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="release-dialog-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="release-dialog-header">
+          <h3 className="release-dialog-title" id="release-dialog-title">Release done tickets?</h3>
+          <p className="release-dialog-subtitle">
+            {tickets.length} ticket{tickets.length !== 1 ? 's' : ''} will be moved to the Releases archive and removed from the board. This cannot be undone.
+          </p>
+        </div>
+
+        <div className="release-dialog-body">
+          {groups.map((group, i) => (
+            <div key={group.epic?.id ?? 'no-epic'} className={`bl-epic-group${i === 0 ? ' bl-epic-group--first' : ''}`}>
+              <div className="bl-epic-group-header release-dialog-group-header" style={group.epic ? { borderLeftColor: group.epic.color } : undefined}>
+                {group.epic ? (
+                  <>
+                    <span className="bl-epic-group-icon">
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2.5 1.5h9a1 1 0 011 1v10l-5.5-2.75L1.5 12.5v-10a1 1 0 011-1z" fill={group.epic.color}/>
+                      </svg>
+                    </span>
+                    <span className="bl-epic-group-title" style={{ color: group.epic.color }}>{group.epic.title}</span>
+                  </>
+                ) : (
+                  <span className="bl-epic-group-title bl-epic-group-title--none">No epic</span>
+                )}
+                <span className="bl-epic-group-count">{group.tickets.length}</span>
+              </div>
+              {group.tickets.map(t => (
+                <div key={t.id} className="bl-row bl-row--indented release-dialog-ticket-row">
+                  <span className="bl-row-icon" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="#5E6C84" strokeWidth="1.3" fill="none"/>
+                      <path d="M5 5h4M5 7h4M5 9h2" stroke="#5E6C84" strokeWidth="1" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <span className="bl-row-key">{t.key}</span>
+                  <span className="bl-row-title">{t.title}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="release-dialog-actions">
+          <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-primary" onClick={onConfirm} autoFocus>Release</button>
+        </div>
+      </div>
     </div>
   );
 }

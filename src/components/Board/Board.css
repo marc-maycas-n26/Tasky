@@ -589,3 +589,77 @@
   opacity: 0.95;
   min-width: 260px;
 }
+
+/* ── Release confirm dialog ─────────────────────────────────────────────────── */
+.release-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  width: 580px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  padding: 24px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: confirm-dialog-in 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.release-dialog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.release-dialog-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.release-dialog-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.release-dialog-body {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  background: var(--color-surface);
+}
+
+/* Remove top border on the very first epic group inside the dialog */
+.release-dialog-body .bl-epic-group:first-child {
+  border-top: none;
+}
+
+/* Epic group headers inside the dialog are not interactive */
+.release-dialog-group-header {
+  cursor: default;
+  background: var(--color-bg);
+}
+.release-dialog-group-header:hover {
+  background: var(--color-bg);
+}
+
+/* Ticket rows inside the dialog are read-only */
+.release-dialog-ticket-row {
+  cursor: default;
+  background: var(--color-surface);
+}
+.release-dialog-ticket-row:hover {
+  background: var(--color-surface);
+}
+
+.release-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
