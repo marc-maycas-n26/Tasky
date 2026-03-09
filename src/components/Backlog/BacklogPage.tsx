@@ -149,7 +149,7 @@ export function BacklogPage() {
           <div className="bl-epics-strip">
             {epics.map(ep => {
               const epTickets = tickets.filter(t => t.epicId === ep.id);
-              const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
+              const doneColIds = columns.filter(c => c.role === 'done' || c.name.toLowerCase() === 'done').map(c => c.id);
               const doneCount = epTickets.filter(t => doneColIds.includes(t.columnId)).length;
               const pct = epTickets.length > 0 ? Math.round((doneCount / epTickets.length) * 100) : 0;
               return (

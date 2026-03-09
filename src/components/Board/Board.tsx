@@ -183,7 +183,7 @@ export function Board() {
       })).filter(g => g.tickets.length > 0),
       ...(noEpicTickets.length > 0 ? [{ epic: null as Epic | null, tickets: noEpicTickets }] : []),
     ];
-  }, [sortedEpics, filteredTickets, columns]);
+  }, [sortedEpics, filteredTickets]);
 
   const epicOptions = sortedEpics.map(e => ({ id: e.id, name: e.title, color: e.color ?? undefined }));
   const labelOptions = tags.map(t => ({ id: t.id, name: t.name, color: t.color }));

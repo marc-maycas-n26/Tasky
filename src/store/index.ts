@@ -67,7 +67,6 @@ interface StoreState extends AppState {
 
   // comments
   addComment(ticketId: string, body: string): void;
-  addSystemComment(ticketId: string, body: string): void;
   updateComment(id: string, body: string): void;
   deleteComment(id: string): void;
 
@@ -561,12 +560,6 @@ export const useStore = create<StoreState>((set, get) => ({
   // ── comments ───────────────────────────────────────────────────────────────
   addComment(ticketId, body) {
     const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now() };
-    set(s => ({ comments: [...s.comments, comment] }));
-    get().persist();
-  },
-
-  addSystemComment(ticketId, body) {
-    const comment: Comment = { id: uuidv4(), ticketId, body, createdAt: now(), updatedAt: now(), isSystem: true };
     set(s => ({ comments: [...s.comments, comment] }));
     get().persist();
   },
