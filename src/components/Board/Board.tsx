@@ -208,15 +208,30 @@ export function Board() {
 
   const lastReleaseLabel = useMemo(() => {
     if (!lastReleaseDate) return null;
-    const weeks = Math.floor((Date.now() - lastReleaseDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    // Compare by natural calendar week (Mon–Sun). Get the Monday of each date's week.
+    const startOfWeek = (d: Date) => {
+      const day = d.getDay(); // 0=Sun, 1=Mon…
+      const diff = (day === 0 ? -6 : 1 - day); // days to subtract to reach Monday
+      const mon = new Date(d);
+      mon.setHours(0, 0, 0, 0);
+      mon.setDate(d.getDate() + diff);
+      return mon;
+    };
+    const nowWeek = startOfWeek(new Date());
+    const releaseWeek = startOfWeek(lastReleaseDate);
+    const weeks = Math.round((nowWeek.getTime() - releaseWeek.getTime()) / (7 * 24 * 60 * 60 * 1000));
     if (weeks === 0) return 'Released this week';
-    if (weeks === 1) return '1 week ago';
-    return `${weeks} weeks ago`;
+    if (weeks === 1) return 'Released last week';
+    return `Released ${weeks} weeks ago`;
   }, [lastReleaseDate]);
 
   const lastReleaseDateLabel = useMemo(() => {
     if (!lastReleaseDate) return null;
-    return lastReleaseDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const weekday = lastReleaseDate.toLocaleDateString(undefined, { weekday: 'short' });
+    const day = String(lastReleaseDate.getDate()).padStart(2, '0');
+    const month = String(lastReleaseDate.getMonth() + 1).padStart(2, '0');
+    const year = lastReleaseDate.getFullYear();
+    return `${weekday} - ${day}.${month}.${year}`;
   }, [lastReleaseDate]);
 
   function handleReleaseClick() {
@@ -278,8 +293,8 @@ export function Board() {
 
           <div className="board-toolbar-right">
             {lastReleaseLabel && (
-              <span className="board-last-release" title={lastReleaseDateLabel ?? undefined}>
-                {lastReleaseLabel}
+              <span className="board-last-release">
+                {lastReleaseLabel}{lastReleaseDateLabel && ` (${lastReleaseDateLabel})`}
               </span>
             )}
             <button className="btn btn-secondary" onClick={handleReleaseClick} title="Release all done tickets">
