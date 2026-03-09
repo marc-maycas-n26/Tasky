@@ -25,7 +25,7 @@ export function BacklogSection({ tickets: allTickets, search, inBacklog, activeT
   const epicGroups = sortedEpics.map(epic => ({
     epic,
     tickets: allTickets.filter(t => t.epicId === epic.id),
-  })).filter(g => g.tickets.length > 0);
+  })).filter(g => g.tickets.length > 0 || g.epic.status !== 'done');
 
   const noEpicTickets = allTickets.filter(t => !t.epicId);
   const total = allTickets.length;

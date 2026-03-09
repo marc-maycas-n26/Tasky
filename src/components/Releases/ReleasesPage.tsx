@@ -32,7 +32,7 @@ export function ReleasesPage() {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set());
+  const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     let list = [...releasedEpics].sort(
@@ -72,7 +72,7 @@ export function ReleasesPage() {
   }, [filtered]);
 
   function toggleEpic(epicId: string) {
-    setExpandedEpics(prev => {
+    setCollapsedEpics(prev => {
       const next = new Set(prev);
       if (next.has(epicId)) next.delete(epicId);
       else next.add(epicId);
@@ -152,7 +152,7 @@ export function ReleasesPage() {
 
               <div className="rl-epics">
                 {group.releases.map(release => {
-                  const isOpen = expandedEpics.has(release.epic.id);
+                  const isOpen = !collapsedEpics.has(release.epic.id);
                   const epicTags = [...new Set(release.tickets.flatMap(t => t.tagIds))]
                     .map(id => tags.find(tg => tg.id === id))
                     .filter(Boolean) as typeof tags;
