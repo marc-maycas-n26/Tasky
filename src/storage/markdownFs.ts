@@ -813,12 +813,17 @@ export class MarkdownFsAdapter implements StorageAdapter {
         .map(c => ({ id: c.id, ticketId: c.ticketId, body: c.body, createdAt: c.createdAt, updatedAt: c.updatedAt, isSystem: c.isSystem })),
     ];
 
+    // Migration: backfill missing priority to 'medium'
+    const migratedTickets = tickets.map(t =>
+      t.priority == null ? { ...t, priority: 'medium' as const } : t
+    );
+
     return {
       schemaVersion: meta.schemaVersion ?? 1,
       columns: migratedColumns,
       epics,
       tags,
-      tickets,
+      tickets: migratedTickets,
       trashedTickets: meta.trashedTickets ?? [],
       releasedEpics:  meta.releasedEpics  ?? [],
       templates:      meta.templates      ?? [],

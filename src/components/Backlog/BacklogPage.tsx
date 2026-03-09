@@ -8,7 +8,9 @@ import { CreateTicketModal } from '../Ticket/CreateTicketModal';
 import { TicketDrawer } from '../Ticket/TicketDrawer';
 import { EpicDrawer } from '../Epic/EpicDrawer';
 import { BacklogSection } from './BacklogSection';
+import { FilterDropdown } from '../Board/FilterDropdown';
 import type { Ticket } from '../../types';
+import { PRIORITIES, PRIORITY_COLORS } from '../../constants/priorities';
 import './BacklogPage.css';
 
 export function BacklogPage() {
@@ -26,6 +28,7 @@ export function BacklogPage() {
   const updateTicket = useStore(s => s.updateTicket);
 
   const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<Set<string>>(new Set());
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [overEpicId, setOverEpicId] = useState<string | null | undefined>(undefined);
 
@@ -35,10 +38,12 @@ export function BacklogPage() {
 
   const backlogTickets = tickets
     .filter(t => t.inBacklog === true && !t.parentId)
+    .filter(t => priorityFilter.size === 0 || priorityFilter.has(t.priority ?? ''))
     .sort((a, b) => a.order - b.order);
 
   const boardTickets = tickets
     .filter(t => t.inBacklog !== true && !!t.columnId && !t.parentId)
+    .filter(t => priorityFilter.size === 0 || priorityFilter.has(t.priority ?? ''))
     .sort((a, b) => a.order - b.order);
 
   function handleDragStart(e: DragStartEvent) {
@@ -171,8 +176,15 @@ export function BacklogPage() {
           </div>
         )}
 
-        {search && (
-          <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>Clear</button>
+        <FilterDropdown
+          label="Priority"
+          options={PRIORITIES.map(p => ({ id: p, name: p.charAt(0).toUpperCase() + p.slice(1), color: PRIORITY_COLORS[p] }))}
+          selected={priorityFilter}
+          onToggle={id => setPriorityFilter(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; })}
+        />
+
+        {(search || priorityFilter.size > 0) && (
+          <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(''); setPriorityFilter(new Set()); }}>Clear</button>
         )}
 
         <div className="board-toolbar-right">

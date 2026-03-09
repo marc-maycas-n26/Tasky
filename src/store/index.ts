@@ -429,7 +429,7 @@ export const useStore = create<StoreState>((set, get) => ({
       order: fields.order ?? s.tickets.filter(
         t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId && !t.parentId
       ).length,
-      priority: fields.priority,
+      priority: fields.priority ?? 'medium',
       dueDate: fields.dueDate,
       createdAt: now(),
       updatedAt: now(),

@@ -16,6 +16,7 @@ import { EpicDrawer } from '../Epic/EpicDrawer';
 import { CreateTicketModal } from '../Ticket/CreateTicketModal';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import type { Ticket, Epic } from '../../types';
+import { PRIORITIES, PRIORITY_COLORS } from '../../constants/priorities';
 import './Board.css';
 
 export function Board() {
@@ -39,6 +40,7 @@ export function Board() {
   const [search, setSearch] = useState('');
   const [epicFilter, setEpicFilter] = useState<Set<string>>(new Set());
   const [labelFilter, setLabelFilter] = useState<Set<string>>(new Set());
+  const [priorityFilter, setPriorityFilter] = useState<Set<string>>(new Set());
   const [otherCollapsed, setOtherCollapsed] = useState(false);
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [nothingToRelease, setNothingToRelease] = useState(false);
@@ -73,6 +75,14 @@ export function Board() {
     });
   }
 
+  function togglePriorityFilter(id: string) {
+    setPriorityFilter(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
   const filteredTickets = useMemo(() => {
     let result = tickets;
     if (search.trim()) {
@@ -89,8 +99,11 @@ export function Board() {
     if (labelFilter.size > 0) {
       result = result.filter(t => t.tagIds.some(tid => labelFilter.has(tid)));
     }
+    if (priorityFilter.size > 0) {
+      result = result.filter(t => priorityFilter.has(t.priority ?? ''));
+    }
     return result;
-  }, [tickets, search, epicFilter, labelFilter]);
+  }, [tickets, search, epicFilter, labelFilter, priorityFilter]);
 
   function handleDragStart(e: DragStartEvent) {
     if (e.active.data.current?.type === 'epic') {
@@ -174,6 +187,7 @@ export function Board() {
 
   const epicOptions = sortedEpics.map(e => ({ id: e.id, name: e.title, color: e.color ?? undefined }));
   const labelOptions = tags.map(t => ({ id: t.id, name: t.name, color: t.color }));
+  const priorityOptions = PRIORITIES.map(p => ({ id: p, name: p.charAt(0).toUpperCase() + p.slice(1), color: PRIORITY_COLORS[p] }));
 
   const doneColIds = useMemo(() => new Set(
     columns
@@ -246,10 +260,17 @@ export function Board() {
             onToggle={toggleLabelFilter}
           />
 
-          {(epicFilter.size > 0 || labelFilter.size > 0) && (
+          <FilterDropdown
+            label="Priority"
+            options={priorityOptions}
+            selected={priorityFilter}
+            onToggle={togglePriorityFilter}
+          />
+
+          {(epicFilter.size > 0 || labelFilter.size > 0 || priorityFilter.size > 0) && (
             <button
               className="btn btn-ghost btn-sm"
-              onClick={() => { setEpicFilter(new Set()); setLabelFilter(new Set()); }}
+              onClick={() => { setEpicFilter(new Set()); setLabelFilter(new Set()); setPriorityFilter(new Set()); }}
             >
               Clear filters
             </button>

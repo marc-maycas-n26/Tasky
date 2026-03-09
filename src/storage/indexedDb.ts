@@ -135,11 +135,12 @@ export class IndexedDbAdapter implements StorageAdapter {
 
     // Migration: if any ticket is missing inBacklog, derive it from the old backlog column flag
     const backlogColIds = new Set(columns.filter(c => c.isBacklog).map(c => c.id));
-    const migratedTickets = tickets.map(t =>
-      (t as Ticket & { inBacklog?: boolean }).inBacklog == null
+    const migratedTickets = tickets.map(t => {
+      const withBacklog = (t as Ticket & { inBacklog?: boolean }).inBacklog == null
         ? { ...t, inBacklog: backlogColIds.has(t.columnId) }
-        : t
-    );
+        : t;
+      return withBacklog.priority == null ? { ...withBacklog, priority: 'medium' as const } : withBacklog;
+    });
     // After migration, remove the old backlog column (it is now represented by inBacklog)
     const migratedColumns = columns.filter(c => !c.isBacklog);
 
