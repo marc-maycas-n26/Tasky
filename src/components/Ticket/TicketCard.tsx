@@ -1,19 +1,7 @@
 import { useStore } from '../../store';
-import type { Ticket, Priority } from '../../types';
-import { PRIORITY_DOT_COLORS } from '../../constants/priorities';
+import type { Ticket } from '../../types';
+import { PRIORITY_COLORS } from '../../constants/priorities';
 import './TicketCard.css';
-
-function PriorityDots({ priority }: { priority?: Priority }) {
-  if (!priority) return null;
-  const colors = PRIORITY_DOT_COLORS[priority];
-  return (
-    <span className="ticket-card-priority-dots" title={priority}>
-      {colors.map((c, i) => (
-        <span key={i} className="ticket-card-priority-dot" style={{ background: c }} />
-      ))}
-    </span>
-  );
-}
 
 interface Props {
   ticket: Ticket;
@@ -25,10 +13,12 @@ export function TicketCard({ ticket, isDragging }: Props) {
   const openTicket = useStore(s => s.openTicket);
 
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
+  const priorityColor = ticket.priority ? PRIORITY_COLORS[ticket.priority] : undefined;
 
   return (
     <div
       className={`ticket-card${isDragging ? ' ticket-card--dragging' : ''}`}
+      style={priorityColor ? { borderLeftColor: priorityColor, borderLeftWidth: 6 } : undefined}
       onClick={() => openTicket(ticket.id)}
       role="button"
       tabIndex={0}
@@ -66,8 +56,6 @@ export function TicketCard({ ticket, isDragging }: Props) {
               {new Date(ticket.dueDate).toLocaleDateString('en-GB')}
             </span>
           )}
-
-          <PriorityDots priority={ticket.priority} />
 
         </div>
       </div>
