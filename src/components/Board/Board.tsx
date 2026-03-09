@@ -78,7 +78,9 @@ export function Board() {
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(t =>
-        t.title.toLowerCase().includes(q) || t.key?.toLowerCase().includes(q)
+        t.title.toLowerCase().includes(q) ||
+        t.key?.toLowerCase().includes(q) ||
+        (t.description ?? '').replace(/<[^>]*>/g, ' ').toLowerCase().includes(q)
       );
     }
     if (epicFilter.size > 0) {

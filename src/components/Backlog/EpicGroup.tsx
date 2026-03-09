@@ -24,7 +24,9 @@ export function EpicGroup({ epic, tickets, search, inBacklog = true, activeTicke
   const filtered = search
     ? tickets.filter(t => {
         const q = search.toLowerCase();
-        return t.title.toLowerCase().includes(q) || (t.key?.toLowerCase().includes(q) ?? false);
+        return t.title.toLowerCase().includes(q) ||
+          (t.key?.toLowerCase().includes(q) ?? false) ||
+          (t.description ?? '').replace(/<[^>]*>/g, ' ').toLowerCase().includes(q);
       })
     : tickets;
 

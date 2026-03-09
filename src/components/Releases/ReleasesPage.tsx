@@ -51,7 +51,11 @@ export function ReleasesPage() {
       const q = search.toLowerCase();
       list = list.filter(r =>
         r.epic.title.toLowerCase().includes(q) ||
-        r.tickets.some(t => t.title.toLowerCase().includes(q) || t.key.toLowerCase().includes(q))
+        r.tickets.some(t =>
+          t.title.toLowerCase().includes(q) ||
+          t.key.toLowerCase().includes(q) ||
+          (t.description ?? '').replace(/<[^>]*>/g, ' ').toLowerCase().includes(q)
+        )
       );
     }
     return list;
