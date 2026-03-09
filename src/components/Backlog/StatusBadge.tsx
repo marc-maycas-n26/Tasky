@@ -27,7 +27,7 @@ export function StatusBadge({ ticket }: { ticket: Ticket }) {
       moveToBoard(ticket.id, colId);
     } else {
       const colTickets = tickets
-        .filter(t => t.columnId === colId && (t.epicId ?? null) === (ticket.epicId ?? null) && !t.parentId)
+        .filter(t => t.columnId === colId && (t.epicId ?? null) === (ticket.epicId ?? null))
         .sort((a, b) => a.order - b.order);
       moveTicket(ticket.id, colId, ticket.epicId, colTickets.length);
     }

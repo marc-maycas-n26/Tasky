@@ -22,14 +22,9 @@ interface Props {
 
 export function TicketCard({ ticket, isDragging }: Props) {
   const tags = useStore(s => s.tags);
-  const tickets = useStore(s => s.tickets);
-  const columns = useStore(s => s.columns);
   const openTicket = useStore(s => s.openTicket);
 
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
-  const subTickets = tickets.filter(t => t.parentId === ticket.id);
-  const doneCol = columns.find(c => c.name.toLowerCase() === 'done');
-  const doneSubCount = subTickets.filter(st => st.columnId === doneCol?.id).length;
 
   return (
     <div
@@ -60,23 +55,12 @@ export function TicketCard({ ticket, isDragging }: Props) {
       )}
 
       <div className="ticket-card-footer">
-        {/* Left: subtask icon + key */}
         <span className="ticket-card-key-row">
-          <SubtaskIcon />
+          <TicketIcon />
           <span className="ticket-card-key">{ticket.key}</span>
         </span>
 
-        {/* Right: priority dots + chevron + subtask count + due + avatar */}
         <div className="ticket-card-meta-right">
-          {subTickets.length > 0 && (
-            <span className="ticket-card-subtasks" title={`${doneSubCount}/${subTickets.length} child issues`}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 2h8v2H2V2zm1 3h6v5H3V5z" fill="#8993A4" />
-              </svg>
-              {doneSubCount}/{subTickets.length}
-            </span>
-          )}
-
           {ticket.dueDate && (
             <span className={`ticket-card-due${new Date(ticket.dueDate) < new Date() ? ' ticket-card-due--overdue' : ''}`}>
               {new Date(ticket.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -106,7 +90,7 @@ export function TicketCard({ ticket, isDragging }: Props) {
   );
 }
 
-function SubtaskIcon() {
+function TicketIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="#5E6C84" strokeWidth="1.3" fill="none"/>

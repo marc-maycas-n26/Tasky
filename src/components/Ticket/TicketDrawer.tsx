@@ -4,7 +4,6 @@ import type { Priority } from '../../types';
 import { PRIORITIES, PRIORITY_COLORS, PRIORITY_ICONS } from '../../constants/priorities';
 import { RichTextEditor } from './RichTextEditor';
 import { StatusPill } from './StatusPill';
-import { SubtasksTable } from './SubtasksTable';
 import { LinkedItemsSection } from './LinkedItemsSection';
 import { ActivitySection } from './ActivitySection';
 import { SidebarRow } from '../Common/SidebarRow';
@@ -19,10 +18,8 @@ export function TicketDrawer() {
   const updateTicket = useStore(s => s.updateTicket);
   const trashTicket = useStore(s => s.trashTicket);
   const closeTicket = useStore(s => s.closeTicket);
-  const openTicket = useStore(s => s.openTicket);
 
   const ticket = tickets.find(t => t.id === selectedTicketId);
-  const parentTicket = ticket?.parentId ? tickets.find(t => t.id === ticket.parentId) : null;
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -62,14 +59,6 @@ export function TicketDrawer() {
         {/* ── Top bar ── */}
         <div className="ticket-drawer-topbar">
           <div className="ticket-drawer-breadcrumb">
-            {parentTicket && (
-              <>
-                <button className="breadcrumb-link" onClick={() => openTicket(parentTicket.id)}>
-                  {parentTicket.key}
-                </button>
-                <span className="breadcrumb-sep">/</span>
-              </>
-            )}
             <span className="breadcrumb-current">{ticket.key}</span>
           </div>
           <div className="ticket-drawer-topbar-actions">
@@ -128,8 +117,6 @@ export function TicketDrawer() {
                 placeholder="Add a description…"
               />
             </div>
-
-            {!ticket.parentId && <SubtasksTable parentId={ticket.id} />}
 
             <LinkedItemsSection ticketId={ticket.id} />
 
@@ -200,13 +187,6 @@ export function TicketDrawer() {
                 </select>
               </SidebarRow>
 
-              {parentTicket && (
-                <SidebarRow label="Parent">
-                  <button className="parent-link" onClick={() => openTicket(parentTicket.id)}>
-                    {parentTicket.key}: {parentTicket.title}
-                  </button>
-                </SidebarRow>
-              )}
             </div>
 
             <div className="sidebar-footer-info">

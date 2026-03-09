@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Template, Priority } from '../../types';
 import { PRIORITIES } from '../../constants/priorities';
 import { RichTextEditor } from '../Ticket/RichTextEditor';
@@ -14,20 +13,8 @@ interface Props {
 }
 
 export function TemplateEditor({ editing, tags, onSave, onCancel, onChange }: Props) {
-  const [newSubTitle, setNewSubTitle] = useState('');
-
   function patchField<K extends keyof Template['defaultFields']>(key: K, value: Template['defaultFields'][K]) {
     onChange({ ...editing, defaultFields: { ...editing.defaultFields, [key]: value } });
-  }
-
-  function addSub() {
-    if (!newSubTitle.trim()) return;
-    onChange({ ...editing, defaultSubtasks: [...editing.defaultSubtasks, { title: newSubTitle.trim() }] });
-    setNewSubTitle('');
-  }
-
-  function removeSub(i: number) {
-    onChange({ ...editing, defaultSubtasks: editing.defaultSubtasks.filter((_, idx) => idx !== i) });
   }
 
   return (
@@ -106,29 +93,6 @@ export function TemplateEditor({ editing, tags, onSave, onCancel, onChange }: Pr
             onChange={html => patchField('description', html || undefined)}
             placeholder="Default description…"
           />
-        </div>
-
-        <div className="form-field">
-          <label className="form-label">Default subtasks</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {editing.defaultSubtasks.map((st, i) => (
-              <div key={i} className="subtask-row">
-                <span style={{ flex: 1, fontSize: 'var(--font-size-sm)' }}>{st.title}</span>
-                <button className="btn btn-icon btn-ghost btn-sm" onClick={() => removeSub(i)}>✕</button>
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                className="form-input"
-                placeholder="Add default subtask…"
-                value={newSubTitle}
-                onChange={e => setNewSubTitle(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addSub(); }}
-                style={{ flex: 1 }}
-              />
-              <button className="btn btn-secondary btn-sm" onClick={addSub}>Add</button>
-            </div>
-          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

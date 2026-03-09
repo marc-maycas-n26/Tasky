@@ -22,7 +22,7 @@ export function TrashPage() {
     purgeExpiredTrash();
   }, [purgeExpiredTrash]);
 
-  const topLevel = trashedTickets.filter(tr => !tr.ticket.parentId);
+  const topLevel = trashedTickets;
 
   function getColumnName(colId: string) {
     return columns.find(c => c.id === colId)?.name ?? 'Unknown';
@@ -53,7 +53,6 @@ export function TrashPage() {
           <div className="tmpl-list">
             {sorted.map(({ ticket, trashedAt, expiresAt }) => {
               const days = daysLeft(expiresAt);
-              const subtaskCount = trashedTickets.filter(tr => tr.ticket.parentId === ticket.id).length;
               return (
                 <div key={ticket.id} className="tmpl-item">
                   <div className="tmpl-item-info">
@@ -63,9 +62,6 @@ export function TrashPage() {
                     </div>
                     <div className="tmpl-item-meta trash-item-meta">
                       <span className="trash-item-column">{getColumnName(ticket.columnId)}</span>
-                      {subtaskCount > 0 && (
-                        <span>+{subtaskCount} subtask{subtaskCount > 1 ? 's' : ''}</span>
-                      )}
                       <span>Deleted {new Date(trashedAt).toLocaleDateString()}</span>
                       <span className={`trash-item-expires${days <= 3 ? ' trash-item-expires--urgent' : days <= 7 ? ' trash-item-expires--warning' : ''}`}>
                         {days === 0 ? 'Deletes today' : `${days}d left`}

@@ -171,7 +171,7 @@ export function BacklogPanel() {
   const [collapsed, setCollapsed] = useState(false);
 
   const backlogTickets = tickets
-    .filter(t => t.inBacklog === true && !t.parentId)
+    .filter(t => t.inBacklog === true)
     .sort((a, b) => a.order - b.order);
 
   return (

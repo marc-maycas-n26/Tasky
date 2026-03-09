@@ -23,7 +23,7 @@ export function EpicDrawer() {
   const openTicket = useStore(s => s.openTicket);
 
   const epic = epics.find(e => e.id === selectedEpicId);
-  const epicTickets = tickets.filter(t => t.epicId === selectedEpicId && !t.parentId);
+  const epicTickets = tickets.filter(t => t.epicId === selectedEpicId);
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');

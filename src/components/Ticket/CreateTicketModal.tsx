@@ -92,20 +92,6 @@ export function CreateTicketModal() {
       priority: priority || undefined,
     });
 
-    const tmpl = templates.find(t => t.id === selectedTemplate);
-    if (tmpl) {
-      tmpl.defaultSubtasks.forEach(st => {
-        addTicket({
-          title: st.title,
-          columnId: todoCol?.id ?? columnId,
-          inBacklog: false,
-          epicId: epicId || undefined,
-          parentId: ticket.id,
-          tagIds: st.tags ?? [],
-        });
-      });
-    }
-
     closeCreateTicket();
     if (andOpen) openTicket(ticket.id);
   }

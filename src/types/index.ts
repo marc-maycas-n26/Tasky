@@ -39,16 +39,10 @@ export interface Tag {
   updatedAt: string;
 }
 
-export interface SubtaskTemplate {
-  title: string;
-  tags?: string[];
-}
-
 export interface Template {
   id: string;
   name: string;
   defaultFields: Partial<Pick<Ticket, 'title' | 'description' | 'epicId' | 'priority' | 'dueDate'>> & { tagIds?: string[] };
-  defaultSubtasks: SubtaskTemplate[];
   createdAt: string;
   updatedAt: string;
 }
@@ -62,8 +56,7 @@ export interface Ticket {
   inBacklog: boolean; // true = lives in backlog; false = on the board
   epicId?: string;
   tagIds: string[];
-  parentId?: string;
-  order: number; // within (columnId + epicId/null + parentId/null)
+  order: number; // within (columnId + epicId/null)
   priority?: Priority;
   dueDate?: string; // ISO date string
   createdAt: string;

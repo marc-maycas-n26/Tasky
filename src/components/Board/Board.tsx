@@ -146,7 +146,7 @@ export function Board() {
       const [, targetColId, epicPart] = colEpicMatch;
       const targetEpicId = epicPart === 'null' ? undefined : epicPart;
       const colTickets = tickets
-        .filter(t => t.columnId === targetColId && (t.epicId ?? 'null') === (targetEpicId ?? 'null') && !t.parentId)
+        .filter(t => t.columnId === targetColId && (t.epicId ?? 'null') === (targetEpicId ?? 'null'))
         .sort((a, b) => a.order - b.order);
       moveTicket(draggedId, targetColId, targetEpicId, colTickets.length);
       return;
@@ -157,7 +157,7 @@ export function Board() {
       const targetColId = overTicket.columnId;
       const targetEpicId = overTicket.epicId;
       const colTickets = tickets
-        .filter(t => t.columnId === targetColId && (t.epicId ?? null) === (targetEpicId ?? null) && !t.parentId)
+        .filter(t => t.columnId === targetColId && (t.epicId ?? null) === (targetEpicId ?? null))
         .sort((a, b) => a.order - b.order);
 
       const withoutDragged = colTickets.filter(t => t.id !== draggedId);
@@ -174,7 +174,7 @@ export function Board() {
   }
 
   const epicGroups = useMemo(() => {
-    const top = filteredTickets.filter(t => !t.parentId && t.inBacklog !== true && !!t.columnId);
+    const top = filteredTickets.filter(t => t.inBacklog !== true && !!t.columnId);
     const noEpicTickets = top.filter(t => !t.epicId);
     return [
       ...sortedEpics.map(epic => ({
@@ -196,7 +196,7 @@ export function Board() {
   ), [columns]);
 
   const doneCount = useMemo(
-    () => tickets.filter(t => !t.inBacklog && !t.parentId && doneColIds.has(t.columnId)).length,
+    () => tickets.filter(t => !t.inBacklog && doneColIds.has(t.columnId)).length,
     [tickets, doneColIds]
   );
 

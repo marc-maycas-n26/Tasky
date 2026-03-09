@@ -9,7 +9,6 @@ type EditingTemplate = Omit<Template, 'id' | 'createdAt' | 'updatedAt'> & { id?:
 const EMPTY_TMPL = (): EditingTemplate => ({
   name: '',
   defaultFields: {},
-  defaultSubtasks: [],
 });
 
 export function TemplatesPage() {
@@ -22,15 +21,15 @@ export function TemplatesPage() {
   const [editing, setEditing] = useState<EditingTemplate | null>(null);
 
   function openEdit(t: Template) {
-    setEditing({ id: t.id, name: t.name, defaultFields: { ...t.defaultFields }, defaultSubtasks: [...t.defaultSubtasks] });
+    setEditing({ id: t.id, name: t.name, defaultFields: { ...t.defaultFields } });
   }
 
   function save() {
     if (!editing || !editing.name.trim()) return;
     if (editing.id) {
-      updateTemplate(editing.id, { name: editing.name, defaultFields: editing.defaultFields, defaultSubtasks: editing.defaultSubtasks });
+      updateTemplate(editing.id, { name: editing.name, defaultFields: editing.defaultFields });
     } else {
-      addTemplate({ name: editing.name, defaultFields: editing.defaultFields, defaultSubtasks: editing.defaultSubtasks });
+      addTemplate({ name: editing.name, defaultFields: editing.defaultFields });
     }
     setEditing(null);
   }
@@ -68,8 +67,7 @@ export function TemplatesPage() {
                 <div className="tmpl-item-info">
                   <span className="tmpl-item-name">{t.name}</span>
                   <span className="tmpl-item-meta">
-                    {t.defaultSubtasks.length} default subtask{t.defaultSubtasks.length !== 1 ? 's' : ''}
-                    {t.defaultFields.priority ? ` · ${t.defaultFields.priority} priority` : ''}
+                    {t.defaultFields.priority ? `${t.defaultFields.priority} priority` : 'No default priority'}
                   </span>
                 </div>
                 <div className="table-actions">

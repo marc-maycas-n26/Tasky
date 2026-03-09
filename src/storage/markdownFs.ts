@@ -324,7 +324,6 @@ function parseKeyFromFilename(filename: string): string | null {
 //   epic: Authentication         ← epic title (resolved on load)
 //   priority: high
 //   tags: [frontend, backend]    ← tag names (resolved on load)
-//   parent: TM-2                 ← parent ticket key (for subtasks)
 //   order: 0
 //   dueDate: 2026-03-15
 //   createdAt: 2026-02-27T10:00:00.000Z
@@ -382,7 +381,6 @@ function serializeTicketFile(
     ...(epicTitle      ? { epic: epicTitle }         : {}),
     ...(ticket.priority ? { priority: ticket.priority } : {}),
     ...(tagNames.length ? { tags: tagNames }          : {}),
-    ...(ticket.parentId ? { parent: ticket.parentId } : {}),
     order: ticket.order,
     ...(ticket.dueDate  ? { dueDate: ticket.dueDate } : {}),
     createdAt: ticket.createdAt,
@@ -677,7 +675,6 @@ export class MarkdownFsAdapter implements StorageAdapter {
         inBacklog,
         epicId,
         tagIds,
-        parentId:  fm.parent    ?? base.parentId,
         order:     fm.order     ?? base.order,
         priority:  (fm.priority as Ticket['priority']) ?? base.priority,
         dueDate:   fm.dueDate   ?? base.dueDate,
@@ -895,7 +892,6 @@ export class MarkdownFsAdapter implements StorageAdapter {
     const deletedFolder = await this.getArchiveSubfolder(DELETED_FOLDER);
     const activeDeletedFiles = new Set<string>();
     for (const { ticket } of state.trashedTickets ?? []) {
-      if (ticket.parentId) continue; // skip subtasks
       await writeTicket(ticket, deletedFolder);
       activeDeletedFiles.add(toFilename(ticket));
     }
@@ -915,7 +911,6 @@ export class MarkdownFsAdapter implements StorageAdapter {
       }
       const { fh, active } = releasedDateFolders.get(dateKey)!;
       for (const ticket of release.tickets) {
-        if (ticket.parentId) continue; // skip subtasks
         await writeTicket(ticket, fh);
         active.add(toFilename(ticket));
       }

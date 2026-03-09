@@ -36,7 +36,7 @@ export function BoardSection() {
   const [collapsed, setCollapsed] = useState(false);
 
   const boardCols = [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
-  const boardTickets = tickets.filter(t => !t.parentId && boardCols.some(c => c.id === t.columnId));
+  const boardTickets = tickets.filter(t => boardCols.some(c => c.id === t.columnId));
 
   if (boardTickets.length === 0 && !columns.some(c => !c.isBacklog)) return null;
 

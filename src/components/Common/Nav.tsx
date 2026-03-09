@@ -80,7 +80,7 @@ interface Props {
 export function Nav({ pinned, onToggle }: Props) {
   const isSaving = useStore(s => s.isSaving);
   const trashedTickets = useStore(s => s.trashedTickets);
-  const trashCount = trashedTickets.filter(tr => !tr.ticket.parentId).length;
+  const trashCount = trashedTickets.length;
 
   return (
     <nav className={`sidebar${pinned ? ' sidebar--pinned' : ' sidebar--collapsed'}`}>

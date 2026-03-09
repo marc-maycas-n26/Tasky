@@ -37,12 +37,12 @@ export function BacklogPage() {
   );
 
   const backlogTickets = tickets
-    .filter(t => t.inBacklog === true && !t.parentId)
+    .filter(t => t.inBacklog === true)
     .filter(t => priorityFilter.size === 0 || priorityFilter.has(t.priority ?? ''))
     .sort((a, b) => a.order - b.order);
 
   const boardTickets = tickets
-    .filter(t => t.inBacklog !== true && !!t.columnId && !t.parentId)
+    .filter(t => t.inBacklog !== true && !!t.columnId)
     .filter(t => priorityFilter.size === 0 || priorityFilter.has(t.priority ?? ''))
     .sort((a, b) => a.order - b.order);
 
@@ -113,7 +113,7 @@ export function BacklogPage() {
       // Reorder within the target epic group
       const targetEpicId = overTicket.epicId;
       const sameGroup = tickets.filter(t =>
-        t.inBacklog === dragged.inBacklog && !t.parentId && (t.epicId ?? null) === (targetEpicId ?? null)
+        t.inBacklog === dragged.inBacklog && (t.epicId ?? null) === (targetEpicId ?? null)
       ).sort((a, b) => a.order - b.order);
       const withoutDragged = sameGroup.filter(t => t.id !== draggedId);
       const overIdx = withoutDragged.findIndex(t => t.id === overId);
@@ -148,7 +148,7 @@ export function BacklogPage() {
         {epics.length > 0 && (
           <div className="bl-epics-strip">
             {epics.map(ep => {
-              const epTickets = tickets.filter(t => t.epicId === ep.id && !t.parentId);
+              const epTickets = tickets.filter(t => t.epicId === ep.id);
               const doneColIds = columns.filter(c => c.name.toLowerCase() === 'done').map(c => c.id);
               const doneCount = epTickets.filter(t => doneColIds.includes(t.columnId)).length;
               const pct = epTickets.length > 0 ? Math.round((doneCount / epTickets.length) * 100) : 0;

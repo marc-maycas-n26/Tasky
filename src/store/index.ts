@@ -286,7 +286,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const s = get();
     const epic = s.epics.find(e => e.id === id);
     if (!epic) return;
-    const epicTickets = s.tickets.filter(t => t.epicId === id && !t.parentId);
+    const epicTickets = s.tickets.filter(t => t.epicId === id);
     const released: ReleasedEpic = {
       epic: { ...epic },
       tickets: epicTickets.map(t => ({ ...t })),
@@ -309,7 +309,7 @@ export const useStore = create<StoreState>((set, get) => ({
         .filter(c => c.role === 'done' || c.name.toLowerCase() === 'done')
         .map(c => c.id)
     );
-    const doneTickets = s.tickets.filter(t => !t.inBacklog && !t.parentId && doneColIds.has(t.columnId));
+    const doneTickets = s.tickets.filter(t => !t.inBacklog && doneColIds.has(t.columnId));
     if (doneTickets.length === 0) return;
 
     // Group done tickets by epicId (undefined = no epic)
@@ -327,10 +327,6 @@ export const useStore = create<StoreState>((set, get) => ({
 
     for (const [epicId, tickets] of byEpic) {
       const epic = epicId ? s.epics.find(e => e.id === epicId) : undefined;
-      // Also include subtasks of released tickets
-      const subtasks = s.tickets.filter(t => t.parentId && ticketIdsToRemove.has(t.parentId));
-      subtasks.forEach(t => ticketIdsToRemove.add(t.id));
-
       newReleases.push({
         epic: epic ? { ...epic } : {
           id: `unassigned-${releasedAt}`,
@@ -347,7 +343,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
       if (epicId) {
         // Only fully release the epic if ALL its tickets are done
-        const allEpicTickets = s.tickets.filter(t => t.epicId === epicId && !t.parentId);
+        const allEpicTickets = s.tickets.filter(t => t.epicId === epicId);
         if (allEpicTickets.every(t => ticketIdsToRemove.has(t.id))) {
           epicIdsToRelease.add(epicId);
         }
@@ -413,9 +409,6 @@ export const useStore = create<StoreState>((set, get) => ({
     const inBacklog = fields.inBacklog ?? false;
     // For backlog tickets, columnId is not meaningful yet — use empty string as placeholder
     const columnId = inBacklog ? (fields.columnId || '') : fields.columnId;
-    // Enforce max 2 levels: a child ticket cannot itself become a parent
-    const parentTicket = fields.parentId ? s.tickets.find(t => t.id === fields.parentId) : undefined;
-    const parentId = parentTicket?.parentId ? undefined : fields.parentId;
     const ticket: Ticket = {
       id: uuidv4(),
       key: `${s.settings.projectKey}-${num}`,
@@ -425,9 +418,8 @@ export const useStore = create<StoreState>((set, get) => ({
       inBacklog,
       epicId: fields.epicId,
       tagIds: fields.tagIds ?? [],
-      parentId,
       order: fields.order ?? s.tickets.filter(
-        t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId && !t.parentId
+        t => t.inBacklog === inBacklog && t.columnId === columnId && t.epicId === fields.epicId
       ).length,
       priority: fields.priority ?? 'medium',
       dueDate: fields.dueDate,
@@ -463,7 +455,7 @@ export const useStore = create<StoreState>((set, get) => ({
   deleteTicket(id) {
     // Hard delete — kept for internal use (e.g. purge). UI should use trashTicket.
     set(s => ({
-      tickets: s.tickets.filter(t => t.id !== id && t.parentId !== id),
+      tickets: s.tickets.filter(t => t.id !== id),
       trashedTickets: s.trashedTickets.filter(tr => tr.ticket.id !== id),
     }));
     get().persist();
@@ -473,12 +465,11 @@ export const useStore = create<StoreState>((set, get) => ({
     const s = get();
     const trashedAt = now();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    // Collect ticket and its subtasks
-    const toTrash = s.tickets.filter(t => t.id === id || t.parentId === id);
-    const newTrashed: TrashedTicket[] = toTrash.map(t => ({ ticket: t, trashedAt, expiresAt }));
+    const ticket = s.tickets.find(t => t.id === id);
+    if (!ticket) return;
     set(st => ({
-      tickets: st.tickets.filter(t => t.id !== id && t.parentId !== id),
-      trashedTickets: [...st.trashedTickets, ...newTrashed],
+      tickets: st.tickets.filter(t => t.id !== id),
+      trashedTickets: [...st.trashedTickets, { ticket, trashedAt, expiresAt }],
     }));
     get().persist();
   },
@@ -487,22 +478,16 @@ export const useStore = create<StoreState>((set, get) => ({
     const s = get();
     const entry = s.trashedTickets.find(tr => tr.ticket.id === id);
     if (!entry) return;
-    // Restore the ticket and any subtasks that were trashed at the same time
-    const sameBatch = s.trashedTickets.filter(
-      tr => tr.ticket.id === id || (tr.ticket.parentId === id && tr.trashedAt === entry.trashedAt)
-    );
     set(st => ({
-      tickets: [...st.tickets, ...sameBatch.map(tr => tr.ticket)],
-      trashedTickets: st.trashedTickets.filter(tr => !sameBatch.some(b => b.ticket.id === tr.ticket.id)),
+      tickets: [...st.tickets, entry.ticket],
+      trashedTickets: st.trashedTickets.filter(tr => tr.ticket.id !== id),
     }));
     get().persist();
   },
 
   purgeTicket(id) {
     set(s => ({
-      trashedTickets: s.trashedTickets.filter(
-        tr => tr.ticket.id !== id && tr.ticket.parentId !== id
-      ),
+      trashedTickets: s.trashedTickets.filter(tr => tr.ticket.id !== id),
     }));
     get().persist();
   },
@@ -540,7 +525,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const ticket = s.tickets.find(t => t.id === ticketId);
     if (!ticket) return;
     const newOrder = s.tickets.filter(
-      t => t.columnId === targetColumnId && (t.epicId ?? null) === (ticket.epicId ?? null) && !t.parentId && !t.inBacklog
+      t => t.columnId === targetColumnId && (t.epicId ?? null) === (ticket.epicId ?? null) && !t.inBacklog
     ).length;
     set(st => ({
       tickets: st.tickets.map(t =>
@@ -554,7 +539,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   moveToBacklog(ticketId) {
     const s = get();
-    const newOrder = s.tickets.filter(t => t.inBacklog && !t.parentId).length;
+    const newOrder = s.tickets.filter(t => t.inBacklog).length;
     set(st => ({
       tickets: st.tickets.map(t =>
         t.id === ticketId
