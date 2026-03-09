@@ -12,7 +12,6 @@ export function CreateTicketModal() {
   const createTicketDefaults = useStore(s => s.createTicketDefaults);
   const addTicket = useStore(s => s.addTicket);
   const addEpic = useStore(s => s.addEpic);
-  const openTicket = useStore(s => s.openTicket);
   const columns = useStore(s => s.columns);
   const epics = useStore(s => s.epics);
   const tags = useStore(s => s.tags);
@@ -71,7 +70,16 @@ export function CreateTicketModal() {
     setEpicTagIds(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
   }
 
-  function handleCreate(andOpen = false) {
+  function resetForm() {
+    setTitle('');
+    setDescription('');
+    setTagIds(createTicketDefaults.tagIds ?? []);
+    setSelectedTemplate('');
+    setError('');
+    setTimeout(() => titleRef.current?.focus(), 0);
+  }
+
+  function handleCreate(andNew = false) {
     if (!title.trim()) { setError('Title is required'); return; }
 
     if (issueType === 'epic') {
@@ -92,8 +100,11 @@ export function CreateTicketModal() {
       priority: priority || undefined,
     });
 
-    closeCreateTicket();
-    if (andOpen) openTicket(ticket.id);
+    if (andNew) {
+      resetForm();
+    } else {
+      closeCreateTicket();
+    }
   }
 
   return (
@@ -186,7 +197,7 @@ export function CreateTicketModal() {
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={closeCreateTicket}>Cancel</button>
           {issueType === 'task' && (
-            <button className="btn btn-secondary" onClick={() => handleCreate(true)}>Create &amp; Open</button>
+            <button className="btn btn-secondary" onClick={() => handleCreate(true)}>Create &amp; New</button>
           )}
           <button className="btn btn-primary" onClick={() => handleCreate(false)}>
             {issueType === 'epic' ? 'Create epic' : 'Create'}

@@ -92,11 +92,6 @@
 }
 
 /* Chevron */
-.ticket-card-chevron {
-  display: flex;
-  align-items: center;
-  opacity: 0.5;
-}
 
 /* Subtask count */
 .ticket-card-subtasks {
@@ -120,14 +115,3 @@
   font-weight: 600;
 }
 
-/* Avatar */
-.ticket-card-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}

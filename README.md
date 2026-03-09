@@ -28,25 +28,28 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 
 ### Board
 
-- Kanban columns with drag-and-drop reordering of tickets
-- Epic swimlanes — tickets grouped by epic across all columns
+- Kanban columns with drag-and-drop reordering of tickets between columns
+- Epic swimlanes — tickets grouped by epic across all columns, drag-and-drop to reorder swimlanes
 - "Other" swimlane for tickets not assigned to an epic
 - Collapsible swimlanes
-- Search tickets by title or key
-- Filter by epic and/or tag (multi-select)
+- Search tickets by title, key, or description content
+- Filter by epic, label, and/or priority (multi-select)
+- Release button — moves all done tickets to the Releases archive; shows last release date with weekday in the toolbar
 - Quick-create ticket button
 
 ### Backlog
 
 - Separate staging area for tickets not yet on the board
-- Drag tickets between Backlog and Board
+- Drag tickets between Backlog and Board sections
 - Epic progress strips: ticket count, % complete, visual progress bar
+- Epics with no tickets still appear (unless explicitly marked done)
 - Search across both board and backlog sections
+- Filter by priority
 
 ### Epics
 
 - Color-coded swimlane groupings
-- Per-epic status: To Do / In Progress / Done
+- Per-epic status: To Do / In Progress / Done (auto-computed or manually overridden)
 - Epic drawer: description, ticket list, progress percentage, column filter
 - Release an epic once all its tickets are done — takes a permanent snapshot and moves it to the Releases archive
 - Collapse/expand swimlanes individually
@@ -54,16 +57,16 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 ### Tickets
 
 - Auto-generated key per project (e.g. `TM-1`)
-- Priority levels: Lowest / Low / Medium / High / Highest
+- Priority levels: Lowest / Low / Medium / High / Highest — defaults to Medium on creation
 - Due date
-- Rich-text description (Markdown)
+- Rich-text description with bold, italic, headings, lists, code, blockquotes, task lists, links, images, and emoji
 - Tag assignment (multiple)
 - Epic assignment
 - Column (status) assignment
-- Subtasks (one level deep) with their own priority, column, and progress tracking
 - Linked items with relationship types: relates to, blocks / is blocked by, clones / is cloned by
-- Comments (Sitrep) — add and delete notes on a ticket
+- Sitrep (activity section) — rich-text comments with system events for column changes; sortable oldest/newest
 - Full edit in ticket drawer
+- "Create & New" — create a ticket and immediately open a fresh form to add another
 
 ### Columns
 
@@ -80,14 +83,14 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 
 ### Templates
 
-- Save pre-configured ticket blueprints with default title, description, epic, priority, due date, tags, and subtasks
+- Save pre-configured ticket blueprints with default title, description, priority, due date, and tags
 - Apply a template when creating a new ticket
 
 ### Releases
 
-- Read-only archive of released epics
+- Read-only archive of released epics, expanded by default
 - Grouped by release date
-- Search by epic name or ticket title/key
+- Search by epic name or ticket title, key, or description
 - Date range filter
 - Shows all tickets that were in the epic at time of release
 
@@ -96,7 +99,6 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 - Soft-delete with 30-day retention
 - Urgency indicators: red (≤ 3 days), yellow (≤ 7 days)
 - Restore individual items or empty trash
-- Subtasks are trashed and restored together with their parent
 
 ---
 
@@ -159,10 +161,10 @@ Used automatically as a transit state (e.g. between folder connections). No data
 | `Column` | `id`, `name`, `order`, `role?`, `color?` |
 | `Epic` | `id`, `title`, `color`, `status`, `order`, `isCollapsed` |
 | `Tag` | `id`, `name`, `color` |
-| `Ticket` | `id`, `key`, `title`, `description`, `columnId`, `inBacklog`, `epicId?`, `parentId?`, `tagIds`, `priority?`, `dueDate?`, `order` |
-| `Comment` | `id`, `ticketId`, `body`, `createdAt`, `updatedAt` |
+| `Ticket` | `id`, `key`, `title`, `description`, `columnId`, `inBacklog`, `epicId?`, `tagIds`, `priority`, `dueDate?`, `order` |
+| `Comment` | `id`, `ticketId`, `body`, `createdAt`, `updatedAt`, `isSystem?` |
 | `LinkedItem` | `id`, `ticketId`, `targetKey`, `targetTitle`, `relation` |
-| `Template` | `id`, `name`, `defaultFields`, `defaultSubtasks` |
+| `Template` | `id`, `name`, `defaultFields` |
 | `ReleasedEpic` | `epic` (snapshot), `tickets` (snapshot), `releasedAt` |
 | `TrashedTicket` | `ticket` (snapshot), `trashedAt`, `expiresAt` |
 
@@ -177,6 +179,7 @@ All entities include `createdAt` and `updatedAt` ISO timestamps.
 | UI | React 19 + TypeScript |
 | State | Zustand |
 | Storage | File System Access API + Dexie (IndexedDB) |
+| Rich text | TipTap |
 | Drag-and-drop | @dnd-kit |
 | Routing | React Router DOM v7 |
 | Build | Vite 7 + vite-plugin-pwa (Workbox) |

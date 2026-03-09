@@ -69,21 +69,6 @@ export function TicketCard({ ticket, isDragging }: Props) {
 
           <PriorityDots priority={ticket.priority} />
 
-          {/* Chevron (expand) */}
-          <span className="ticket-card-chevron" title="Priority">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2 3.5l3 3 3-3" stroke="#8993A4" strokeWidth="1.3" strokeLinecap="round"/>
-            </svg>
-          </span>
-
-          {/* Avatar */}
-          <span className="ticket-card-avatar" title="Unassigned">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill="#DFE1E6" />
-              <circle cx="8" cy="6" r="2.5" fill="#97A0AF" />
-              <path d="M3 13.5c0-2.76 2.24-5 5-5s5 2.24 5 5" fill="#97A0AF" />
-            </svg>
-          </span>
         </div>
       </div>
     </div>
