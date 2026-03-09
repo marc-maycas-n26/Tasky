@@ -63,7 +63,7 @@ export function TicketCard({ ticket, isDragging }: Props) {
         <div className="ticket-card-meta-right">
           {ticket.dueDate && (
             <span className={`ticket-card-due${new Date(ticket.dueDate) < new Date() ? ' ticket-card-due--overdue' : ''}`}>
-              {new Date(ticket.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              {new Date(ticket.dueDate).toLocaleDateString('en-GB')}
             </span>
           )}
 

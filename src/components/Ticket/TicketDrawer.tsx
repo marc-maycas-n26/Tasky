@@ -190,8 +190,8 @@ export function TicketDrawer() {
             </div>
 
             <div className="sidebar-footer-info">
-              <div>Created {new Date(ticket.createdAt).toLocaleDateString()}</div>
-              <div>Updated {new Date(ticket.updatedAt).toLocaleDateString()}</div>
+              <div>Created {new Date(ticket.createdAt).toLocaleDateString('en-GB')}</div>
+              <div>Updated {new Date(ticket.updatedAt).toLocaleDateString('en-GB')}</div>
             </div>
           </aside>
         </div>

@@ -103,7 +103,7 @@ export function ActivitySection({ ticketId }: Props) {
             <div key={c.id} className="system-event-row">
               <span className="system-event-icon"><SystemIcon /></span>
               <span className="system-event-body">{renderSystemBody(c.body)}</span>
-              <span className="system-event-time">{new Date(c.createdAt).toLocaleString()}</span>
+              <span className="system-event-time">{new Date(c.createdAt).toLocaleDateString('en-GB') + ', ' + new Date(c.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
               <button
                 className="system-event-delete btn btn-ghost btn-sm"
                 onClick={() => deleteComment(c.id)}
@@ -115,7 +115,7 @@ export function ActivitySection({ ticketId }: Props) {
               <div className="comment-body-wrap">
                 <div className="comment-meta">
                   <span className="comment-author">You</span>
-                  <span className="comment-time">{new Date(c.createdAt).toLocaleString()}</span>
+                  <span className="comment-time">{new Date(c.createdAt).toLocaleDateString('en-GB') + ', ' + new Date(c.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
                   {c.updatedAt !== c.createdAt && (
                     <span className="comment-edited">(edited)</span>
                   )}

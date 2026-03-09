@@ -62,7 +62,7 @@ export function TrashPage() {
                     </div>
                     <div className="tmpl-item-meta trash-item-meta">
                       <span className="trash-item-column">{getColumnName(ticket.columnId)}</span>
-                      <span>Deleted {new Date(trashedAt).toLocaleDateString()}</span>
+                      <span>Deleted {new Date(trashedAt).toLocaleDateString('en-GB')}</span>
                       <span className={`trash-item-expires${days <= 3 ? ' trash-item-expires--urgent' : days <= 7 ? ' trash-item-expires--warning' : ''}`}>
                         {days === 0 ? 'Deletes today' : `${days}d left`}
                       </span>

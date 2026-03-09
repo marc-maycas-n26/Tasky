@@ -5,7 +5,8 @@ import './ReleasesPage.css';
 
 function formatDay(isoDate: string): string {
   const d = new Date(isoDate);
-  return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const weekday = d.toLocaleDateString('en-GB', { weekday: 'long' });
+  return `${weekday}, ${d.toLocaleDateString('en-GB')}`;
 }
 
 function toDateKey(isoDate: string): string {
