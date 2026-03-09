@@ -83,24 +83,6 @@ export interface LinkedItem {
   createdAt: string;
 }
 
-export type AutomationTrigger = 'onTicketCreate' | 'onMoveToColumn';
-
-export interface AutomationAction {
-  type: 'createSubtasksFromTemplate';
-  templateId: string;
-}
-
-export interface AutomationRule {
-  id: string;
-  name: string;
-  trigger: AutomationTrigger;
-  conditions: Record<string, unknown>;
-  actions: AutomationAction[];
-  enabled: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // ─── Trash ────────────────────────────────────────────────────────────────────
 
 export interface TrashedTicket {
@@ -133,7 +115,6 @@ export interface AppState {
   trashedTickets: TrashedTicket[];
   releasedEpics: ReleasedEpic[];
   templates: Template[];
-  automationRules: AutomationRule[];
   comments: Comment[];
   linkedItems: LinkedItem[];
   nextTicketNumber: number;

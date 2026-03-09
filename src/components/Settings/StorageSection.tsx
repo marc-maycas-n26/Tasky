@@ -102,7 +102,7 @@ export function StorageSection() {
       schemaVersion: 1,
       columns: [], epics: [], tags: [], tickets: [],
       trashedTickets: [], releasedEpics: [], templates: [],
-      automationRules: [], comments: [], linkedItems: [],
+      comments: [], linkedItems: [],
       nextTicketNumber: 1,
       settings: { projectKey: 'TM' },
     });

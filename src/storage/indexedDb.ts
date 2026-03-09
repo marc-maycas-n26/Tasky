@@ -9,7 +9,6 @@ import type {
   Ticket,
   TrashedTicket,
   ReleasedEpic,
-  AutomationRule,
   Comment,
   LinkedItem,
   StorageAdapter,
@@ -25,7 +24,6 @@ class AppDatabase extends Dexie {
   tickets!: Table<Ticket>;
   trashedTickets!: Table<TrashedTicket & { id: string }>;
   releasedEpics!: Table<ReleasedEpic & { id: string }>;
-  automationRules!: Table<AutomationRule>;
   comments!: Table<Comment>;
   linkedItems!: Table<LinkedItem>;
   meta!: Table<{ key: string; value: unknown }>;
@@ -86,7 +84,7 @@ const db = new AppDatabase();
 export async function clearAppDatabase(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.columns, db.epics, db.tags, db.templates, db.tickets, db.automationRules,
+    [db.columns, db.epics, db.tags, db.templates, db.tickets,
      db.comments, db.linkedItems, db.trashedTickets, db.releasedEpics, db.meta],
     async () => {
       await Promise.all([
@@ -95,7 +93,6 @@ export async function clearAppDatabase(): Promise<void> {
         db.tags.clear(),
         db.templates.clear(),
         db.tickets.clear(),
-        db.automationRules.clear(),
         db.comments.clear(),
         db.linkedItems.clear(),
         db.trashedTickets.clear(),
@@ -111,14 +108,13 @@ export class IndexedDbAdapter implements StorageAdapter {
   supportsSync = false;
 
   async loadAll(): Promise<AppState> {
-    const [columns, epics, tags, templates, tickets, automationRules, comments, linkedItems, trashedRaw, releasedRaw] =
+    const [columns, epics, tags, templates, tickets, comments, linkedItems, trashedRaw, releasedRaw] =
       await Promise.all([
         db.columns.toArray(),
         db.epics.toArray(),
         db.tags.toArray(),
         db.templates.toArray(),
         db.tickets.toArray(),
-        db.automationRules.toArray(),
         db.comments.toArray(),
         db.linkedItems.toArray(),
         db.trashedTickets.toArray(),
@@ -153,7 +149,6 @@ export class IndexedDbAdapter implements StorageAdapter {
       tickets: migratedTickets,
       trashedTickets,
       releasedEpics,
-      automationRules,
       comments,
       linkedItems,
       nextTicketNumber: (meta['nextTicketNumber'] as number) ?? 1,
@@ -168,7 +163,7 @@ export class IndexedDbAdapter implements StorageAdapter {
     const releasedRows = (state.releasedEpics ?? []).map(r => ({ ...r, id: r.epic.id }));
     await db.transaction(
       'rw',
-      [db.columns, db.epics, db.tags, db.templates, db.tickets, db.automationRules, db.comments, db.linkedItems, db.trashedTickets, db.releasedEpics, db.meta],
+      [db.columns, db.epics, db.tags, db.templates, db.tickets, db.comments, db.linkedItems, db.trashedTickets, db.releasedEpics, db.meta],
       async () => {
         await Promise.all([
           db.columns.clear().then(() => db.columns.bulkPut(state.columns)),
@@ -176,7 +171,6 @@ export class IndexedDbAdapter implements StorageAdapter {
           db.tags.clear().then(() => db.tags.bulkPut(state.tags)),
           db.templates.clear().then(() => db.templates.bulkPut(state.templates)),
           db.tickets.clear().then(() => db.tickets.bulkPut(state.tickets)),
-          db.automationRules.clear().then(() => db.automationRules.bulkPut(state.automationRules)),
           db.comments.clear().then(() => db.comments.bulkPut(state.comments ?? [])),
           db.linkedItems.clear().then(() => db.linkedItems.bulkPut(state.linkedItems ?? [])),
           db.trashedTickets.clear().then(() => db.trashedTickets.bulkPut(trashedRows)),

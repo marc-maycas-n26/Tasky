@@ -610,7 +610,7 @@ export class MarkdownFsAdapter implements StorageAdapter {
         schemaVersion: 1,
         columns: [], epics: [], tags: [], tickets: [],
         trashedTickets: [], releasedEpics: [], templates: [],
-        automationRules: [], comments: [], linkedItems: [],
+        comments: [], linkedItems: [],
         nextTicketNumber: 1,
         settings: { projectKey: 'TM' },
       };
@@ -824,7 +824,6 @@ export class MarkdownFsAdapter implements StorageAdapter {
       trashedTickets: meta.trashedTickets ?? [],
       releasedEpics:  meta.releasedEpics  ?? [],
       templates:      meta.templates      ?? [],
-      automationRules: meta.automationRules ?? [],
       comments:       mergedComments,
       linkedItems:    meta.linkedItems    ?? [],
       nextTicketNumber: meta.nextTicketNumber ?? 1,
