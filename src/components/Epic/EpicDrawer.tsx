@@ -272,8 +272,8 @@ export function EpicDrawer() {
             </div>
 
             <div className="sidebar-footer-info">
-              <div>Created {new Date(epic.createdAt).toLocaleDateString('en-GB')}</div>
-              <div>Updated {new Date(epic.updatedAt).toLocaleDateString('en-GB')}</div>
+              <div>Created {new Date(epic.createdAt).toLocaleDateString('en-GB')}, {new Date(epic.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+              <div>Updated {new Date(epic.updatedAt).toLocaleDateString('en-GB')}, {new Date(epic.updatedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
             </div>
           </aside>
         </div>
