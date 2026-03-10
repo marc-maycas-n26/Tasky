@@ -27,6 +27,8 @@ export function TicketDrawer() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [labelPickerOpen, setLabelPickerOpen] = useState(false);
   const [labelSearch, setLabelSearch] = useState('');
+  const [labelDropdownPos, setLabelDropdownPos] = useState({ top: 0, left: 0 });
+  const labelBtnRef = useRef<HTMLButtonElement>(null);
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const labelSearchRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +59,12 @@ export function TicketDrawer() {
 
   useEffect(() => {
     if (!labelPickerOpen) { setLabelSearch(''); return; }
+    if (labelBtnRef.current) {
+      const r = labelBtnRef.current.getBoundingClientRect();
+      const dropdownWidth = 200;
+      const left = Math.min(r.left, window.innerWidth - dropdownWidth - 8);
+      setLabelDropdownPos({ top: r.bottom + 6, left });
+    }
     setTimeout(() => labelSearchRef.current?.focus(), 0);
     function handleClick(e: MouseEvent) {
       if (labelPickerRef.current && !labelPickerRef.current.contains(e.target as Node)) {
@@ -176,54 +184,17 @@ export function TicketDrawer() {
                       </button>
                     );
                   })}
-                  <div className="sidebar-label-picker-wrap" ref={labelPickerRef}>
-                    <button
-                      type="button"
-                      className="btn btn-icon btn-ghost sidebar-label-add-btn"
-                      onClick={() => setLabelPickerOpen(o => !o)}
-                      title="Add label"
-                    >
-                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                      </svg>
-                    </button>
-                    {labelPickerOpen && (
-                      <div className="sidebar-label-dropdown">
-                        <div className="sidebar-label-search-wrap">
-                          <input
-                            ref={labelSearchRef}
-                            className="sidebar-label-search"
-                            placeholder="Search labels…"
-                            value={labelSearch}
-                            onChange={e => setLabelSearch(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Escape') setLabelPickerOpen(false); }}
-                          />
-                        </div>
-                        <div className="sidebar-label-dropdown-list">
-                          {tags.filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase())).length === 0 && (
-                            <span className="sidebar-label-dropdown-empty">No labels found</span>
-                          )}
-                          {tags
-                            .filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase()))
-                            .map(tag => {
-                              const active = ticket.tagIds.includes(tag.id);
-                              return (
-                                <button
-                                  key={tag.id}
-                                  type="button"
-                                  className={`sidebar-label-option${active ? ' sidebar-label-option--active' : ''}`}
-                                  onClick={() => { toggleTag(tag.id); setLabelSearch(''); }}
-                                >
-                                  <span className="sidebar-label-option-dot" style={{ background: tag.color }} />
-                                  <span>{tag.name}</span>
-                                  {active && <span className="sidebar-label-option-check">✓</span>}
-                                </button>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    ref={labelBtnRef}
+                    type="button"
+                    className="sidebar-label-add-btn"
+                    onClick={() => setLabelPickerOpen(o => !o)}
+                    title="Add label"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                      <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  </button>
                 </div>
               </SidebarRow>
 
@@ -261,6 +232,47 @@ export function TicketDrawer() {
           </aside>
         </div>
       </div>
+
+      {labelPickerOpen && (
+        <div
+          ref={labelPickerRef}
+          className="sidebar-label-dropdown"
+          style={{ top: labelDropdownPos.top, left: labelDropdownPos.left }}
+        >
+          <div className="sidebar-label-search-wrap">
+            <input
+              ref={labelSearchRef}
+              className="sidebar-label-search"
+              placeholder="Search labels…"
+              value={labelSearch}
+              onChange={e => setLabelSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') setLabelPickerOpen(false); }}
+            />
+          </div>
+          <div className="sidebar-label-dropdown-list">
+            {tags.filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase())).length === 0 && (
+              <span className="sidebar-label-dropdown-empty">No labels found</span>
+            )}
+            {tags
+              .filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase()))
+              .map(tag => {
+                const active = ticket.tagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    className={`sidebar-label-option${active ? ' sidebar-label-option--active' : ''}`}
+                    onClick={() => { toggleTag(tag.id); setLabelSearch(''); }}
+                  >
+                    <span className="sidebar-label-option-dot" style={{ background: tag.color }} />
+                    <span>{tag.name}</span>
+                    {active && <span className="sidebar-label-option-check">✓</span>}
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {confirmingDelete && (
         <ConfirmDialog

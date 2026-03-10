@@ -676,12 +676,16 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1.5px dashed var(--color-border);
+  border: 1.5px solid var(--color-border);
+  background: none;
   color: var(--color-text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
 }
 .sidebar-label-add-btn:hover {
   border-color: var(--color-primary);
@@ -689,15 +693,9 @@
   background: var(--color-primary-light);
 }
 
-.sidebar-label-picker-wrap {
-  position: relative;
-}
-
 .sidebar-label-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 300;
+  position: fixed;
+  z-index: 500;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
