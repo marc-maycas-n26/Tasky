@@ -211,7 +211,7 @@ export function EpicDrawer() {
 
               {allTags.length > 0 && (
                 <div className="sidebar-row sidebar-row--tags">
-                  <span className="sidebar-row-label">Tags</span>
+                  <span className="sidebar-row-label">Labels</span>
                   <div className="sidebar-row-value">
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {allTags.map(tag => {

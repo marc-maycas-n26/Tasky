@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useStore } from '../../store';
 import type { Priority } from '../../types';
 import { PRIORITIES, PRIORITY_COLORS, PRIORITY_ICONS } from '../../constants/priorities';
@@ -25,6 +25,10 @@ export function TicketDrawer() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [labelPickerOpen, setLabelPickerOpen] = useState(false);
+  const [labelSearch, setLabelSearch] = useState('');
+  const labelPickerRef = useRef<HTMLDivElement>(null);
+  const labelSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (ticket) setTitleDraft(ticket.title);
@@ -44,12 +48,24 @@ export function TicketDrawer() {
     setEditingTitle(false);
   }
 
-  function toggleTag(tagId: string) {
+  const toggleTag = useCallback((tagId: string) => {
     const tagIds = ticket!.tagIds.includes(tagId)
       ? ticket!.tagIds.filter(id => id !== tagId)
       : [...ticket!.tagIds, tagId];
     updateTicket(ticket!.id, { tagIds });
-  }
+  }, [ticket, updateTicket]);
+
+  useEffect(() => {
+    if (!labelPickerOpen) { setLabelSearch(''); return; }
+    setTimeout(() => labelSearchRef.current?.focus(), 0);
+    function handleClick(e: MouseEvent) {
+      if (labelPickerRef.current && !labelPickerRef.current.contains(e.target as Node)) {
+        setLabelPickerOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [labelPickerOpen]);
 
   return (
     <>
@@ -142,23 +158,72 @@ export function TicketDrawer() {
               </SidebarRow>
 
               <SidebarRow label="Labels">
-                <div className="sidebar-tags">
-                  {tags.map(tag => (
+                <div className="sidebar-labels-row">
+                  {ticket.tagIds.map(id => {
+                    const tag = tags.find(t => t.id === id);
+                    if (!tag) return null;
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        className="chip sidebar-label-chip"
+                        style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}55` }}
+                        onClick={() => toggleTag(tag.id)}
+                        title="Remove label"
+                      >
+                        {tag.name}
+                        <span className="sidebar-label-remove" aria-hidden="true">×</span>
+                      </button>
+                    );
+                  })}
+                  <div className="sidebar-label-picker-wrap" ref={labelPickerRef}>
                     <button
-                      key={tag.id}
                       type="button"
-                      className={`chip sidebar-tag-toggle${ticket.tagIds.includes(tag.id) ? ' sidebar-tag-toggle--active' : ''}`}
-                      style={{
-                        background: ticket.tagIds.includes(tag.id) ? tag.color + '22' : 'transparent',
-                        color: tag.color,
-                        border: `1px solid ${tag.color}55`,
-                      }}
-                      onClick={() => toggleTag(tag.id)}
+                      className="btn btn-icon btn-ghost sidebar-label-add-btn"
+                      onClick={() => setLabelPickerOpen(o => !o)}
+                      title="Add label"
                     >
-                      {tag.name}
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
                     </button>
-                  ))}
-                  {tags.length === 0 && <span className="text-subtle" style={{ fontSize: 12 }}>Add labels</span>}
+                    {labelPickerOpen && (
+                      <div className="sidebar-label-dropdown">
+                        <div className="sidebar-label-search-wrap">
+                          <input
+                            ref={labelSearchRef}
+                            className="sidebar-label-search"
+                            placeholder="Search labels…"
+                            value={labelSearch}
+                            onChange={e => setLabelSearch(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Escape') setLabelPickerOpen(false); }}
+                          />
+                        </div>
+                        <div className="sidebar-label-dropdown-list">
+                          {tags.filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase())).length === 0 && (
+                            <span className="sidebar-label-dropdown-empty">No labels found</span>
+                          )}
+                          {tags
+                            .filter(t => t.name.toLowerCase().includes(labelSearch.toLowerCase()))
+                            .map(tag => {
+                              const active = ticket.tagIds.includes(tag.id);
+                              return (
+                                <button
+                                  key={tag.id}
+                                  type="button"
+                                  className={`sidebar-label-option${active ? ' sidebar-label-option--active' : ''}`}
+                                  onClick={() => { toggleTag(tag.id); setLabelSearch(''); }}
+                                >
+                                  <span className="sidebar-label-option-dot" style={{ background: tag.color }} />
+                                  <span>{tag.name}</span>
+                                  {active && <span className="sidebar-label-option-check">✓</span>}
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </SidebarRow>
 

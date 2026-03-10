@@ -29,7 +29,7 @@ const STATIC_NAV_ITEMS = [
   {
     to: '/tags',
     end: false,
-    label: 'Tags',
+    label: 'Labels',
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
         <path d="M2 2h6.5l7.5 7.5-6.5 6.5L2 8.5V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>

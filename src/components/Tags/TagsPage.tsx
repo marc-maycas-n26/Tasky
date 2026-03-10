@@ -3,6 +3,18 @@ import { useStore } from '../../store';
 import { ColorPickerPopover } from '../Common/ColorPickerPopover';
 import './TagsPage.css';
 
+const LABEL_PALETTE = [
+  '#4F46E5', '#0052CC', '#0078D4', '#0EA5E9', '#10B981',
+  '#16A34A', '#CA8A04', '#EA580C', '#DC2626', '#DB2777',
+  '#9333EA', '#6366F1', '#14B8A6', '#F59E0B', '#8993A4',
+];
+
+function pickNextColor(usedColors: string[]): string {
+  const used = new Set(usedColors.map(c => c.toLowerCase()));
+  const free = LABEL_PALETTE.find(c => !used.has(c.toLowerCase()));
+  return free ?? LABEL_PALETTE[usedColors.length % LABEL_PALETTE.length];
+}
+
 export function TagsPage() {
   const tags = useStore(s => s.tags);
   const addTag = useStore(s => s.addTag);
@@ -20,7 +32,7 @@ export function TagsPage() {
   function openAddRow() {
     setAdding(true);
     setNewName('');
-    setNewColor('#0052CC');
+    setNewColor(pickNextColor(tags.map(t => t.color)));
     setTimeout(() => newInputRef.current?.focus(), 0);
   }
 
@@ -28,8 +40,8 @@ export function TagsPage() {
     if (!newName.trim()) { setAdding(false); return; }
     addTag(newName.trim(), newColor);
     setNewName('');
-    setNewColor('#0052CC');
-    setAdding(false);
+    setNewColor(pickNextColor([...tags.map(t => t.color), newColor]));
+    setTimeout(() => newInputRef.current?.focus(), 0);
   }
 
   function cancelAdd() {
@@ -53,16 +65,16 @@ export function TagsPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Tags</h1>
-        <p className="page-subtitle">Create and manage reusable tags for your tickets.</p>
+        <h1 className="page-title">Labels</h1>
+        <p className="page-subtitle">Create and manage reusable labels for your tickets.</p>
       </div>
 
       <div className="card">
         <div className="card-header columns-card-header">
-          <span>All tags ({tags.length})</span>
+          <span>All labels ({tags.length})</span>
           {!adding && (
             <button className="btn btn-primary btn-sm" onClick={openAddRow}>
-              + Add tag
+              + Add label
             </button>
           )}
         </div>
@@ -72,7 +84,7 @@ export function TagsPage() {
             <input
               ref={newInputRef}
               className="form-input"
-              placeholder="Tag name"
+              placeholder="Label name"
               value={newName}
               onChange={e => setNewName(e.target.value)}
               onKeyDown={e => {
@@ -83,12 +95,12 @@ export function TagsPage() {
             />
             <ColorPickerPopover value={newColor} onChange={setNewColor} />
             <button className="btn btn-primary btn-sm" onClick={handleAdd}>Add</button>
-            <button className="btn btn-secondary btn-sm" onClick={cancelAdd}>Cancel</button>
+            <button className="btn btn-secondary btn-sm" onClick={cancelAdd}>Done</button>
           </div>
         )}
 
         {tags.length === 0 ? (
-          <div className="card-empty">No tags yet. Click "+ Add tag" to create one.</div>
+          <div className="card-empty">No labels yet. Click "+ Add label" to create one.</div>
         ) : (
           <div className="tmpl-list">
             {tags.map(tag => (
@@ -125,10 +137,7 @@ export function TagsPage() {
                       >
                         {tag.name}
                       </span>
-                      <span className="tmpl-item-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span className="color-dot" style={{ background: tag.color }} title={tag.color} />
-                        {tag.color}
-                      </span>
+                      <span className="label-color-swatch" style={{ background: tag.color }} title={tag.color} />
                     </div>
                     <div className="table-actions">
                       <button className="btn btn-icon btn-primary btn-sm" title="Edit" onClick={() => startEdit(tag.id)}>

@@ -215,7 +215,7 @@ export function StorageSection() {
               Delete all data
             </button>
           </div>
-          <p className="settings-hint">Permanently deletes all tickets, columns, epics, tags, and settings. Starts completely fresh. Use Export JSON first if you want a backup.</p>
+          <p className="settings-hint">Permanently deletes all tickets, columns, epics, labels, and settings. Starts completely fresh. Use Export JSON first if you want a backup.</p>
         </div>
 
       </div>
@@ -224,7 +224,7 @@ export function StorageSection() {
     {confirmDelete && (
       <ConfirmDialog
         title="Delete all data?"
-        message="This will permanently delete all your tickets, columns, epics, tags, and settings. The markdown folder will be cleared and disconnected. This cannot be undone."
+        message="This will permanently delete all your tickets, columns, epics, labels, and settings. The markdown folder will be cleared and disconnected. This cannot be undone."
         confirmLabel="Delete everything"
         dangerous
         onConfirm={handleDeleteAll}

@@ -95,7 +95,7 @@ export function CreateTaskForm({
 
       {tags.length > 0 && (
         <div className="form-field">
-          <label className="form-label">Tags</label>
+          <label className="form-label">Labels</label>
           <div className="create-ticket-tags">
             {tags.map(tag => (
               <button
