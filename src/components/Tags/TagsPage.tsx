@@ -107,13 +107,7 @@ export function TagsPage() {
               <div key={tag.id} className="tmpl-item">
                 {editId === tag.id ? (
                   <>
-                    <div className="tmpl-item-info">
-                      <span
-                        className="chip"
-                        style={{ background: editColor + '22', color: editColor, border: `1px solid ${editColor}66` }}
-                      >
-                        {editName || 'preview'}
-                      </span>
+                    <div className="tmpl-item-info label-item-info">
                       <input
                         className="form-input form-input-inline"
                         value={editName}
@@ -130,7 +124,7 @@ export function TagsPage() {
                   </>
                 ) : (
                   <>
-                    <div className="tmpl-item-info">
+                    <div className="tmpl-item-info label-item-info">
                       <span
                         className="chip"
                         style={{ background: tag.color + '22', color: tag.color, border: `1px solid ${tag.color}66` }}
