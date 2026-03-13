@@ -614,7 +614,7 @@ function ChangelogDialog({
       const entries: ChangelogEntry[] = comments
         .filter(c => c.ticketId === ticket.id && new Date(c.createdAt) > sinceDate)
         .map(c => ({ type: c.isSystem ? 'status' : 'sitrep', body: c.body, at: c.createdAt }));
-      entries.sort((a, b) => a.at.localeCompare(b.at));
+      entries.sort((a, b) => b.at.localeCompare(a.at));
 
       if (isDone) {
         done.push({ ticket, entries });
