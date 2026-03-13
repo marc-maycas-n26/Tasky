@@ -300,7 +300,7 @@ export function Board() {
                 {lastReleaseLabel}{lastReleaseDateLabel && ` (${lastReleaseDateLabel})`}
               </span>
             )}
-            <button className="btn btn-secondary btn-sm" onClick={() => setChangelogOpen(true)} title="View changes since last release">
+            <button className="btn btn-secondary" onClick={() => setChangelogOpen(true)} title="View changes since last release">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                 <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4"/>
                 <path d="M7 4v3.5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>

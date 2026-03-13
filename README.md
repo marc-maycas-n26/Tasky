@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. On first load you will be prompted to choose a folder — Tasky reads and writes all data from there.
+Open http://localhost:5174. On first load you will be prompted to choose a folder — Tasky reads and writes all data from there.
 
 ## Build for production
 
@@ -34,7 +34,8 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 - Collapsible swimlanes
 - Search tickets by title, key, or description content
 - Filter by epic, label, and/or priority (multi-select)
-- Release button — moves all done tickets to the Releases archive; shows last release date with weekday in the toolbar
+- **Release** button — moves all done tickets to the Releases archive; shows last release date with weekday in the toolbar
+- **Changelog** button — modal showing all activity since the last release, split into three sections: Done tickets, Updates (status changes and sitrep notes), and New tickets; entries expand by default
 - Quick-create ticket button
 
 ### Backlog
@@ -60,11 +61,13 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 - Priority levels: Lowest / Low / Medium / High / Highest — defaults to Medium on creation
 - Due date
 - Rich-text description with bold, italic, headings, lists, code, blockquotes, task lists, links, images, and emoji
-- Tag assignment (multiple)
+- Tag (label) assignment — multiple per ticket
 - Epic assignment
 - Column (status) assignment
+- Subtasks — nested tickets up to one level deep
 - Linked items with relationship types: relates to, blocks / is blocked by, clones / is cloned by
-- Sitrep (activity section) — rich-text comments with system events for column changes; sortable oldest/newest
+- Sitrep (activity section) — rich-text comments with automatic system events for column changes; sortable oldest/newest; editable and deletable
+- Created and updated timestamps shown with date and time (HH:MM)
 - Full edit in ticket drawer
 - "Create & New" — create a ticket and immediately open a fresh form to add another
 
@@ -72,14 +75,15 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 
 - Create, rename, delete, and drag-reorder columns
 - Optional color per column
-- Optional role per column: **To Do**, **In Progress**, or **Done** — used for epic status calculation, default column on ticket creation, and auto-coloring
+- Optional role per column: **To Do**, **In Progress**, or **Done** — used for epic status calculation, default column on ticket creation, and release detection
 
-### Tags
+### Labels (Tags)
 
-- Create color-coded labels
-- Assign multiple tags to any ticket
-- Filter the board by tag
-- Delete a tag removes it from all tickets
+- Create color-coded labels with inline swatch and color picker
+- Assign multiple labels to any ticket or epic
+- Filter the board by label
+- Dedicated Labels page for management
+- Delete a label removes it from all tickets and epics
 
 ### Templates
 
@@ -88,11 +92,19 @@ Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to 
 
 ### Releases
 
-- Read-only archive of released epics, expanded by default
-- Grouped by release date
+- Release all done tickets from the board in one click — groups them by epic, shows a confirmation dialog with the full ticket list before committing
+- Read-only archive of released epics grouped by release date
 - Search by epic name or ticket title, key, or description
 - Date range filter
-- Shows all tickets that were in the epic at time of release
+- Shows all tickets that were in the epic at time of release with their tags
+
+### Changelog
+
+- Accessible from the board toolbar — shows everything that happened since the last release (or all-time if no releases yet)
+- **Done** — tickets currently in a done column
+- **Updates** — existing tickets with status changes or sitrep notes since the last release, with a timestamped timeline per ticket
+- **New tickets** — tickets created after the last release
+- All entries anchored to the exact release timestamp (date + time), so same-day changes after a release are correctly included
 
 ### Trash
 
