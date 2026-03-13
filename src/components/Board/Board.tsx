@@ -724,17 +724,17 @@ function ChangelogDialog({
                               : <span style={{ display: 'inline-block', width: 10 }} />
                             }
                           </span>
-                          <span className="changelog-ticket-key">{ticket.key}</span>
                           <span className="changelog-ticket-title">{ticket.title}</span>
                           <div className="changelog-ticket-meta">
-                            {col && (
-                              <span className="changelog-badge changelog-badge--done">{col.name}</span>
-                            )}
                             {epic && (
                               <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
                                 {epic.title}
                               </span>
                             )}
+                            {col && (
+                              <span className="changelog-badge changelog-badge--done">{col.name}</span>
+                            )}
+                            <span className="changelog-ticket-key">{ticket.key}</span>
                             {entries.length > 0 && (
                               <span className="changelog-entry-count">
                                 {entries.length} update{entries.length !== 1 ? 's' : ''}
@@ -785,19 +785,19 @@ function ChangelogDialog({
                               : <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3V2z" fill="currentColor"/></svg>
                             }
                           </span>
-                          <span className="changelog-ticket-key">{ticket.key}</span>
                           <span className="changelog-ticket-title">{ticket.title}</span>
                           <div className="changelog-ticket-meta">
-                            {col && (
-                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
-                                {col.name}
-                              </span>
-                            )}
                             {epic && (
                               <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
                                 {epic.title}
                               </span>
                             )}
+                            {col && (
+                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
+                                {col.name}
+                              </span>
+                            )}
+                            <span className="changelog-ticket-key">{ticket.key}</span>
                             <span className="changelog-entry-count">
                               {entries.length} update{entries.length !== 1 ? 's' : ''}
                             </span>
@@ -836,19 +836,19 @@ function ChangelogDialog({
                       <div key={ticket.id} className="changelog-ticket">
                         <div className="changelog-ticket-row" style={{ cursor: 'default' }}>
                           <span style={{ display: 'inline-block', width: 10, flexShrink: 0 }} />
-                          <span className="changelog-ticket-key">{ticket.key}</span>
                           <span className="changelog-ticket-title">{ticket.title}</span>
                           <div className="changelog-ticket-meta">
-                            {col && (
-                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
-                                {col.name}
-                              </span>
-                            )}
                             {epic && (
                               <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
                                 {epic.title}
                               </span>
                             )}
+                            {col && (
+                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
+                                {col.name}
+                              </span>
+                            )}
+                            <span className="changelog-ticket-key">{ticket.key}</span>
                           </div>
                         </div>
                       </div>
