@@ -669,7 +669,7 @@
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-modal);
-  width: 820px;
+  width: 640px;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 64px);
   display: flex;
@@ -746,11 +746,10 @@
 .changelog-ticket-key {
   font-family: ui-monospace, 'SFMono-Regular', monospace;
   font-size: var(--font-size-xs);
-  color: var(--color-text-subtle);
+  color: var(--color-primary);
   white-space: nowrap;
   flex-shrink: 0;
-  width: 60px;
-  text-align: right;
+  min-width: 52px;
 }
 
 .changelog-ticket-title {
@@ -769,8 +768,6 @@
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  width: 280px;
-  justify-content: flex-end;
 }
 
 .changelog-badge {

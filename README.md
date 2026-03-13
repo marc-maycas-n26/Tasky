@@ -22,40 +22,6 @@ npm run preview
 
 Tasky is a PWA. In Chrome or Edge, click the install icon in the address bar to add it to your dock/applications and run it as a standalone window.
 
-## `tasky` shell command — launch from the terminal
-
-You can add a `tasky` command that builds, serves, and opens the app in one step.
-
-**1. Add the script to your shell config** (`~/.zshrc`, `~/.bashrc`, etc.):
-
-```bash
-tasky() {
-  local dir="/path/to/your/Task Manager"   # ← change to your actual path
-  echo "Building Tasky…"
-  (cd "$dir" && npm run build) && \
-  echo "Starting preview server…" && \
-  (cd "$dir" && npm run preview &) && \
-  sleep 1 && \
-  open "http://localhost:4173"
-}
-```
-
-**2. Reload your shell:**
-
-```bash
-source ~/.zshrc   # or source ~/.bashrc
-```
-
-**3. Run:**
-
-```bash
-tasky
-```
-
-This builds a fresh production bundle, starts the preview server in the background, and opens the app in your browser. The PWA install prompt will appear in the address bar — install it once to get a standalone app icon in your dock.
-
-> **Tip:** if you want to skip the build step when nothing has changed, replace `npm run build &&` with just running `npm run preview` directly.
-
 ---
 
 ## Features
