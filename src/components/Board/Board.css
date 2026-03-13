@@ -903,5 +903,8 @@
   padding: 0;
 }
 .changelog-entry-body.rte-content p { margin: 2px 0; }
+.changelog-entry-body.rte-content ul,
+.changelog-entry-body.rte-content ol { padding-left: 20px; margin: 4px 0; }
+.changelog-entry-body.rte-content li { margin: 2px 0; }
 .changelog-entry-body.rte-content > *:first-child { margin-top: 0; }
 .changelog-entry-body.rte-content > *:last-child { margin-bottom: 0; }

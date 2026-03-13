@@ -512,9 +512,10 @@
   min-height: unset;
   padding: 0;
 }
-.comment-body.rte-content p {
-  margin: 2px 0;
-}
+.comment-body.rte-content p { margin: 2px 0; }
+.comment-body.rte-content ul,
+.comment-body.rte-content ol { padding-left: 20px; margin: 4px 0; }
+.comment-body.rte-content li { margin: 2px 0; }
 
 .comment-actions {
   display: flex;
