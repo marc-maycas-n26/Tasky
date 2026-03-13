@@ -3,6 +3,8 @@ import Link from '@tiptap/extension-link'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 export const CustomLink = Link.extend({
+  inclusive: false,
+
   addOptions() {
     return {
       ...this.parent?.(),
