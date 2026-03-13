@@ -669,7 +669,7 @@
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-modal);
-  width: 640px;
+  width: 70vw;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 64px);
   display: flex;
@@ -729,7 +729,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 9px 16px;
+  padding: 9px 24px;
   transition: background 0.1s;
 }
 .changelog-ticket-row:hover {
@@ -766,16 +766,8 @@
 .changelog-ticket-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   flex-shrink: 0;
-}
-
-.changelog-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 20px;
-  white-space: nowrap;
 }
 
 .changelog-section {
@@ -808,40 +800,58 @@
   border-radius: 20px;
 }
 
-.changelog-badge--done {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--color-status-done);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+/* Epic chip — same pill style as bl-row-epic */
+.changelog-meta-epic {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  justify-content: center;
 }
 
-.changelog-badge--col {
+/* Updates count — replaces priority slot */
+.changelog-meta-updates {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 20px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
   background: var(--color-border-light);
   color: var(--color-text-subtle);
-  border: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
-.changelog-badge--epic {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-subtle);
-  max-width: 120px;
+/* Status chip — fixed width sized to fit "Experimentation" */
+.changelog-meta-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 9px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1.5px solid;
+  width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.changelog-entry-count {
-  font-size: 11px;
-  color: var(--color-text-subtle);
-  background: var(--color-border-light);
-  padding: 2px 7px;
-  border-radius: 20px;
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ── Expanded entries ────────────────────────────────────────────────────────── */
 .changelog-entries {
-  padding: 2px 16px 10px 35px;
+  padding: 2px 24px 10px 43px;
   display: flex;
   flex-direction: column;
   gap: 5px;
