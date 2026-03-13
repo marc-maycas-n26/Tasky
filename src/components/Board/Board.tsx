@@ -300,7 +300,7 @@ export function Board() {
                 {lastReleaseLabel}{lastReleaseDateLabel && ` (${lastReleaseDateLabel})`}
               </span>
             )}
-            <button className="btn btn-ghost btn-sm" onClick={() => setChangelogOpen(true)} title="View changes since last release">
+            <button className="btn btn-secondary btn-sm" onClick={() => setChangelogOpen(true)} title="View changes since last release">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                 <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4"/>
                 <path d="M7 4v3.5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -582,8 +582,6 @@ function ChangelogDialog({
   epics: Epic[];
   onClose: () => void;
 }) {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
   // Anchor: the most recent releasedAt, or epoch if no releases
   const sinceTs = useMemo(() => {
     if (releasedEpics.length === 0) return new Date(0).toISOString();
@@ -596,36 +594,56 @@ function ChangelogDialog({
   const colMap = useMemo(() => new Map(columns.map(c => [c.id, c])), [columns]);
   const epicMap = useMemo(() => new Map(epics.map(e => [e.id, e])), [epics]);
 
-  // Build per-ticket rows: only tickets that have activity after sinceTs
-  const rows = useMemo<ChangelogTicketRow[]>(() => {
-    const result: ChangelogTicketRow[] = [];
+  // Split into done / updated / new tickets since the anchor
+  const { doneTickets, changedTickets, newTickets } = useMemo(() => {
+    const done: ChangelogTicketRow[] = [];
+    const changed: ChangelogTicketRow[] = [];
+    const newT: Ticket[] = [];
+
+    const doneColIds = new Set(
+      columns
+        .filter(c => c.role === 'done' || c.name.toLowerCase() === 'done')
+        .map(c => c.id)
+    );
+
     for (const ticket of tickets) {
       if (ticket.inBacklog) continue;
-      const ticketComments = comments.filter(c => c.ticketId === ticket.id);
-      const entries: ChangelogEntry[] = ticketComments
-        .filter(c => new Date(c.createdAt) > sinceDate)
-        .map(c => ({
-          type: c.isSystem ? 'status' : 'sitrep',
-          body: c.body,
-          at: c.createdAt,
-        }));
+      const isNew = new Date(ticket.createdAt) > sinceDate;
+      const isDone = doneColIds.has(ticket.columnId);
 
-      // Also include ticket itself if it was created after sinceTs
-      const wasCreatedAfter = new Date(ticket.createdAt) > sinceDate;
-
-      if (entries.length === 0 && !wasCreatedAfter) continue;
-
+      const entries: ChangelogEntry[] = comments
+        .filter(c => c.ticketId === ticket.id && new Date(c.createdAt) > sinceDate)
+        .map(c => ({ type: c.isSystem ? 'status' : 'sitrep', body: c.body, at: c.createdAt }));
       entries.sort((a, b) => a.at.localeCompare(b.at));
-      result.push({ ticket, entries });
+
+      if (isDone) {
+        done.push({ ticket, entries });
+      } else if (isNew) {
+        newT.push(ticket);
+      } else if (entries.length > 0) {
+        changed.push({ ticket, entries });
+      }
     }
-    // Sort by most recent activity first
-    result.sort((a, b) => {
-      const aLast = a.entries.length > 0 ? a.entries[a.entries.length - 1].at : a.ticket.createdAt;
-      const bLast = b.entries.length > 0 ? b.entries[b.entries.length - 1].at : b.ticket.createdAt;
+
+    done.sort((a, b) => {
+      const aLast = a.entries.length > 0 ? a.entries[a.entries.length - 1].at : a.ticket.updatedAt;
+      const bLast = b.entries.length > 0 ? b.entries[b.entries.length - 1].at : b.ticket.updatedAt;
       return bLast.localeCompare(aLast);
     });
-    return result;
-  }, [tickets, comments, sinceDate]);
+    changed.sort((a, b) => {
+      const aLast = a.entries[a.entries.length - 1].at;
+      const bLast = b.entries[b.entries.length - 1].at;
+      return bLast.localeCompare(aLast);
+    });
+    newT.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    return { doneTickets: done, changedTickets: changed, newTickets: newT };
+  }, [tickets, comments, columns, sinceDate]);
+
+  // Default-expand all changed and done tickets
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
+    new Set([...doneTickets.map(r => r.ticket.id), ...changedTickets.map(r => r.ticket.id)])
+  );
 
   function toggleExpand(id: string) {
     setExpandedIds(prev => {
@@ -677,67 +695,169 @@ function ChangelogDialog({
         </div>
 
         <div className="changelog-dialog-body">
-          {rows.length === 0 ? (
+          {doneTickets.length === 0 && changedTickets.length === 0 && newTickets.length === 0 ? (
             <div className="changelog-empty">No changes since the last release.</div>
           ) : (
-            rows.map(({ ticket, entries }) => {
-              const isExpanded = expandedIds.has(ticket.id);
-              const col = colMap.get(ticket.columnId);
-              const epic = ticket.epicId ? epicMap.get(ticket.epicId) : undefined;
-              const isNew = new Date(ticket.createdAt) > sinceDate;
-
-              return (
-                <div key={ticket.id} className="changelog-ticket">
-                  <div
-                    className="changelog-ticket-row"
-                    onClick={() => entries.length > 0 && toggleExpand(ticket.id)}
-                    style={{ cursor: entries.length > 0 ? 'pointer' : 'default' }}
-                  >
-                    <span className="changelog-ticket-toggle">
-                      {entries.length > 0 ? (
-                        isExpanded
-                          ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4H2z" fill="currentColor"/></svg>
-                          : <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3V2z" fill="currentColor"/></svg>
-                      ) : <span style={{ display: 'inline-block', width: 10 }} />}
-                    </span>
-
-                    <span className="changelog-ticket-key">{ticket.key}</span>
-                    <span className="changelog-ticket-title">{ticket.title}</span>
-
-                    <div className="changelog-ticket-meta">
-                      {isNew && <span className="changelog-badge changelog-badge--new">New</span>}
-                      {col && (
-                        <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
-                          {col.name}
-                        </span>
-                      )}
-                      {epic && (
-                        <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
-                          {epic.title}
-                        </span>
-                      )}
-                      {entries.length > 0 && (
-                        <span className="changelog-entry-count">
-                          {entries.length} update{entries.length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </div>
+            <>
+              {doneTickets.length > 0 && (
+                <div className="changelog-section">
+                  <div className="changelog-section-header">
+                    Done
+                    <span className="changelog-section-count">{doneTickets.length}</span>
                   </div>
-
-                  {isExpanded && entries.length > 0 && (
-                    <div className="changelog-entries">
-                      {entries.map((entry, i) => (
-                        <div key={i} className={`changelog-entry changelog-entry--${entry.type}`}>
-                          <span className="changelog-entry-dot" />
-                          <span className="changelog-entry-body">{renderBody(entry.body)}</span>
-                          <span className="changelog-entry-time">{formatTs(entry.at)}</span>
+                  {doneTickets.map(({ ticket, entries }) => {
+                    const isExpanded = expandedIds.has(ticket.id);
+                    const col = colMap.get(ticket.columnId);
+                    const epic = ticket.epicId ? epicMap.get(ticket.epicId) : undefined;
+                    return (
+                      <div key={ticket.id} className="changelog-ticket">
+                        <div
+                          className="changelog-ticket-row"
+                          onClick={() => entries.length > 0 && toggleExpand(ticket.id)}
+                          style={{ cursor: entries.length > 0 ? 'pointer' : 'default' }}
+                        >
+                          <span className="changelog-ticket-toggle">
+                            {entries.length > 0
+                              ? isExpanded
+                                ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4H2z" fill="currentColor"/></svg>
+                                : <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3V2z" fill="currentColor"/></svg>
+                              : <span style={{ display: 'inline-block', width: 10 }} />
+                            }
+                          </span>
+                          <span className="changelog-ticket-key">{ticket.key}</span>
+                          <span className="changelog-ticket-title">{ticket.title}</span>
+                          <div className="changelog-ticket-meta">
+                            {col && (
+                              <span className="changelog-badge changelog-badge--done">{col.name}</span>
+                            )}
+                            {epic && (
+                              <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
+                                {epic.title}
+                              </span>
+                            )}
+                            {entries.length > 0 && (
+                              <span className="changelog-entry-count">
+                                {entries.length} update{entries.length !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        {isExpanded && entries.length > 0 && (
+                          <div className="changelog-entries">
+                            {entries.map((entry, i) => (
+                              <div key={i} className={`changelog-entry changelog-entry--${entry.type}`}>
+                                <span className="changelog-entry-dot" />
+                                {entry.type === 'sitrep'
+                                  ? <span className="changelog-entry-body rte-content" dangerouslySetInnerHTML={{ __html: entry.body }} />
+                                  : <span className="changelog-entry-body">{renderBody(entry.body)}</span>
+                                }
+                                <span className="changelog-entry-time">{formatTs(entry.at)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })
+              )}
+
+              {changedTickets.length > 0 && (
+                <div className="changelog-section">
+                  <div className="changelog-section-header">
+                    Updates
+                    <span className="changelog-section-count">{changedTickets.length}</span>
+                  </div>
+                  {changedTickets.map(({ ticket, entries }) => {
+                    const isExpanded = expandedIds.has(ticket.id);
+                    const col = colMap.get(ticket.columnId);
+                    const epic = ticket.epicId ? epicMap.get(ticket.epicId) : undefined;
+                    return (
+                      <div key={ticket.id} className="changelog-ticket">
+                        <div
+                          className="changelog-ticket-row"
+                          onClick={() => toggleExpand(ticket.id)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="changelog-ticket-toggle">
+                            {isExpanded
+                              ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4H2z" fill="currentColor"/></svg>
+                              : <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3V2z" fill="currentColor"/></svg>
+                            }
+                          </span>
+                          <span className="changelog-ticket-key">{ticket.key}</span>
+                          <span className="changelog-ticket-title">{ticket.title}</span>
+                          <div className="changelog-ticket-meta">
+                            {col && (
+                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
+                                {col.name}
+                              </span>
+                            )}
+                            {epic && (
+                              <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
+                                {epic.title}
+                              </span>
+                            )}
+                            <span className="changelog-entry-count">
+                              {entries.length} update{entries.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div className="changelog-entries">
+                            {entries.map((entry, i) => (
+                              <div key={i} className={`changelog-entry changelog-entry--${entry.type}`}>
+                                <span className="changelog-entry-dot" />
+                                {entry.type === 'sitrep'
+                                  ? <span className="changelog-entry-body rte-content" dangerouslySetInnerHTML={{ __html: entry.body }} />
+                                  : <span className="changelog-entry-body">{renderBody(entry.body)}</span>
+                                }
+                                <span className="changelog-entry-time">{formatTs(entry.at)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {newTickets.length > 0 && (
+                <div className="changelog-section">
+                  <div className="changelog-section-header">
+                    New tickets
+                    <span className="changelog-section-count">{newTickets.length}</span>
+                  </div>
+                  {newTickets.map(ticket => {
+                    const col = colMap.get(ticket.columnId);
+                    const epic = ticket.epicId ? epicMap.get(ticket.epicId) : undefined;
+                    return (
+                      <div key={ticket.id} className="changelog-ticket">
+                        <div className="changelog-ticket-row" style={{ cursor: 'default' }}>
+                          <span style={{ display: 'inline-block', width: 10, flexShrink: 0 }} />
+                          <span className="changelog-ticket-key">{ticket.key}</span>
+                          <span className="changelog-ticket-title">{ticket.title}</span>
+                          <div className="changelog-ticket-meta">
+                            {col && (
+                              <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
+                                {col.name}
+                              </span>
+                            )}
+                            {epic && (
+                              <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
+                                {epic.title}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+            </>
           )}
         </div>
       </div>
