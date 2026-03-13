@@ -663,3 +663,197 @@
   justify-content: flex-end;
   flex-shrink: 0;
 }
+
+/* ── Changelog dialog ────────────────────────────────────────────────────────── */
+.changelog-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  animation: confirm-dialog-in 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.changelog-dialog-header {
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.changelog-dialog-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.changelog-dialog-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.changelog-dialog-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  margin: 0;
+}
+
+.changelog-dialog-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+
+.changelog-empty {
+  padding: 24px 20px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Ticket rows ─────────────────────────────────────────────────────────────── */
+.changelog-ticket {
+  border-bottom: 1px solid var(--color-border-light);
+}
+.changelog-ticket:last-child {
+  border-bottom: none;
+}
+
+.changelog-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  transition: background 0.1s;
+}
+.changelog-ticket-row:hover {
+  background: var(--color-bg);
+}
+
+.changelog-ticket-toggle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.changelog-ticket-key {
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.changelog-ticket-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.changelog-ticket-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.changelog-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.changelog-badge--new {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.changelog-badge--col {
+  background: var(--color-border-light);
+  color: var(--color-text-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.changelog-badge--epic {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-subtle);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.changelog-entry-count {
+  font-size: 11px;
+  color: var(--color-text-subtle);
+  background: var(--color-border-light);
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ── Expanded entries ────────────────────────────────────────────────────────── */
+.changelog-entries {
+  padding: 2px 16px 10px 35px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.changelog-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+}
+
+.changelog-entry-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+  position: relative;
+  top: 1px;
+}
+
+.changelog-entry--status .changelog-entry-dot {
+  background: var(--color-primary);
+}
+
+.changelog-entry--sitrep .changelog-entry-dot {
+  background: var(--color-text-subtle);
+}
+
+.changelog-entry-body {
+  flex: 1;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.changelog-entry--status .changelog-entry-body {
+  color: var(--color-text-primary);
+}
+
+.changelog-entry-time {
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

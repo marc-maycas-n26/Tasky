@@ -15,7 +15,7 @@ import { TicketDrawer } from '../Ticket/TicketDrawer';
 import { EpicDrawer } from '../Epic/EpicDrawer';
 import { CreateTicketModal } from '../Ticket/CreateTicketModal';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
-import type { Ticket, Epic } from '../../types';
+import type { Ticket, Epic, Comment, Column, ReleasedEpic } from '../../types';
 import { PRIORITIES, PRIORITY_COLORS } from '../../constants/priorities';
 import './Board.css';
 
@@ -33,6 +33,7 @@ export function Board() {
   const releaseDoneTickets = useStore(s => s.releaseDoneTickets);
   const reorderEpics = useStore(s => s.reorderEpics);
   const releasedEpics = useStore(s => s.releasedEpics);
+  const comments = useStore(s => s.comments);
 
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [activeEpicId, setActiveEpicId] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function Board() {
   const [otherCollapsed, setOtherCollapsed] = useState(false);
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [nothingToRelease, setNothingToRelease] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   const sortedColumns = useMemo(
     () => [...columns].sort((a, b) => a.order - b.order).filter(c => !c.isBacklog),
@@ -298,6 +300,13 @@ export function Board() {
                 {lastReleaseLabel}{lastReleaseDateLabel && ` (${lastReleaseDateLabel})`}
               </span>
             )}
+            <button className="btn btn-ghost btn-sm" onClick={() => setChangelogOpen(true)} title="View changes since last release">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M7 4v3.5l2 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Changelog
+            </button>
             <button className="btn btn-secondary" onClick={handleReleaseClick} title="Release all done tickets">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
                 <path d="M7 1.5C4 1.5 1.5 4 1.5 7S4 12.5 7 12.5 12.5 10 12.5 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -416,6 +425,17 @@ export function Board() {
           onCancel={() => setNothingToRelease(false)}
         />
       )}
+
+      {changelogOpen && (
+        <ChangelogDialog
+          tickets={tickets}
+          comments={comments}
+          columns={columns}
+          releasedEpics={releasedEpics}
+          epics={sortedEpics}
+          onClose={() => setChangelogOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -532,6 +552,193 @@ function ReleaseConfirmDialog({
         <div className="release-dialog-actions">
           <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
           <button className="btn btn-primary" onClick={onConfirm} autoFocus>Release</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Changelog dialog ──────────────────────────────────────────────────────────
+
+type ChangelogEntry = { type: 'status' | 'sitrep'; body: string; at: string };
+
+interface ChangelogTicketRow {
+  ticket: Ticket;
+  entries: ChangelogEntry[];
+}
+
+function ChangelogDialog({
+  tickets,
+  comments,
+  columns,
+  releasedEpics,
+  epics,
+  onClose,
+}: {
+  tickets: Ticket[];
+  comments: Comment[];
+  columns: Column[];
+  releasedEpics: ReleasedEpic[];
+  epics: Epic[];
+  onClose: () => void;
+}) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Anchor: the most recent releasedAt, or epoch if no releases
+  const sinceTs = useMemo(() => {
+    if (releasedEpics.length === 0) return new Date(0).toISOString();
+    return releasedEpics.reduce((a, b) => a.releasedAt > b.releasedAt ? a : b).releasedAt;
+  }, [releasedEpics]);
+
+  const sinceDate = new Date(sinceTs);
+  const hasReleases = releasedEpics.length > 0;
+
+  const colMap = useMemo(() => new Map(columns.map(c => [c.id, c])), [columns]);
+  const epicMap = useMemo(() => new Map(epics.map(e => [e.id, e])), [epics]);
+
+  // Build per-ticket rows: only tickets that have activity after sinceTs
+  const rows = useMemo<ChangelogTicketRow[]>(() => {
+    const result: ChangelogTicketRow[] = [];
+    for (const ticket of tickets) {
+      if (ticket.inBacklog) continue;
+      const ticketComments = comments.filter(c => c.ticketId === ticket.id);
+      const entries: ChangelogEntry[] = ticketComments
+        .filter(c => new Date(c.createdAt) > sinceDate)
+        .map(c => ({
+          type: c.isSystem ? 'status' : 'sitrep',
+          body: c.body,
+          at: c.createdAt,
+        }));
+
+      // Also include ticket itself if it was created after sinceTs
+      const wasCreatedAfter = new Date(ticket.createdAt) > sinceDate;
+
+      if (entries.length === 0 && !wasCreatedAfter) continue;
+
+      entries.sort((a, b) => a.at.localeCompare(b.at));
+      result.push({ ticket, entries });
+    }
+    // Sort by most recent activity first
+    result.sort((a, b) => {
+      const aLast = a.entries.length > 0 ? a.entries[a.entries.length - 1].at : a.ticket.createdAt;
+      const bLast = b.entries.length > 0 ? b.entries[b.entries.length - 1].at : b.ticket.createdAt;
+      return bLast.localeCompare(aLast);
+    });
+    return result;
+  }, [tickets, comments, sinceDate]);
+
+  function toggleExpand(id: string) {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function formatTs(iso: string) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Render a system comment body: replace **text** with <strong>
+  function renderBody(body: string) {
+    const parts = body.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((p, i) =>
+      p.startsWith('**') && p.endsWith('**')
+        ? <strong key={i}>{p.slice(2, -2)}</strong>
+        : p
+    );
+  }
+
+  const sinceLabel = hasReleases
+    ? `Since release on ${sinceDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} at ${sinceDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
+    : 'All activity (no releases yet)';
+
+  return (
+    <div className="confirm-dialog-backdrop" onClick={onClose}>
+      <div
+        className="changelog-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="changelog-dialog-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="changelog-dialog-header">
+          <div className="changelog-dialog-title-row">
+            <h3 className="changelog-dialog-title" id="changelog-dialog-title">Changelog</h3>
+            <button className="btn btn-ghost btn-sm btn-icon" onClick={onClose} aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <p className="changelog-dialog-subtitle">{sinceLabel}</p>
+        </div>
+
+        <div className="changelog-dialog-body">
+          {rows.length === 0 ? (
+            <div className="changelog-empty">No changes since the last release.</div>
+          ) : (
+            rows.map(({ ticket, entries }) => {
+              const isExpanded = expandedIds.has(ticket.id);
+              const col = colMap.get(ticket.columnId);
+              const epic = ticket.epicId ? epicMap.get(ticket.epicId) : undefined;
+              const isNew = new Date(ticket.createdAt) > sinceDate;
+
+              return (
+                <div key={ticket.id} className="changelog-ticket">
+                  <div
+                    className="changelog-ticket-row"
+                    onClick={() => entries.length > 0 && toggleExpand(ticket.id)}
+                    style={{ cursor: entries.length > 0 ? 'pointer' : 'default' }}
+                  >
+                    <span className="changelog-ticket-toggle">
+                      {entries.length > 0 ? (
+                        isExpanded
+                          ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4H2z" fill="currentColor"/></svg>
+                          : <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3V2z" fill="currentColor"/></svg>
+                      ) : <span style={{ display: 'inline-block', width: 10 }} />}
+                    </span>
+
+                    <span className="changelog-ticket-key">{ticket.key}</span>
+                    <span className="changelog-ticket-title">{ticket.title}</span>
+
+                    <div className="changelog-ticket-meta">
+                      {isNew && <span className="changelog-badge changelog-badge--new">New</span>}
+                      {col && (
+                        <span className="changelog-badge changelog-badge--col" style={col.color ? { background: col.color + '22', color: col.color, borderColor: col.color + '55' } : undefined}>
+                          {col.name}
+                        </span>
+                      )}
+                      {epic && (
+                        <span className="changelog-badge changelog-badge--epic" style={{ color: epic.color ?? 'var(--color-text-subtle)' }}>
+                          {epic.title}
+                        </span>
+                      )}
+                      {entries.length > 0 && (
+                        <span className="changelog-entry-count">
+                          {entries.length} update{entries.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isExpanded && entries.length > 0 && (
+                    <div className="changelog-entries">
+                      {entries.map((entry, i) => (
+                        <div key={i} className={`changelog-entry changelog-entry--${entry.type}`}>
+                          <span className="changelog-entry-dot" />
+                          <span className="changelog-entry-body">{renderBody(entry.body)}</span>
+                          <span className="changelog-entry-time">{formatTs(entry.at)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
