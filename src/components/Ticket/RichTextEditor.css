@@ -323,16 +323,8 @@
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
   cursor: zoom-in;
   user-select: none;
-  transition: transform 0.2s ease;
 }
-
-.rte-lightbox-img--zoomed {
-  max-width: none;
-  max-height: none;
-  cursor: grab;
-  transition: none;
-}
-.rte-lightbox-img--zoomed:active {
+.rte-lightbox-img:active {
   cursor: grabbing;
 }
 
