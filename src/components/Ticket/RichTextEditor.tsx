@@ -10,6 +10,7 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import EmojiPicker, { Theme, type EmojiClickData } from 'emoji-picker-react';
 import { Emoji } from '@tiptap/extension-emoji';
 import { emojiSuggestion } from './EmojiSuggestion';
+import { ImageLightbox } from './ImageLightbox';
 import './RichTextEditor.css';
 
 interface Props {
@@ -128,15 +129,6 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
     el.addEventListener('click', handleClick, true);
     return () => el.removeEventListener('click', handleClick, true);
   }, [editor]);
-
-  useEffect(() => {
-    if (!lightboxSrc) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') { e.stopPropagation(); setLightboxSrc(null); }
-    }
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [lightboxSrc]);
 
   // ── Link dialog ──────────────────────────────────────────────────────────
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -335,12 +327,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Add a descripti
       )}
 
       {/* Image lightbox */}
-      {lightboxSrc && (
-        <div className="rte-lightbox-backdrop" onClick={() => setLightboxSrc(null)}>
-          <button className="rte-lightbox-close" onClick={() => setLightboxSrc(null)} aria-label="Close">✕</button>
-          <img className="rte-lightbox-img" src={lightboxSrc} alt="" onClick={e => e.stopPropagation()} />
-        </div>
-      )}
+      {lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}
 
       {/* Link confirmation dialog */}
       {confirmLink && (

@@ -312,6 +312,7 @@
   align-items: center;
   justify-content: center;
   cursor: zoom-out;
+  overflow: hidden;
 }
 
 .rte-lightbox-img {
@@ -320,8 +321,19 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-  cursor: default;
+  cursor: zoom-in;
   user-select: none;
+  transition: transform 0.2s ease;
+}
+
+.rte-lightbox-img--zoomed {
+  max-width: none;
+  max-height: none;
+  cursor: grab;
+  transition: none;
+}
+.rte-lightbox-img--zoomed:active {
+  cursor: grabbing;
 }
 
 .rte-lightbox-close {

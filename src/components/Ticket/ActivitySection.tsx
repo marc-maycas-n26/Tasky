@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ImageLightbox } from './ImageLightbox';
 import { useStore } from '../../store';
 import { RichTextEditor } from './RichTextEditor';
 
@@ -18,6 +19,12 @@ export function ActivitySection({ ticketId }: Props) {
   const addComment = useStore(s => s.addComment);
   const updateComment = useStore(s => s.updateComment);
   const deleteComment = useStore(s => s.deleteComment);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
+  function handleCommentClick(e: React.MouseEvent) {
+    const img = (e.target as HTMLElement).closest('img');
+    if (img) setLightboxSrc((img as HTMLImageElement).src);
+  }
 
   const ticketComments = comments.filter(c => c.ticketId === ticketId);
   const [body, setBody] = useState('');
@@ -139,6 +146,7 @@ export function ActivitySection({ ticketId }: Props) {
                     <div
                       className="comment-body rte-content"
                       dangerouslySetInnerHTML={{ __html: c.body }}
+                      onClick={handleCommentClick}
                     />
                     <div className="comment-actions">
                       <button
@@ -161,6 +169,8 @@ export function ActivitySection({ ticketId }: Props) {
       {sorted.length === 0 && (
         <p className="activity-hint">Pro tip: press <kbd>Ctrl+Enter</kbd> or <kbd>⌘+Enter</kbd> to save</p>
       )}
+
+      {lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}
     </div>
   );
 }
