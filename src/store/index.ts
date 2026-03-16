@@ -41,6 +41,7 @@ interface StoreState extends AppState {
   reorderEpics(ids: string[]): void;
   releaseEpic(id: string): void;
   releaseDoneTickets(): void;
+  restoreTicketFromRelease(ticketId: string): void;
 
   // tags
   addTag(name: string, color: string): void;
@@ -134,6 +135,18 @@ export const useStore = create<StoreState>((set, get) => ({
       const trashedTickets = state.trashedTickets ?? [];
       const releasedEpics = state.releasedEpics ?? [];
       set({ ...state, trashedTickets, releasedEpics, isLoading: false });
+
+      // Seed default columns on a clean state (no columns stored yet)
+      if ((state.columns ?? []).length === 0) {
+        const ts = now();
+        const backlogCol: Column = { id: uuidv4(), name: 'Backlog', order: 0, isBacklog: true, isTodo: false, createdAt: ts, updatedAt: ts };
+        const todoCol: Column = { id: uuidv4(), name: 'To Do', order: 1, isBacklog: false, isTodo: true, role: 'todo', createdAt: ts, updatedAt: ts };
+        const inProgressCol: Column = { id: uuidv4(), name: 'In Progress', order: 2, isBacklog: false, isTodo: false, role: 'in_progress', createdAt: ts, updatedAt: ts };
+        const doneCol: Column = { id: uuidv4(), name: 'Done', order: 3, isBacklog: false, isTodo: false, role: 'done', createdAt: ts, updatedAt: ts };
+        set({ columns: [backlogCol, todoCol, inProgressCol, doneCol] });
+        get().persist();
+      }
+
       get().purgeExpiredTrash();
     } catch (e) {
       set({ isLoading: false, lastError: String(e) });
@@ -351,6 +364,32 @@ export const useStore = create<StoreState>((set, get) => ({
       epics: st.epics.filter(e => !epicIdsToRelease.has(e.id)),
       tickets: st.tickets.filter(t => !ticketIdsToRemove.has(t.id)),
     }));
+    get().persist();
+  },
+
+  restoreTicketFromRelease(ticketId) {
+    const s = get();
+    // Find which ReleasedEpic contains this ticket
+    const releaseIdx = s.releasedEpics.findIndex(r => r.tickets.some(t => t.id === ticketId));
+    if (releaseIdx === -1) return;
+    const release = s.releasedEpics[releaseIdx];
+    const ticket = release.tickets.find(t => t.id === ticketId)!;
+
+    // Find a 'todo' column to restore into, fall back to the first non-backlog column
+    const todoCol = s.columns.find(c => c.role === 'todo' && !c.isBacklog)
+      ?? s.columns.filter(c => !c.isBacklog).sort((a, b) => a.order - b.order)[0];
+    if (!todoCol) return;
+
+    const maxOrder = Math.max(0, ...s.tickets.filter(t => t.columnId === todoCol.id).map(t => t.order));
+    const restoredTicket = { ...ticket, columnId: todoCol.id, inBacklog: false, order: maxOrder + 1 };
+
+    // Remove from the release; if no tickets remain, remove the whole release entry
+    const updatedTickets = release.tickets.filter(t => t.id !== ticketId);
+    const updatedReleases = updatedTickets.length > 0
+      ? s.releasedEpics.map((r, i) => i === releaseIdx ? { ...r, tickets: updatedTickets } : r)
+      : s.releasedEpics.filter((_, i) => i !== releaseIdx);
+
+    set({ tickets: [...s.tickets, restoredTicket], releasedEpics: updatedReleases });
     get().persist();
   },
 
