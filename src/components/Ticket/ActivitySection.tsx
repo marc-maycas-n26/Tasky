@@ -71,6 +71,23 @@ export function ActivitySection({ ticketId }: Props) {
     );
   }
 
+  const [composing, setComposing] = useState(false);
+
+  function openComposer() {
+    setComposing(true);
+    setBody('');
+  }
+
+  function cancelCompose() {
+    setComposing(false);
+    setBody('');
+  }
+
+  function handleSubmitAndClose() {
+    handleSubmit();
+    setComposing(false);
+  }
+
   return (
     <div className="activity-section">
       <div className="activity-section-header">
@@ -87,22 +104,25 @@ export function ActivitySection({ ticketId }: Props) {
         </button>
       </div>
 
-      <div className="comment-input-wrapper">
-        <RichTextEditor
-          key={`new-${ticketId}`}
-          value={body}
-          onChange={setBody}
-          placeholder="Add a sitrep…"
-          onCtrlEnter={handleSubmit}
-          compact
-        />
-        {body && body !== '<p></p>' && (
+      {composing ? (
+        <div className="comment-composer">
+          <RichTextEditor
+            key={`new-${ticketId}`}
+            value={body}
+            onChange={setBody}
+            placeholder="Add a sitrep…"
+            onCtrlEnter={handleSubmitAndClose}
+          />
           <div className="comment-input-actions">
-            <button className="btn btn-primary btn-sm" onClick={handleSubmit}>Save</button>
-            <button className="btn btn-secondary btn-sm" onClick={() => setBody('')}>Cancel</button>
+            <button className="btn btn-primary btn-sm" onClick={handleSubmitAndClose}>Save</button>
+            <button className="btn btn-secondary btn-sm" onClick={cancelCompose}>Cancel</button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <button className="sitrep-add-btn" onClick={openComposer}>
+          + Add a sitrep…
+        </button>
+      )}
 
       {sorted.length > 0 && (
         <div className="comment-list">
@@ -164,10 +184,6 @@ export function ActivitySection({ ticketId }: Props) {
             </div>
           ))}
         </div>
-      )}
-
-      {sorted.length === 0 && (
-        <p className="activity-hint">Pro tip: press <kbd>Ctrl+Enter</kbd> or <kbd>⌘+Enter</kbd> to save</p>
       )}
 
       {lightboxSrc && <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />}
