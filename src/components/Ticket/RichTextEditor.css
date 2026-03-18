@@ -109,8 +109,6 @@
 .rte-content .tiptap h2 { font-size: 17px; font-weight: 700; margin: 10px 0 5px; }
 .rte-content .tiptap h3 { font-size: 15px; font-weight: 600; margin: 8px 0 4px; }
 .rte-content .tiptap p { margin: 4px 0; }
-.rte-content .tiptap p:empty,
-.rte-content .tiptap p:has(> br:only-child) { margin: 0; height: 0; }
 .rte-content .tiptap li p { margin: 0; }
 .rte-content .tiptap ul,
 .rte-content .tiptap ol { padding-left: 20px; margin: 6px 0; }
