@@ -1,5 +1,6 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useStore } from '../../store';
+import { useToast } from '../Common/Toast';
 import { StatusBadge } from './StatusBadge';
 import type { Ticket, Priority } from '../../types';
 
@@ -15,8 +16,14 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
   const tags = useStore(s => s.tags);
   const epics = useStore(s => s.epics);
   const openTicket = useStore(s => s.openTicket);
+  const columns = useStore(s => s.columns);
+  const moveToBoard = useStore(s => s.moveToBoard);
+  const moveToBacklog = useStore(s => s.moveToBacklog);
   const ticketTags = tags.filter(t => ticket.tagIds.includes(t.id));
   const ticketEpic = ticket.epicId ? epics.find(e => e.id === ticket.epicId) : null;
+  const sortedBoardCols = [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
+  const firstTodoCol = sortedBoardCols.find(c => c.role === 'todo' || c.isTodo) ?? sortedBoardCols[0];
+  const { show: showToast } = useToast();
 
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({ id: ticket.id });
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: ticket.id });
@@ -75,6 +82,44 @@ export function BacklogRow({ ticket, indented }: { ticket: Ticket; indented?: bo
       </div>
 
       <StatusBadge ticket={ticket} />
+
+      <button
+        className="bl-row-location-btn"
+        title={ticket.inBacklog ? 'Move to board' : 'Move to backlog'}
+        onClick={e => {
+          e.stopPropagation();
+          if (ticket.inBacklog) {
+            const colId = firstTodoCol?.id;
+            if (!colId) return;
+            moveToBoard(ticket.id, colId);
+            showToast({
+              message: `"${ticket.title}" moved to board`,
+              undoLabel: 'Undo',
+              onUndo: () => moveToBacklog(ticket.id),
+            });
+          } else {
+            const prevColId = ticket.columnId;
+            moveToBacklog(ticket.id);
+            showToast({
+              message: `"${ticket.title}" moved to backlog`,
+              undoLabel: 'Undo',
+              onUndo: () => moveToBoard(ticket.id, prevColId),
+            });
+          }
+        }}
+      >
+        {ticket.inBacklog ? (
+          // Up arrow — move to board
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 11V3M3.5 6.5L7 3l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ) : (
+          // Down arrow — move to backlog
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 3v8M3.5 7.5L7 11l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+      </button>
 
       <span className="bl-row-chevron" aria-hidden="true">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none">

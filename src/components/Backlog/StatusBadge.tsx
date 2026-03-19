@@ -7,14 +7,15 @@ export function StatusBadge({ ticket }: { ticket: Ticket }) {
   const columns = useStore(s => s.columns);
   const tickets = useStore(s => s.tickets);
   const moveTicket = useStore(s => s.moveTicket);
-  const moveToBoard = useStore(s => s.moveToBoard);
+  const updateTicket = useStore(s => s.updateTicket);
   const moveToBacklog = useStore(s => s.moveToBacklog);
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
 
   const boardCols = [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
-  const currentCol = ticket.inBacklog ? null : columns.find(c => c.id === ticket.columnId);
+  // Always show the real column (backlog tickets retain their columnId)
+  const currentCol = columns.find(c => c.id === ticket.columnId) ?? null;
 
   function handleMove(colId: string | '__backlog__') {
     if (colId === '__backlog__') {
@@ -22,9 +23,10 @@ export function StatusBadge({ ticket }: { ticket: Ticket }) {
       setOpen(false);
       return;
     }
-    if (!ticket.inBacklog && colId === ticket.columnId) { setOpen(false); return; }
+    if (colId === ticket.columnId) { setOpen(false); return; }
     if (ticket.inBacklog) {
-      moveToBoard(ticket.id, colId);
+      // Just update the column tag — keep the ticket in the backlog
+      updateTicket(ticket.id, { columnId: colId });
     } else {
       const colTickets = tickets
         .filter(t => t.columnId === colId && (t.epicId ?? null) === (ticket.epicId ?? null))
@@ -61,7 +63,7 @@ export function StatusBadge({ ticket }: { ticket: Ticket }) {
         onClick={openMenu}
         title="Change column"
       >
-        {ticket.inBacklog ? 'Backlog' : (currentCol?.name ?? '—')}
+        {currentCol?.name ?? '—'}
         <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true" style={{ opacity: 0.7 }}>
           <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>

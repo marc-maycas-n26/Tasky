@@ -575,10 +575,12 @@ export const useStore = create<StoreState>((set, get) => ({
   moveToBacklog(ticketId) {
     const s = get();
     const newOrder = s.tickets.filter(t => t.inBacklog).length;
+    const sorted = [...s.columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
+    const todoCol = sorted.find(c => c.role === 'todo' || c.isTodo) ?? sorted[0];
     set(st => ({
       tickets: st.tickets.map(t =>
         t.id === ticketId
-          ? { ...t, columnId: '', inBacklog: true, order: newOrder, updatedAt: now() }
+          ? { ...t, inBacklog: true, order: newOrder, columnId: todoCol?.id ?? t.columnId, updatedAt: now() }
           : t
       ),
     }));

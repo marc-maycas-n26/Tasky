@@ -10,6 +10,7 @@ import { SettingsPage } from './components/Settings/SettingsPage';
 import { TrashPage } from './components/Trash/TrashPage';
 import { ReleasesPage } from './components/Releases/ReleasesPage';
 import { MarkdownFsAdapter, saveDirectoryHandle } from './storage/markdownFs';
+import { ToastProvider } from './components/Common/Toast';
 
 // ── Theme applicator ───────────────────────────────────────────────────────────
 
@@ -215,7 +216,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeApplicator />
-      <AppShell />
+      <ToastProvider>
+        <AppShell />
+      </ToastProvider>
     </BrowserRouter>
   );
 }

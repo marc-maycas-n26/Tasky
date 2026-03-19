@@ -640,6 +640,31 @@
   font-weight: 600;
 }
 
+/* ── Board/backlog location toggle button ────────────────────────────────────── */
+.bl-row-location-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, background 0.1s, color 0.1s;
+  padding: 0;
+}
+.bl-row:hover .bl-row-location-btn {
+  opacity: 1;
+}
+.bl-row-location-btn:hover {
+  background: var(--color-border-light);
+  color: var(--color-primary);
+}
+
 /* ── Chevron ─────────────────────────────────────────────────────────────────── */
 .bl-row-chevron {
   display: flex;

@@ -549,6 +549,14 @@
   pointer-events: none;
 }
 
+/* ── Swimlane drag handle spacer (non-draggable rows) ───────────────────────── */
+.swimlane-drag-handle-spacer {
+  display: flex;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* ── Swimlane drag handle ────────────────────────────────────────────────────── */
 .swimlane-drag-handle {
   display: flex;

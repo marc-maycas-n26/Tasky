@@ -74,10 +74,9 @@ export function BacklogPage() {
     // Dropped on the Board section drop zone → move backlog ticket to board
     if (overId === 'section-board') {
       if (dragged.inBacklog) {
-        const firstCol = [...columns]
-          .filter(c => !c.isBacklog)
-          .sort((a, b) => a.order - b.order)[0];
-        if (firstCol) moveToBoard(draggedId, firstCol.id);
+        const sorted = [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
+        const todoCol = sorted.find(c => c.role === 'todo' || c.isTodo) ?? sorted[0];
+        if (todoCol) moveToBoard(draggedId, todoCol.id);
       }
       return;
     }
@@ -94,10 +93,10 @@ export function BacklogPage() {
       // Cross-section drop: ticket dragged over a row in the other section
       if (dragged.inBacklog !== overTicket.inBacklog) {
         if (dragged.inBacklog) {
-          // backlog ticket dropped on a board row → move to board, same column as target
-          moveToBoard(draggedId, overTicket.columnId || (
-            [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order)[0]?.id ?? ''
-          ));
+          // backlog ticket dropped on a board row → move to board into the first todo column
+          const sorted = [...columns].filter(c => !c.isBacklog).sort((a, b) => a.order - b.order);
+          const todoCol = sorted.find(c => c.role === 'todo' || c.isTodo) ?? sorted[0];
+          moveToBoard(draggedId, todoCol?.id ?? '');
         } else {
           // board ticket dropped on a backlog row → move to backlog
           moveToBacklog(draggedId);

@@ -82,7 +82,7 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
         else onToggleOther?.();
       }}
     >
-      {dragHandleProps && (
+      {dragHandleProps ? (
         <span
           ref={dragHandleProps.ref}
           className="swimlane-drag-handle"
@@ -101,6 +101,8 @@ export function SwimlaneEpicHeader({ epic, tickets, columns, tags: allTags, isCo
             <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
           </svg>
         </span>
+      ) : (
+        <span className="swimlane-drag-handle-spacer" aria-hidden="true" />
       )}
       <span className="swimlane-toggle-btn" aria-label={isCollapsed ? 'Expand' : 'Collapse'}>
         {isCollapsed ? (
