@@ -175,10 +175,13 @@ export function ReleasesPage() {
           />
           {hasFilters && (
             <button
-              className="btn btn-secondary btn-sm"
+              className="btn btn-sm rl-clear-btn"
               onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setEpicFilter(new Set()); }}
             >
-              Clear
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              Clear filters
             </button>
           )}
         </div>

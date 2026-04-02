@@ -18,6 +18,21 @@
   background: rgba(239, 68, 68, 0.07);
 }
 
+/* ── Clear filters button ────────────────────────────────────────────────────── */
+.rl-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  font-weight: 600;
+}
+.rl-clear-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
 /* ── Filter bar ──────────────────────────────────────────────────────────────── */
 .rl-filters {
   display: flex;
