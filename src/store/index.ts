@@ -42,6 +42,7 @@ interface StoreState extends AppState {
   releaseEpic(id: string): void;
   releaseDoneTickets(): void;
   restoreTicketFromRelease(ticketId: string): void;
+  deleteReleases(epicIds: string[]): void;
 
   // tags
   addTag(name: string, color: string): void;
@@ -421,6 +422,18 @@ export const useStore = create<StoreState>((set, get) => ({
       : s.releasedEpics.filter((_, i) => i !== releaseIdx);
 
     set({ tickets: [...s.tickets, restoredTicket], releasedEpics: updatedReleases });
+    get().persist();
+  },
+
+  deleteReleases(epicIds) {
+    const s = get();
+    const epicIdSet = new Set(epicIds);
+    const removedReleases = s.releasedEpics.filter(r => epicIdSet.has(r.epic.id));
+    const removedTicketIds = new Set(removedReleases.flatMap(r => r.tickets.map(t => t.id)));
+    set({
+      releasedEpics: s.releasedEpics.filter(r => !epicIdSet.has(r.epic.id)),
+      comments: s.comments.filter(c => !removedTicketIds.has(c.ticketId)),
+    });
     get().persist();
   },
 

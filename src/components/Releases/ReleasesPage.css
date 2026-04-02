@@ -1,3 +1,23 @@
+/* ── Page header delete button ───────────────────────────────────────────────── */
+.rl-page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rl-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  flex-shrink: 0;
+}
+.rl-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.07);
+}
+
 /* ── Filter bar ──────────────────────────────────────────────────────────────── */
 .rl-filters {
   display: flex;

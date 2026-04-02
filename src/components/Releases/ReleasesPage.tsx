@@ -5,6 +5,7 @@ import { PRIORITY_COLORS, PRIORITY_ICONS } from '../../constants/priorities';
 import { SidebarRow } from '../Common/SidebarRow';
 import { ImageLightbox } from '../Ticket/ImageLightbox';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
+import { DeleteReleasesDialog } from './DeleteReleasesDialog';
 import '../Ticket/TicketDrawer.css';
 import './ReleasesPage.css';
 
@@ -34,12 +35,14 @@ interface DayGroup {
 export function ReleasesPage() {
   const releasedEpics = useStore(s => s.releasedEpics);
   const tags = useStore(s => s.tags);
+  const deleteReleases = useStore(s => s.deleteReleases);
 
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
   const [previewTicket, setPreviewTicket] = useState<Ticket | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const filtered = useMemo(() => {
     let list = [...releasedEpics].sort(
@@ -95,8 +98,21 @@ export function ReleasesPage() {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Releases</h1>
+      <div className="page-header rl-page-header">
+        <div className="rl-page-header-row">
+          <h1 className="page-title">Releases</h1>
+          {releasedEpics.length > 0 && (
+            <button
+              className="btn btn-secondary btn-sm rl-delete-btn"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2.5 4h9M5.5 4V2.5h3V4M6 6.5v4M8 6.5v4M3.5 4l.5 7.5h6l.5-7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Delete releases
+            </button>
+          )}
+        </div>
         <p className="page-subtitle">Completed epics and their tickets, grouped by release date.</p>
       </div>
 
@@ -269,6 +285,14 @@ export function ReleasesPage() {
 
       {previewTicket && (
         <ReleasedTicketDrawer ticket={previewTicket} tags={tags} onClose={() => setPreviewTicket(null)} />
+      )}
+
+      {showDeleteDialog && (
+        <DeleteReleasesDialog
+          releases={[...releasedEpics].sort((a, b) => new Date(b.releasedAt).getTime() - new Date(a.releasedAt).getTime())}
+          onConfirm={epicIds => { deleteReleases(epicIds); setShowDeleteDialog(false); }}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
       )}
     </div>
   );
