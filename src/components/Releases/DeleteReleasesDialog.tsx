@@ -147,22 +147,6 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
                   </span>
                 </label>
 
-                {/* Epic list inside the date group */}
-                <div className="del-releases-epics">
-                  {g.releases.map(r => (
-                    <div key={r.epic.id} className="del-releases-epic-row">
-                      <span
-                        className="del-releases-epic-dot"
-                        style={{ background: r.epic.color ?? '#6554C0' }}
-                      />
-                      <span className="del-releases-epic-name">{r.epic.title}</span>
-                      <span className="del-releases-epic-meta">
-                        {r.tickets.length} ticket{r.tickets.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
                 {isChecked && (
                   <div className="del-releases-confirm-row">
                     <p className="del-releases-phrase-label">
