@@ -175,7 +175,7 @@ export function ReleasesPage() {
           />
           {hasFilters && (
             <button
-              className="btn btn-ghost btn-sm"
+              className="btn btn-secondary btn-sm"
               onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setEpicFilter(new Set()); }}
             >
               Clear
