@@ -6,6 +6,7 @@ import { SidebarRow } from '../Common/SidebarRow';
 import { ImageLightbox } from '../Ticket/ImageLightbox';
 import { ConfirmDialog } from '../Common/ConfirmDialog';
 import { DeleteReleasesDialog } from './DeleteReleasesDialog';
+import { FilterDropdown } from '../Board/FilterDropdown';
 import '../Ticket/TicketDrawer.css';
 import './ReleasesPage.css';
 
@@ -40,9 +41,20 @@ export function ReleasesPage() {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [epicFilter, setEpicFilter] = useState<Set<string>>(new Set());
   const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
   const [previewTicket, setPreviewTicket] = useState<Ticket | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const epicOptions = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; color?: string }>();
+    for (const r of releasedEpics) {
+      if (!seen.has(r.epic.id)) {
+        seen.set(r.epic.id, { id: r.epic.id, name: r.epic.title, color: r.epic.color ?? undefined });
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [releasedEpics]);
 
   const filtered = useMemo(() => {
     let list = [...releasedEpics].sort(
@@ -57,6 +69,9 @@ export function ReleasesPage() {
       const to = parseLocalDate(dateTo);
       list = list.filter(r => new Date(toDateKey(r.releasedAt) + 'T00:00:00') <= to);
     }
+    if (epicFilter.size > 0) {
+      list = list.filter(r => epicFilter.has(r.epic.id));
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(r =>
@@ -69,7 +84,7 @@ export function ReleasesPage() {
       );
     }
     return list;
-  }, [releasedEpics, search, dateFrom, dateTo]);
+  }, [releasedEpics, search, dateFrom, dateTo, epicFilter]);
 
   const dayGroups = useMemo<DayGroup[]>(() => {
     const map = new Map<string, ReleasedEpic[]>();
@@ -94,7 +109,7 @@ export function ReleasesPage() {
     });
   }
 
-  const hasFilters = search || dateFrom || dateTo;
+  const hasFilters = search || dateFrom || dateTo || epicFilter.size > 0;
 
   return (
     <div className="page-container">
@@ -132,6 +147,17 @@ export function ReleasesPage() {
           />
         </div>
 
+        <FilterDropdown
+          label="Epic"
+          options={epicOptions}
+          selected={epicFilter}
+          onToggle={id => setEpicFilter(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+          })}
+        />
+
         <div className="rl-date-range">
           <label className="rl-date-label">From</label>
           <input
@@ -150,7 +176,7 @@ export function ReleasesPage() {
           {hasFilters && (
             <button
               className="btn btn-ghost btn-sm"
-              onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); }}
+              onClick={() => { setSearch(''); setDateFrom(''); setDateTo(''); setEpicFilter(new Set()); }}
             >
               Clear
             </button>
