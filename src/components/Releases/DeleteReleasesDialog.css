@@ -55,13 +55,41 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 0 10px;
+  padding: 8px 6px 10px;
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
   cursor: pointer;
   border-bottom: 1px solid var(--color-border-light);
   margin-bottom: 4px;
+}
+
+/* Custom checkbox to avoid stopPropagation issues */
+.del-releases-checkbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s, background 0.12s;
+}
+.del-releases-checkbox--checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.del-releases-checkbox--checked::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 7px;
+  border: 1.5px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
 }
 
 .del-releases-item {

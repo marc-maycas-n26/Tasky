@@ -170,15 +170,9 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
                     role="checkbox"
                     aria-checked={isChecked}
                     tabIndex={0}
-                    onKeyDown={e => e.key === ' ' && handleRowClick(g.dateKey, i, e as unknown as React.MouseEvent)}
+                    onKeyDown={e => e.key === ' ' && (e.preventDefault(), handleRowClick(g.dateKey, i, { shiftKey: e.shiftKey } as React.MouseEvent))}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => {}}
-                      onClick={e => e.stopPropagation()}
-                      tabIndex={-1}
-                    />
+                    <span className={`del-releases-checkbox${isChecked ? ' del-releases-checkbox--checked' : ''}`} aria-hidden="true" />
                     <span className="del-releases-date-label">{g.label}</span>
                     <span className="del-releases-epic-meta">
                       {g.releases.length} epic{g.releases.length !== 1 ? 's' : ''} · {totalTickets} ticket{totalTickets !== 1 ? 's' : ''}
