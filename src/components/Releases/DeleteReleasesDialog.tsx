@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import type { ReleasedEpic } from '../../types';
 import './DeleteReleasesDialog.css';
 
-// Short, memorable phrases — one per selected release
 const PHRASE_POOL = [
   'delete this forever',
   'gone and forgotten',
@@ -21,14 +20,24 @@ const PHRASE_POOL = [
   'farewell old data',
 ];
 
-function pickPhrase(epicId: string, index: number): string {
-  // Deterministic per-epic phrase derived from the index
-  return PHRASE_POOL[(index * 3 + epicId.charCodeAt(0)) % PHRASE_POOL.length];
+function pickPhrase(dateKey: string, index: number): string {
+  return PHRASE_POOL[(index * 3 + dateKey.charCodeAt(0)) % PHRASE_POOL.length];
 }
 
-function formatDate(isoDate: string): string {
+function toDateKey(isoDate: string): string {
   const d = new Date(isoDate);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDay(isoDate: string): string {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+interface DateGroup {
+  dateKey: string;
+  label: string;
+  releases: ReleasedEpic[];
 }
 
 interface Props {
@@ -38,49 +47,65 @@ interface Props {
 }
 
 export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
+  // selected = set of dateKeys
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [inputs, setInputs] = useState<Record<string, string>>({});
 
-  const selectedList = useMemo(
-    () => releases.filter(r => selected.has(r.epic.id)),
-    [releases, selected]
-  );
+  const dateGroups = useMemo<DateGroup[]>(() => {
+    const map = new Map<string, ReleasedEpic[]>();
+    for (const r of releases) {
+      const key = toDateKey(r.releasedAt);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([dateKey, group]) => ({
+        dateKey,
+        label: formatDay(group[0].releasedAt),
+        releases: group,
+      }));
+  }, [releases]);
 
-  // Map each selected release to its required confirmation phrase
   const requiredPhrases = useMemo<Record<string, string>>(() => {
     const map: Record<string, string> = {};
-    selectedList.forEach((r, i) => {
-      map[r.epic.id] = pickPhrase(r.epic.id, i);
+    dateGroups.forEach((g, i) => {
+      map[g.dateKey] = pickPhrase(g.dateKey, i);
     });
     return map;
-  }, [selectedList]);
+  }, [dateGroups]);
 
-  const allConfirmed = selectedList.length > 0 && selectedList.every(
-    r => (inputs[r.epic.id] ?? '').trim().toLowerCase() === requiredPhrases[r.epic.id]
+  const selectedGroups = dateGroups.filter(g => selected.has(g.dateKey));
+  const totalSelectedEpics = selectedGroups.reduce((n, g) => n + g.releases.length, 0);
+
+  const allConfirmed = selectedGroups.length > 0 && selectedGroups.every(
+    g => (inputs[g.dateKey] ?? '').trim().toLowerCase() === requiredPhrases[g.dateKey]
   );
 
-  const allSelected = selected.size === releases.length;
+  const allSelected = selected.size === dateGroups.length;
 
   function toggleAll() {
     if (allSelected) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(releases.map(r => r.epic.id)));
+      setSelected(new Set(dateGroups.map(g => g.dateKey)));
     }
   }
 
-  function toggle(epicId: string) {
+  function toggleGroup(dateKey: string) {
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(epicId)) {
-        next.delete(epicId);
-        setInputs(inp => { const n = { ...inp }; delete n[epicId]; return n; });
+      if (next.has(dateKey)) {
+        next.delete(dateKey);
+        setInputs(inp => { const n = { ...inp }; delete n[dateKey]; return n; });
       } else {
-        next.add(epicId);
+        next.add(dateKey);
       }
       return next;
     });
   }
+
+  const selectedEpicIds = selectedGroups.flatMap(g => g.releases.map(r => r.epic.id));
 
   return (
     <>
@@ -92,43 +117,51 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
         </div>
 
         <p className="del-releases-intro">
-          Select the releases to permanently delete. Their tickets and activity will be removed from the archive and from storage. Open board and backlog tickets are not affected.
+          Select the release dates to permanently delete. Their tickets and activity will be removed from the archive and from storage. Open board and backlog tickets are not affected.
         </p>
 
-        {/* Release list */}
         <div className="del-releases-list">
           <label className="del-releases-select-all">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={toggleAll}
-            />
-            <span>Select all ({releases.length})</span>
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+            <span>Select all ({dateGroups.length} date{dateGroups.length !== 1 ? 's' : ''})</span>
           </label>
 
-          {releases.map(r => {
-            const isChecked = selected.has(r.epic.id);
-            const phrase = requiredPhrases[r.epic.id];
-            const inputVal = inputs[r.epic.id] ?? '';
+          {dateGroups.map(g => {
+            const isChecked = selected.has(g.dateKey);
+            const phrase = requiredPhrases[g.dateKey];
+            const inputVal = inputs[g.dateKey] ?? '';
             const confirmed = inputVal.trim().toLowerCase() === phrase;
+            const totalTickets = g.releases.reduce((n, r) => n + r.tickets.length, 0);
 
             return (
-              <div key={r.epic.id} className={`del-releases-item${isChecked ? ' del-releases-item--selected' : ''}`}>
+              <div key={g.dateKey} className={`del-releases-item${isChecked ? ' del-releases-item--selected' : ''}`}>
                 <label className="del-releases-item-check">
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    onChange={() => toggle(r.epic.id)}
+                    onChange={() => toggleGroup(g.dateKey)}
                   />
-                  <span
-                    className="del-releases-epic-dot"
-                    style={{ background: r.epic.color ?? '#6554C0' }}
-                  />
-                  <span className="del-releases-epic-name">{r.epic.title}</span>
+                  <span className="del-releases-date-label">{g.label}</span>
                   <span className="del-releases-epic-meta">
-                    {r.tickets.length} ticket{r.tickets.length !== 1 ? 's' : ''} · released {formatDate(r.releasedAt)}
+                    {g.releases.length} epic{g.releases.length !== 1 ? 's' : ''} · {totalTickets} ticket{totalTickets !== 1 ? 's' : ''}
                   </span>
                 </label>
+
+                {/* Epic list inside the date group */}
+                <div className="del-releases-epics">
+                  {g.releases.map(r => (
+                    <div key={r.epic.id} className="del-releases-epic-row">
+                      <span
+                        className="del-releases-epic-dot"
+                        style={{ background: r.epic.color ?? '#6554C0' }}
+                      />
+                      <span className="del-releases-epic-name">{r.epic.title}</span>
+                      <span className="del-releases-epic-meta">
+                        {r.tickets.length} ticket{r.tickets.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
                 {isChecked && (
                   <div className="del-releases-confirm-row">
@@ -140,8 +173,7 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
                       type="text"
                       placeholder={phrase}
                       value={inputVal}
-                      onChange={e => setInputs(inp => ({ ...inp, [r.epic.id]: e.target.value }))}
-                      autoFocus={selectedList[0]?.epic.id === r.epic.id}
+                      onChange={e => setInputs(inp => ({ ...inp, [g.dateKey]: e.target.value }))}
                       spellCheck={false}
                       autoComplete="off"
                     />
@@ -157,9 +189,11 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
           <button
             className="btn btn-danger"
             disabled={!allConfirmed}
-            onClick={() => onConfirm(Array.from(selected))}
+            onClick={() => onConfirm(selectedEpicIds)}
           >
-            Delete {selected.size > 0 ? `${selected.size} release${selected.size !== 1 ? 's' : ''}` : 'releases'}
+            Delete {totalSelectedEpics > 0
+              ? `${totalSelectedEpics} epic${totalSelectedEpics !== 1 ? 's' : ''}`
+              : 'releases'}
           </button>
         </div>
       </div>
