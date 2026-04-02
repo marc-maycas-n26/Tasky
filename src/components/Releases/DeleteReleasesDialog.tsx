@@ -119,7 +119,7 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
           <>
             <div className="del-releases-confirm-step">
               <p className="del-releases-confirm-desc">
-                You are about to permanently delete <strong>{selectedGroups.length} release date{selectedGroups.length !== 1 ? 's' : ''}</strong> ({totalSelectedEpics} epic{totalSelectedEpics !== 1 ? 's' : ''}). This cannot be undone.
+                You are about to permanently delete <strong>{selectedGroups.length} release{selectedGroups.length !== 1 ? 's' : ''}</strong>. This cannot be undone.
               </p>
               <p className="del-releases-phrase-label">
                 Type <strong>{confirmPhrase}</strong> to confirm
@@ -142,7 +142,7 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
                 disabled={!phraseMatches}
                 onClick={() => onConfirm(selectedEpicIds)}
               >
-                Delete {totalSelectedEpics} epic{totalSelectedEpics !== 1 ? 's' : ''}
+                Delete {selectedGroups.length} release{selectedGroups.length !== 1 ? 's' : ''}
               </button>
             </div>
           </>
@@ -189,8 +189,8 @@ export function DeleteReleasesDialog({ releases, onConfirm, onCancel }: Props) {
                 disabled={selected.size === 0}
                 onClick={handleDeleteClick}
               >
-                Delete {totalSelectedEpics > 0
-                  ? `${totalSelectedEpics} epic${totalSelectedEpics !== 1 ? 's' : ''}`
+                Delete {selected.size > 0
+                  ? `${selected.size} release${selected.size !== 1 ? 's' : ''}`
                   : 'releases'}
               </button>
             </div>
