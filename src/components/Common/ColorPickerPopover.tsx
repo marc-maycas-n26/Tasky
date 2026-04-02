@@ -2,12 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import './ColorPickerPopover.css';
 
 export const PRESET_COLORS = [
-  '#0052CC', '#0065FF', '#4C9AFF',
-  '#00875A', '#36B37E', '#57D9A3',
-  '#FF5630', '#DE350B', '#FF7452',
-  '#FF991F', '#FF8B00', '#FFC400',
-  '#6554C0', '#8777D9', '#998DD9',
-  '#97A0AF', '#5E6C84', '#344563',
+  // Reds & pinks
+  '#E53E3E', '#ED64A6', '#D53F8C',
+  // Oranges & browns
+  '#ED8936', '#C05621', '#7B341E',
+  // Yellows
+  '#ECC94B', '#D69E2E', '#B7791F',
+  // Greens
+  '#48BB78', '#38A169', '#276749',
+  // Teals & cyans
+  '#38B2AC', '#0097A7', '#00BCD4',
+  // Blues
+  '#4299E1', '#3182CE', '#0052CC',
+  // Indigos & purples
+  '#667EEA', '#6B46C1', '#553C9A',
+  // Magentas & violets
+  '#9F7AEA', '#B83280', '#702459',
+  // Greys
+  '#A0AEC0', '#718096', '#2D3748',
 ];
 
 interface Props {

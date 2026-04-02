@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
-
-function getStatusClass(name: string): string {
-  const n = name.toLowerCase();
-  if (n === 'done') return 'status-pill--done';
-  if (n.includes('progress')) return 'status-pill--inprogress';
-  if (n.includes('review')) return 'status-pill--review';
-  if (n === 'blocked') return 'status-pill--blocked';
-  return 'status-pill--todo';
-}
+import { getColumnColor } from '../../utils/columnColor';
 
 interface Props {
   columnId: string;
@@ -22,10 +14,16 @@ export function StatusPill({ columnId, onChange }: Props) {
   const col = columns.find(c => c.id === columnId);
   const sorted = [...columns].sort((a, b) => a.order - b.order);
 
+  const pillStyle = col ? {
+    background: getColumnColor(col) + '1a',
+    color: getColumnColor(col),
+  } : undefined;
+
   return (
     <div className="status-pill-wrapper">
       <button
-        className={`status-pill ${getStatusClass(col?.name ?? '')}`}
+        className="status-pill"
+        style={pillStyle}
         onClick={() => setOpen(o => !o)}
       >
         {col?.name ?? '—'}
@@ -38,15 +36,19 @@ export function StatusPill({ columnId, onChange }: Props) {
         <>
           <div className="status-pill-backdrop" onClick={() => setOpen(false)} />
           <div className="status-pill-menu">
-            {sorted.map(c => (
-              <button
-                key={c.id}
-                className={`status-pill-option ${getStatusClass(c.name)}${c.id === columnId ? ' status-pill-option--active' : ''}`}
-                onClick={() => { onChange(c.id); setOpen(false); }}
-              >
-                {c.name}
-              </button>
-            ))}
+            {sorted.map(c => {
+              const hex = getColumnColor(c);
+              return (
+                <button
+                  key={c.id}
+                  className={`status-pill-option${c.id === columnId ? ' status-pill-option--active' : ''}`}
+                  style={{ background: hex + '1a', color: hex }}
+                  onClick={() => { onChange(c.id); setOpen(false); }}
+                >
+                  {c.name}
+                </button>
+              );
+            })}
           </div>
         </>
       )}

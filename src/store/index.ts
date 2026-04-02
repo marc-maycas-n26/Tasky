@@ -136,6 +136,37 @@ export const useStore = create<StoreState>((set, get) => ({
       const releasedEpics = state.releasedEpics ?? [];
       set({ ...state, trashedTickets, releasedEpics, isLoading: false });
 
+      // Migrate: force-assign canonical colors to known column names
+      {
+        const CANONICAL_COLORS: Record<string, string> = {
+          'backlog':         '#A0AEC0',
+          'to do':           '#667EEA',
+          'in progress':     '#ED8936',
+          'discovery':       '#00BCD4',
+          'development':     '#3182CE',
+          'experimentation': '#9F7AEA',
+          'review':          '#B83280',
+          'blocked':         '#E53E3E',
+          'done':            '#38A169',
+          "won't do":        '#718096',
+        };
+        const patchedColumns = (state.columns ?? []).map(c => {
+          const key = c.name.toLowerCase();
+          if (CANONICAL_COLORS[key]) return { ...c, color: CANONICAL_COLORS[key] };
+          if (!c.color) {
+            const color = c.isBacklog ? '#A0AEC0'
+              : c.role === 'todo' ? '#667EEA'
+              : c.role === 'in_progress' ? '#ED8936'
+              : c.role === 'done' ? '#38A169'
+              : '#667EEA';
+            return { ...c, color };
+          }
+          return c;
+        });
+        set({ columns: patchedColumns });
+        get().persist();
+      }
+
       // Seed default columns on a clean state (no columns stored yet)
       if ((state.columns ?? []).length === 0) {
         const ts = now();

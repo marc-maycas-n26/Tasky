@@ -215,8 +215,8 @@ function nodeToMd(node: Node, indent = ''): string {
     case 'code':             return `\`${inner}\``;
     case 'pre':              return `\`\`\`\n${el.textContent ?? ''}\n\`\`\`\n\n`;
     case 'a':                return `[${inner}](${el.getAttribute('href') ?? ''})`;
-    case 'img':              return `![${el.getAttribute('alt') ?? ''}](${el.getAttribute('src') ?? ''})\n\n`;
-    case 'li':               return `${indent}- ${inner}\n`;
+    case 'img':              return `![${el.getAttribute('alt') ?? ''}](${el.getAttribute('src') ?? ''})`;
+    case 'li':               return `${indent}- ${inner.trim()}\n`;
     case 'ul': case 'ol':   return `${inner}\n`;
     case 'br':               return '\n';
     case 'p': {

@@ -144,7 +144,7 @@ Requires Chrome or Edge (File System Access API).
 
 ### IndexedDB fallback
 
-Used automatically as a transit state (e.g. between folder connections). No data is shown until a folder is connected.
+Used when no Markdown folder is connected. The app starts empty — no data is shown until a folder is chosen.
 
 ---
 
@@ -152,10 +152,9 @@ Used automatically as a transit state (e.g. between folder connections). No data
 
 | Section | What you can do |
 |---|---|
+| Appearance | Switch theme (light / dark / system) |
 | Columns | Add, rename, reorder, color, and set role (To Do / In Progress / Done) |
-| Storage | Connect or disconnect a Markdown folder |
-| Backup | Export full JSON snapshot / Import JSON (replaces all data) |
-| Danger zone | **Delete all data** — clears the folder, IndexedDB, and resets to a blank state |
+| Storage & Data | Connect or disconnect a Markdown folder; export/import JSON backup; delete all data |
 
 ---
 
