@@ -696,22 +696,54 @@ export class MarkdownFsAdapter implements StorageAdapter {
         } catch { /* folder may not exist yet */ }
       } else {
         const folderName = colFolderName.get(raw.columnId);
+        let foundColumnId = raw.columnId;
         if (folderName) {
           try {
             const subfolder = await this.getColumnFolder(folderName, false);
             fileContent = await this.readTextFile(toFilename(raw), subfolder);
             if (!fileContent) {
               // Legacy: root-level column folder
-              const legacyFolder = await this.getSubfolder(folderName, false);
-              fileContent = await this.readTextFile(toFilename(raw), legacyFolder);
+              try {
+                const legacyFolder = await this.getSubfolder(folderName, false);
+                fileContent = await this.readTextFile(toFilename(raw), legacyFolder);
+              } catch { /* ignore */ }
             }
           } catch { /* folder may not exist yet */ }
+        }
+
+        // File not found in expected folder — scan all column folders to find where it moved
+        if (!fileContent) {
+          for (const [colId, colFolder] of colFolderName) {
+            if (colId === raw.columnId) continue;
+            try {
+              const subfolder = await this.getColumnFolder(colFolder, false);
+              const content = await this.readTextFile(toFilename(raw), subfolder);
+              if (content) {
+                fileContent = content;
+                foundColumnId = colId;
+                break;
+              }
+            } catch { /* folder may not exist */ }
+          }
+        }
+
+        if (foundColumnId !== raw.columnId) {
+          raw.columnId = foundColumnId;
         }
       }
 
       const { frontMatter: fm, description, parsedComments } = fileContent
         ? parseTicketFile(fileContent)
         : { frontMatter: {}, description: '', parsedComments: [] };
+
+      // Folder location is the source of truth for column: override fm.status to match
+      // the folder where the file was actually found (handles files moved on disk).
+      if (!inBacklog) {
+        const actualFolderColName = columns.find(c => c.id === raw.columnId)?.name;
+        if (actualFolderColName) {
+          fm.status = actualFolderColName;
+        }
+      }
 
       const merged = applyFrontMatter(raw, fm, raw.columnId, inBacklog);
       tickets.push({ ...merged, description });

@@ -145,9 +145,12 @@
   cursor: pointer;
 }
 
-.rte-content .tiptap img {
+.rte-content .tiptap img,
+.rte-content img {
   cursor: zoom-in;
   max-width: 100%;
+  width: 100%;
+  height: auto;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   margin: 6px 0;
